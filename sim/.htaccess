@@ -1,0 +1,5 @@
+AuthName "My Protected Area"
+AuthType Basic
+AuthUserFile /home/mcroot/McStas/www-django/mcwww/sim/.htpasswd
+AuthGroupFile /dev/null
+require valid-user
