@@ -4,3 +4,4 @@
   	    Copy .../django/contrib/auth/models.py to mcwww/mcUser.py 
   	    to change User model dependency.
 	    Edited mcwww/settings.py to reflect change.
+- Commit 3: changed the simplejson import line in runworker
