@@ -1,5 +1,6 @@
-from django.core.management.base import NoArgsCommand, make_option
+from django.core.management.base import NoArgsCommand
 
+from optparse import make_option
 import glob, re
 
 

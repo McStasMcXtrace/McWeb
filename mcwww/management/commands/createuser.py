@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, make_option
+from django.core.management.base import BaseCommand
 
 import sys
 from getpass import getpass

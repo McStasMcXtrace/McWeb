@@ -1,4 +1,4 @@
-from django.core.management.base import NoArgsCommand, make_option
+from django.core.management.base import NoArgsCommand
 from django.contrib.auth.models import User,Group
 
 from mcsimulator.models import Simulation, Param
@@ -7,7 +7,7 @@ from os.path import basename, dirname
 from commands import getstatusoutput
 from glob import glob
 
-
+from optparse import make_option
 import json
 import re
 
