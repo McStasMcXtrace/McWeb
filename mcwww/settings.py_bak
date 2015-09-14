@@ -1,4 +1,4 @@
-#  PEBCAK AND Id-10T errors.
+REMEBER#  PEBCAK AND Id-10T errors.
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 PROJECT_PATH = os.path.realpath(BASE_DIR)
@@ -8,7 +8,7 @@ PROJECT_PATH = os.path.realpath(BASE_DIR)
 #===============#
 LOGIN_URL                       = '/login'
 # AUTHENTICATION_BACKENDS         = ('mcUser.models.mcBackend',)
-# AUTH_USER_MODEL                 = ('mcwww.User')
+AUTH_USER_MODEL                 = ('mcwww.User')
 # AUTHENTICATION_BACKENDS         = ('auth.RemoteUserBackend',)
 AUTH_USER_MODEL                 = ('auth.User')
 SESSION_COOKIE_AGE              = 10*60
@@ -52,7 +52,7 @@ INSTALLED_APPS = (
     # django Apps #
     # ----------- #
     # Admin Site
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
