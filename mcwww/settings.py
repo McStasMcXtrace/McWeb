@@ -86,7 +86,7 @@ ADMINS     = (
 MANAGERS   = ADMINS
 DATABASES  = {                                                            # keys not read by sqlite removed.
     'default': { 'ENGINE': 'django.db.backends.sqlite3',
-                 'NAME': os.path.join(BASE_DIR, '/DB/mcwww.sqlite3'),     # (sqlite3: NAME = path to db file)
+                 'NAME': os.path.join(BASE_DIR, 'DB/mcwww.sqlite3'),     # (sqlite3: NAME = path to db file)
                  }
     }
 #---------------#
