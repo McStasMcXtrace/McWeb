@@ -6,7 +6,7 @@ PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 #===============#
 LOGIN_URL                       = '/login'
 # AUTHENTICATION_BACKENDS         = ('mcUser.models.mcBackend',)
-# AUTH_USER_MODEL                 = ('mcUser.mcUser')
+AUTH_USER_MODEL                 = ('mcwww.User')
 # AUTHENTICATION_BACKENDS         = ('auth.RemoteUserBackend',)
 AUTH_USER_MODEL                 = ('auth.User')
 SESSION_COOKIE_AGE              = 10*60
