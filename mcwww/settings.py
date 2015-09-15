@@ -1,7 +1,6 @@
 #  PEBCAK AND Id-10T errors.
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-PROJECT_PATH = os.path.realpath(BASE_DIR)
 
 #===============#
 # McUser CONFIG #
@@ -99,13 +98,13 @@ DATABASES  = {                                                            # keys
 WSGI_APPLICATION = 'mcwww.wsgi.application' # path to WSGI app used by runserver.
 ROOT_URLCONF     = 'mcwww.urls'             # File holding URLs to be served.
 TEMPLATE_DIRS    = (                        # Absolute paths to template.htmls
-    PROJECT_PATH + '/templates/',
+    BASE_DIR + '/templates/',
     # Admin Site Templates #
     # -------------------- #
-    PROJECT_PATH + '/templates/admin',
-    #PROJECT_PATH + '/templates/mcUser',
-    #PROJECT_PATH + '/templates/mcsimulator',
-    #PROJECT_PATH + '/templates/mcwww',
+    BASE_DIR + '/templates/admin',
+    #BASE_DIR + '/templates/mcUser',
+    #BASE_DIR + '/templates/mcsimulator',
+    #BASE_DIR + '/templates/mcwww',
     
     )
 TEMPLATE_LOADERS = (                        # Callables that import templates.
@@ -116,8 +115,8 @@ TEMPLATE_LOADERS = (                        # Callables that import templates.
 STATIC_ROOT      = ''                       # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
 STATIC_URL       = '/static/'               # URL prefix for static files.
 STATICFILES_DIRS = (                        # Absolute paths of static files.
-    PROJECT_PATH + '/static/',
-    PROJECT_PATH + '/out/'
+    BASE_DIR + '/static/',
+    BASE_DIR + '/out/'
 )
 STATICFILES_FINDERS = (                     # Classes that find static files.
     'django.contrib.staticfiles.finders.FileSystemFinder',
