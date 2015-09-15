@@ -85,9 +85,11 @@ sidenote_2: Ensure your keyboard is set to a locale that the python scripts are 
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
    a)  ./manage.py createuser <USERNAME> <PASSWORD>
-   b)  ./bin/update-simulations.sh ; ./manage.py populate_db
-   c)  sudo ./manage.py runworker &
-   d)  sudo ./manage.py runserver <IP ADDRESS>:<PORT> (80 is a good listening port)
+   b)  ./manage.py generate_docs
+   c)  ./bin/update-simulations.sh ; 
+   d)  ./manage.py populate_db
+   e)  sudo ./manage.py runworker &
+   f)  sudo ./manage.py runserver <IP ADDRESS>:<PORT> (80 is a good listening port)
 
 sidenote_3: When you have compiled the instruments (step (10)b) ) you should copy the .html files into the <GROUP>
 	    folder. This keeps everything tidy, although the server will find them in any of the referenced subfolders
@@ -96,8 +98,8 @@ sidenote_3: When you have compiled the instruments (step (10)b) ) you should cop
 Adding a Simulation to the DB
 -----------------------------
 
-- If you wisdh to create a new group of simulations follow step (7) and then (10)b). Remember to put your 
+- If you wisdh to create a new group of simulations follow step (7) to 10b-d). Remember to put your 
   user in groups that you wish them to be able to select simulations from.
-- Otherwise put your .instr file(s) in an existing group and perform step (10)b).
+- Otherwise put your .instr file(s) in an existing group and perform step (10)b-d).
 - Upon reopening the configuration page the new simulations should be available to the users in the correct 
   groups.
