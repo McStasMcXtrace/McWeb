@@ -1,14 +1,11 @@
-from django.core.management.base import NoArgsCommand
-from django.contrib.auth.models import User,Group
+from django.core.management.base import BaseCommand
+from django.contrib.auth.models import Group
 
 from mcsimulator.models import Simulation, Param
 
 from os.path import basename, dirname
 from commands import getstatusoutput
 from glob import glob
-
-from optparse import make_option
-import json
 import re
 
 
@@ -103,10 +100,7 @@ def info(bin):
     infos = read_params('%s.instr' % bin[:-1*len('.out')])
 
     # Insert param default
-    convertfns = {'string' : lambda x: x,
-                  'double' : float,
-                  'int'    : int
-                  }
+    convertfns = {'string' : lambda x: x, 'double' : float, 'int': int}
 
     # Insert new params
     for param in sorted(types.keys()):
@@ -131,21 +125,11 @@ def info(bin):
         p.save()
 
 
-def getlist():
-    return glob(PATH_BIN + '/*/*.out')
+class Command(BaseCommand):
 
+    def handle(self, *args, **options):
+        
+        grab = glob(PATH_BIN + '/*/*.out')
+        
+        map(info, grab)
 
-def main():
-    map(info, getlist())
-
-
-class Command(NoArgsCommand):
-
-    help = "Whatever you want to print here"
-
-    option_list = NoArgsCommand.option_list + (
-        make_option('--verbose', action='store_true'),
-    )
-
-    def handle_noargs(self, **options):
-        main()
