@@ -43,9 +43,3 @@ for dir in $( find . -maxdepth 1 -type d | cut -b3- | grep -v datafiles | grep -
 done
 
 echo ""
-
-# Generate documentation
-python manage.py generate_docs
-
-# Add new instruments to the database
-python manage.py populate_db
