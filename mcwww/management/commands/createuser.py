@@ -8,7 +8,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('username', nargs=1, type=str)
         parser.add_argument('password', nargs=1, type=str)
+<<<<<<< HEAD
 	parser.add_argument('group', nargs='+', type=str)
+=======
+        parser.add_argument('group', nargs='*', type=str)
+>>>>>>> 141c78faf9b295f63fc8863f6778fdb0bb403d24
 
     def handle(self, *args, **options):
         if len(options) < 1:
