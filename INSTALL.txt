@@ -86,7 +86,7 @@ sidenote_2: Ensure your keyboard is set to a locale that the python scripts are 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
    a)  ./manage.py createuser <USERNAME> <PASSWORD>
    b)  ./manage.py generate_docs
-   c)  ./bin/update-simulations.sh ; 
+   c)  ./bin/update-simulations.sh (NOT MANDATORY: compiles instruments)
    d)  ./manage.py populate_db
    e)  sudo ./manage.py runworker &
    f)  sudo ./manage.py runserver <IP ADDRESS>:<PORT> (80 is a good listening port)
