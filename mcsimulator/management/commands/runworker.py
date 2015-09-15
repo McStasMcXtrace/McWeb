@@ -1,66 +1,42 @@
-from django.core.management.base import NoArgsCommand, make_option
-from django.db import transaction
-
+# python imports
+import tarfile
+import traceback
+import time, os, shutil, re
 import simplejson as json
-
-
-from mcsimulator.models import *
-from common import fetch, fetch1, one_or_none
-
-
 from subprocess import Popen, PIPE
 from os.path import basename, dirname, splitext, abspath
-
-import time, os, shutil, re
-import traceback
-import tarfile
-
-
-from mcwww.settings import IMAGE_FORMAT, MPI_NP, DATA_FILES, \
-     MAX_RAY_SAMPLES, MAX_SCAN_POINTS
-
+# django imports
+from django.core.management.base import BaseCommand
+from django.db import transaction
+# app imports
+from mcsimulator.models import *
+from common import fetch, fetch1, one_or_none
+from mcwww.settings import ( IMAGE_FORMAT, MPI_NP, DATA_FILES,
+                             MAX_RAY_SAMPLES, MAX_SCAN_POINTS )
+# Handy Consts
 SIM_SRC_PATH = "sim/%s.instr"
 SIM_BIN_PATH = "sim/%s.out"
 SIM_C_PATH = "sim/%s.c"
-
 WORK_PATH = "out/%s"
-
 STACKTRACE = '''Python stack-trace:
 %s'''
 
-
+#================#
+# Module Methods #
+#================#
 def popenwait(args, cwd, log):
     pid = Popen(args, cwd=cwd, stdout=PIPE, stderr=PIPE)
     out, err = pid.communicate()
     log(out, err)
     return out
 
-
-# try to use new R plotter instead of mcplot
 def mcplot(simfile, outfile, logger, logy=False):
     ''' Plot a mccode.sim file with mcplot '''
-    args = (["mcplot", "-%s" % IMAGE_FORMAT] +
-            (logy and ["-log"] or []) +
-            [basename(simfile)])
+    args = ( ["mcplot", "-%s" % IMAGE_FORMAT] + (logy and ["-log"] or []) + [basename(simfile)] )
     popenwait(args, cwd=dirname(simfile), log=logger)
     os.rename("%s.%s" % (simfile, IMAGE_FORMAT) , outfile)
+    
 
-try:
-    from rplot.plot import plotSim
-    def plot(simfile, outfile, logger, logy=False):
-        ''' Plot a sim file with R '''
-        try:
-            plotSim(simfile, logy, IMAGE_FORMAT)
-            os.rename('%s.%s' % (simfile, IMAGE_FORMAT), outfile)
-        except Exception,e:
-            print 'Fallback to mcplot, because:'
-            traceback.print_exc()
-            mcplot(simfile, outfile, logger=logger, logy=logy)
-    print 'INFO: using plotter from rplot/'
-except Exception, e:
-    # Error occured: Print it and fallback to old mcplot
-    print e
-    plot = mcplot
 
 
 def display(instr, params, outfile, log, fmt=IMAGE_FORMAT):
@@ -122,7 +98,7 @@ def work():
 
     # mark job as completed
     run.status = "done"
-    with transaction.commit_on_success():
+    with transaction.atomic():
         run.save()
     print "Done."
 
@@ -213,19 +189,35 @@ def processJob(run, workdir):
                  process_components(folder + "/mcstas.sim"),
                  [])
 
-class Command(NoArgsCommand):
-    help = "Whatever you want to print here"
+#===================#
+# runworker Command #
+#===================#
+# try to use new R plotter instead of mcplot
+try:
+    from rplot.plot import plotSim
+    def plot(simfile, outfile, logger, logy=False):
+        ''' Plot a sim file with R '''
+        try:
+            plotSim(simfile, logy, IMAGE_FORMAT)
+            os.rename('%s.%s' % (simfile, IMAGE_FORMAT), outfile)
+        except Exception,e:
+            print 'Fallback to mcplot, because:'
+            traceback.print_exc()
+            mcplot(simfile, outfile, logger=logger, logy=logy)
+    print 'INFO: using plotter from rplot/'
+except Exception, e:
+    # Error occured: Print it and fallback to old mcplot
+    print e
+    plot = mcplot
 
-    option_list = NoArgsCommand.option_list + (
-        make_option('--verbose', action='store_true'),
-    )
 
-    def handle_noargs(self, **options):
+class Command(BaseCommand):
+
+    def handle(self, *args, **options):
         while True:
             time.sleep(1)
-            try:
-                    work()
+            try: work()
             except:
-                # print error message to stdout
                 print 'Job failed because:'
                 traceback.print_exc()
+
