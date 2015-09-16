@@ -26,7 +26,7 @@ System Setup
 
         r-base (for rplot)
 
-    pip install:
+    sudo pip install:
 
         django 1.8
         simplejson
@@ -42,31 +42,24 @@ System Setup
 Setting up Django Webserver
 ---------------------------
 
-5) Create the server dir and copy the server files into it, you are playing in the root dir now so you have to 
-   sudo everything or run as root, change the permissions at the end if you don't like running round your 
-   system as su:
-     sudo mkdir /srv/mcstas-django
-     sudo cp -rp /root/trunk/tools/Python/www/www-django/mcwww/ /srv/mcstas-django
+5) Ensure your keyboard is set to a locale that the python scripts are happy with:
+
+    export LC_ALL="en_US.UTF-8"
 
 6) Move to your shiny new working directory (the one you just made). Run:
 
     sudo bin/get-dependencies.sh
 
-7) Make a <Group_Dir> in sim/ and populate sim/<Group_Dir> with at least one instr - 
+7) Select a "group name" and populate the folder sim/<Group_Dir> with at least one instrument. 
+   You must add users to groups through the admin interface (<IP ADDRESS>:<PORT>/admin).
+   Groups correspond to <Group_Dir> names.
 
-    sudo cp /usr/local/lib/mcstas-2.0/examples/<choose_one_or_more>.instr sim/<Group_Dir>
+8) From the project root folder, run:
 
-    - sidenote_1:   You will need to login to <IP ADDRESS>:<PORT>/admin (after creating your users) and put users
-                    in groups so they can run simulations. Groups correspond to <Group_Dir> names.
+    ./manage.py syncdb
 
-    - sidenote_2:   Ensure your keyboard is set to a locale that the python scripts are happy with:
-
-                    export LC_ALL="en_US.UTF-8"
-
-8) Run:
-    ./bin/init-db.sh
-
-9) Follow the prompts, you should set up a superuser to start with, step (10)a) shows how to create new users:
+9) Follow the prompts, you should set up a superuser to start with, step (10)a) shows how to 
+   create new users:
 
     Username (leave blank to use 'root'):
     E-mail address:
@@ -75,12 +68,12 @@ Setting up Django Webserver
     Superuser created successfully.
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
-    a)  ./manage.py createuser <USERNAME> <PASSWORD>
+    a)  ./manage.py createuser <USERNAME> <PASSWORD> (optionally append group names to add users to these groups)
     b)  ./manage.py generate_docs
-    c)  ./bin/update-simulations.sh (NOT MANDATORY: compiles instruments)
+    c)  ./bin/update-simulations.sh (this script simply compiles instruments)
     d)  ./manage.py populate_db
-    e)  sudo ./manage.py runworker &
-    f)  sudo ./manage.py runserver
+    e)  ./manage.py runworker &
+    f)  ./manage.py runserver
 
     - sidenote_3:   When you have compiled the instruments (step (10)b) ) you should copy the .html files into the <GROUP>
                     folder. This keeps everything tidy, although the server will find them in any of the referenced subfolders
