@@ -15,7 +15,7 @@ class Command(BaseCommand):
             print 'usage: %s username [password]' % options[0]
             sys.exit(1)
     
-        username = options['username']
+        username = options['username'][0]
         print 'Username:', username
     
         if User.objects.filter(username=username).count() > 0:
@@ -24,7 +24,7 @@ class Command(BaseCommand):
     
         if len(options) > 1:
             print 'Password taken from argument'
-            password = options['password']
+            password = options['password'][0]
         else:
             password = getpass('Enter password: ')
         
