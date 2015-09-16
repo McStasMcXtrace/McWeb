@@ -41,6 +41,7 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import redirect
 from django.http import HttpResponse
 
+import os
 
 from mcsimulator.models import * # Will have to limit this import as going to build more DB objects that I don't want the std view to have access to.
 from common import *

@@ -1,25 +1,17 @@
-# python imports
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
 import tarfile
 import traceback
-import time, os, shutil, re
+import time, os, re
 import simplejson as json
 from subprocess import Popen, PIPE
 from os.path import basename, dirname, splitext, abspath
-# django imports
-from django.core.management.base import BaseCommand
-from django.db import transaction
-# app imports
-from mcsimulator.models import *
-from common import fetch, fetch1, one_or_none
+
+from mcsimulator.models import SimRun
+from common import fetch, one_or_none
 from mcwww.settings import ( IMAGE_FORMAT, MPI_NP, DATA_FILES,
                              MAX_RAY_SAMPLES, MAX_SCAN_POINTS )
-# Handy Consts
-SIM_SRC_PATH = "sim/%s.instr"
-SIM_BIN_PATH = "sim/%s.out"
-SIM_C_PATH = "sim/%s.c"
-WORK_PATH = "out/%s"
-STACKTRACE = '''Python stack-trace:
-%s'''
 
 #================#
 # Module Methods #
@@ -80,9 +72,9 @@ def work():
     print "Running job: ", run.ref
 
     # create output folder; works as a lock
-    workdir = "%s/%%s" % (WORK_PATH % run.ref)
+    workdir = 'out/%s' % run.ref
     try:
-        os.mkdir(workdir % "")
+        os.mkdir(workdir)
     except OSError:
         # Someone else beat us to it, bail out
         print "Skipping: already running."
@@ -93,7 +85,7 @@ def work():
         processJob(run, workdir)
     except:
         exc = traceback.format_exc()
-        file(workdir % 'err.txt', 'a').write('\n' + STACKTRACE % exc)
+        file(os.path.join(workdir, 'err.txt'), 'a').write('\n' + '''Python stack-trace:\n%s''' % exc)
         print exc
 
     # mark job as completed
@@ -109,8 +101,8 @@ def processJob(run, workdir):
 
     def appendLog(out, err):
         # populate result folder
-        if out: file(workdir % "out.txt", "a").write(out)
-        if err: file(workdir % "err.txt", "a").write(err)
+        if out: file(os.path.join(workdir, "out.txt"), "a").write(out)
+        if err: file(os.path.join(workdir, "err.txt"), "a").write(err)
 
     # pick seed and samples
     params = run.params
@@ -131,12 +123,12 @@ def processJob(run, workdir):
     
     # Create hard links to instrument source, c-code and binary
     for path in (siminstr, simbin, simc, simhtml):
-        os.link(path, workdir % basename(path))
+        os.link(path, os.path.join(workdir, basename(path)))
 
     # Create soft links to data files/folders
     for path in DATA_FILES:
         for fname in os.listdir(path):
-            os.symlink('%s/%s' % (abspath(path), fname), workdir % fname)
+            os.symlink('%s/%s' % (abspath(path), fname), os.path.join(workdir, fname))
 
     # compute instrument layout
     is_scan = any(isinstance(param, list) for param in params.values())
@@ -146,10 +138,10 @@ def processJob(run, workdir):
                     if not k[0] == '_' ]
 
     # Generate instrument graphics with mcdisplay
-    display(workdir % (name + ".instr"), first_range(params_strs),
-            workdir % "layout.png", log=appendLog) #changed gif -> png
-    display(workdir % (name + ".instr"), first_range(params_strs),
-            workdir % "layout.wrl", log=appendLog, fmt='vrml')
+    display(os.path.join(workdir, (name + ".instr")), first_range(params_strs),
+            os.path.join(workdir, "layout.png"), log=appendLog) #changed gif -> png
+    display(os.path.join(workdir, (name + ".instr")), first_range(params_strs),
+            os.path.join(workdir, "layout.wrl"), log=appendLog, fmt='vrml')
 
     # run mcstas via mcrun
     args = ["mcrun"] + \
@@ -159,12 +151,12 @@ def processJob(run, workdir):
            ["--ncount", str(samples),
             "--dir",    "mcstas",
             name] + params_strs
-    popenwait(args, cwd=workdir % '', log=appendLog)
+    popenwait(args, cwd=workdir, log=appendLog)
 
     # tar results
     tarname = 'mcstas-' + run.ref
-    tarf = workdir % ('%s.tar.gz' % tarname)
-    tarfile.open(tarf, 'w:gz').add(workdir % "mcstas", arcname=tarname)
+    tarf = os.path.join(workdir, ('%s.tar.gz' % tarname))
+    tarfile.open(tarf, 'w:gz').add(os.path.join(workdir, "mcstas"), arcname=tarname)
 
     def process_components(sim_path):
         if os.path.isfile(sim_path):
@@ -180,11 +172,11 @@ def processJob(run, workdir):
                          logger=appendLog,
                          logy=(mode == "log"))
     
-    os.path.walk(workdir % 'mcstas',
+    os.path.walk(os.path.join(workdir, 'mcstas'),
                  lambda _arg, folder, files:
                  process_components(folder + "/mccode.sim"),
                  [])
-    os.path.walk(workdir % 'mcstas',
+    os.path.walk(os.path.join(workdir, 'mcstas'),
                  lambda _arg, folder, files:
                  process_components(folder + "/mcstas.sim"),
                  [])
@@ -212,12 +204,12 @@ except Exception, e:
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
         while True:
             time.sleep(1)
-            try: work()
+            try: 
+                work()
             except:
-                print 'Job failed because:'
+                print 'Job failed: '
                 traceback.print_exc()
 
