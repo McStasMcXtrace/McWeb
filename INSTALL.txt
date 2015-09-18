@@ -32,11 +32,12 @@ System Setup
         simplejson
         rpy2 (for rplot)
 
-3) Get mcstas/mxtrace through github
+3) Get mcstas/mxtrace by installing it via apt-get (see e.g. http://mcstas.org)
+   or through github:
     
     git clone https://github.com/McStasMcXtrace/McCode
 
-4) Follow the instructions in BUILD_DEPS.TXT in the McCode root dir.
+4) If you used git under 3, follow the instructions in BUILD_DEPS.TXT in the McCode root dir.
 
 
 Setting up Django Webserver
