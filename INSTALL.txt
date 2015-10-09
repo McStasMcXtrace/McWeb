@@ -12,7 +12,7 @@ System Setup
 
     sudo apt-get install git
     (go to source root)
-    git clone https://github.com/McStasMcXtrace/mcwww
+    git clone https://github.com/McStasMcXtrace/McWeb
 
 2) mcwww build dependencies:
 
@@ -69,10 +69,10 @@ Setting up Django Webserver
     Superuser created successfully.
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
-    a)  ./manage.py createuser <USERNAME> <PASSWORD> (optionally append group names to add users to these groups)
-    b)  ./manage.py generate_docs
-    c)  ./bin/update-simulations.sh (this script simply compiles instruments)
-    d)  ./manage.py populate_db
+    a)  ./manage.py generate_docs
+    b)  ./bin/update-simulations.sh (this script simply compiles instruments)
+    c)  ./manage.py populate_db
+    d)  ./manage.py createuser <USERNAME> <PASSWORD> (optionally append group names to add users to these groups)
     e)  ./manage.py runworker &
     f)  ./manage.py runserver
 
