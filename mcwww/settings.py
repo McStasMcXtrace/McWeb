@@ -45,7 +45,7 @@ DATA_FILES      = ('sim/datafiles',) # performs: ln <simulation folder>/datafile
 #===============#
 SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'                    # THIS SHOULD BE SECRET! REGENERATE IT A LOT BECAUSE OF THE SERIALIZER USED. ----^
 ALLOWED_HOSTS  = []
-DEBUG          = True <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false)
+DEBUG          = True #<----  THIS NEEDS TO BE SET TO FALSE. (css broken if false)
 TEMPLATE_DEBUG = True
 INSTALLED_APPS = (
     'mcsimulator',
