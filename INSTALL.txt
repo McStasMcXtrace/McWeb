@@ -30,6 +30,7 @@ System Setup
 
         django 1.8
         simplejson
+        django_auth_ldap
         rpy2 (for rplot)
 
 3) Get mcstas/mxtrace by installing it via apt-get (see e.g. http://mcstas.org)
@@ -51,7 +52,7 @@ Setting up Django Webserver
 
     sudo bin/get-dependencies.sh
 
-7) Select a "group name" and populate the folder sim/<Group_Dir> with at least one instrument. 
+7) Select a "group name" and populate the folder sim/<Group_Dir>/ with at least one instrument. 
    You must add users to groups through the admin interface (<IP ADDRESS>:<PORT>/admin).
    Groups correspond to <Group_Dir> names.
 
@@ -70,9 +71,9 @@ Setting up Django Webserver
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
     a)  ./manage.py generate_docs
-    b)  ./bin/update-simulations.sh (this script simply compiles instruments)
+    b)  ./bin/update-simulations.sh (compiles instruments)
     c)  ./manage.py populate_db
-    d)  ./manage.py createuser <USERNAME> <PASSWORD> (optionally append group names to add users to these groups)
+    d)  ./manage.py createuser <USERNAME> <PASSWORD> (opt: group names)
     e)  ./manage.py runworker &
     f)  ./manage.py runserver
 
@@ -88,3 +89,4 @@ Adding a Simulation to the DB
 - Otherwise put your .instr file(s) in an existing group and perform step (10)b-d).
 - Upon reopening the configuration page the new simulations should be available to the users in the correct
   groups.
+

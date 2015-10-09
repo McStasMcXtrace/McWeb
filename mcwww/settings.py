@@ -1,14 +1,21 @@
-#  PEBCAK AND Id-10T errors.
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+import ldap
+from django_auth_ldap.config import LDAPSearch
 
+AUTH_LDAP_SERVER_URI = "ldap://localhost"
+AUTH_LDAP_BIND_DN = ""
+AUTH_LDAP_BIND_PASSWORD = ""
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=fysik,dc=dtu,dc=dk", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+AUTHENTICATION_BACKENDS = (
+    'django_auth_ldap.backend.LDAPBackend',
+    #'django.contrib.auth.backends.ModelBackend', # uncomment this line to enable local sign-on (django-db)
+)
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 #===============#
 # McUser CONFIG #
 #===============#
 LOGIN_URL                       = '/login'
-# AUTHENTICATION_BACKENDS         = ('mcUser.models.mcBackend',)
-# AUTH_USER_MODEL                 = ('mcwww.User')
-# AUTHENTICATION_BACKENDS         = ('auth.RemoteUserBackend',)
 AUTH_USER_MODEL                 = ('auth.User')
 SESSION_COOKIE_AGE              = 10*60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -36,20 +43,13 @@ DATA_FILES      = ('sim/datafiles',) # performs: ln <simulation folder>/datafile
 #===============#
 # Django Config #
 #===============#
-# DJANGO_SETTINGS_MODULE = 'mcwww/settings.py'
 SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'                    # THIS SHOULD BE SECRET! REGENERATE IT A LOT BECAUSE OF THE SERIALIZER USED. ----^
 ALLOWED_HOSTS  = []
-DEBUG          =  True # False                                                           <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false!!!!)
-TEMPLATE_DEBUG = True  # False
+DEBUG          = True <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false)
+TEMPLATE_DEBUG = True
 INSTALLED_APPS = (
-    # mcApps #
-    # ------ #
     'mcsimulator',
     'mcwww',
-    #    'mcUser',
-
-    # django Apps #
-    # ----------- #
     # Admin Site
     # 'django.contrib.admin',
     'django.contrib.admin.apps.SimpleAdminConfig',
