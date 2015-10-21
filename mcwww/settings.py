@@ -7,8 +7,8 @@ AUTH_LDAP_BIND_DN = ""
 AUTH_LDAP_BIND_PASSWORD = ""
 AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=fysik,dc=dtu,dc=dk", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
 AUTHENTICATION_BACKENDS = (
-    'django_auth_ldap.backend.LDAPBackend',
-    #'django.contrib.auth.backends.ModelBackend', # uncomment this line to enable local sign-on (django-db)
+    #'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend', # uncomment this line to enable local sign-on (django-db)
 )
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -112,7 +112,7 @@ TEMPLATE_LOADERS = (                        # Callables that import templates.
     'django.template.loaders.app_directories.Loader',
     #     'django.template.loaders.eggs.Loader',
     )
-STATIC_ROOT      = ''                       # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
+STATIC_ROOT      = STATIC_ROOT = os.path.join(BASE_DIR, "static/")  # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
 STATIC_URL       = '/static/'               # URL prefix for static files.
 STATICFILES_DIRS = (                        # Absolute paths of static files.
     BASE_DIR + '/static/',
