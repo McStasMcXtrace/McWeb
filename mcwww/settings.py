@@ -78,7 +78,7 @@ MIDDLEWARE_CLASSES = (
 #-----------------#
 # DATABASE CONFIG #
 #-----------------#
-ADMINS     = ( 
+ADMINS     = (
     ('Peter Willendrup', 'pkwi@fysik.dyu.dk'),
     ('Mark Lewis', 'lewis@fysik.dtu.dk'),
     )
@@ -93,7 +93,7 @@ DATABASES  = {                                                            # keys
 #---------------#
 
 #--------------#
-# FILE SERVING # 
+# FILE SERVING #
 #--------------#
 WSGI_APPLICATION = 'mcwww.wsgi.application' # path to WSGI app used by runserver.
 ROOT_URLCONF     = 'mcwww.urls'             # File holding URLs to be served.
@@ -105,14 +105,14 @@ TEMPLATE_DIRS    = (                        # Absolute paths to template.htmls
     #BASE_DIR + '/templates/mcUser',
     #BASE_DIR + '/templates/mcsimulator',
     #BASE_DIR + '/templates/mcwww',
-    
+
     )
 TEMPLATE_LOADERS = (                        # Callables that import templates.
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #     'django.template.loaders.eggs.Loader',
     )
-STATIC_ROOT      = STATIC_ROOT = os.path.join(BASE_DIR, "static/")  # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
+#STATIC_ROOT      = STATIC_ROOT = os.path.join(BASE_DIR, "static/")  # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
 STATIC_URL       = '/static/'               # URL prefix for static files.
 STATICFILES_DIRS = (                        # Absolute paths of static files.
     BASE_DIR + '/static/',
@@ -124,7 +124,7 @@ STATICFILES_FINDERS = (                     # Classes that find static files.
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 #------------------#
-# END FILE SERVING # 
+# END FILE SERVING #
 #------------------#
 #============================#
 # END (USEFUL) DJANGO CONFIG #
@@ -155,13 +155,13 @@ USE_TZ        = True                 # timezone-aware datetimes.
 #   filter
 #    DEBUG=False.
 #   handled by
-#    email site admins 
+#    email site admins
 #   perform on
-#    HTTP 500 error 
-LOGGING = { # See http://docs.djangoproject.com/en/dev/topics/logging 
+#    HTTP 500 error
+LOGGING = { # See http://docs.djangoproject.com/en/dev/topics/logging
     'version': 1,
     'disable_existing_loggers': False,
-    'filters': {'require_debug_false':  {'()': 'django.utils.log.RequireDebugFalse' 
+    'filters': {'require_debug_false':  {'()': 'django.utils.log.RequireDebugFalse'
                                          }
                 },
     'handlers': {'mail_admins': {'level': 'ERROR',
