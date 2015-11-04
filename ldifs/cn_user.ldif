@@ -1,0 +1,12 @@
+dn: cn=firstname UID,ou=users,DN
+objectClass: top
+objectClass: inetOrgPerson
+objectClass: posixAccount
+cn: firstname UID
+sn: UID
+uid: UID
+uidNumber: uID_NUM
+gidNumber: 500
+homeDirectory: /home/users/UID
+loginShell: /bin/sh
+userPassword: PASSWORD
