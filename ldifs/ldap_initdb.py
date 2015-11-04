@@ -21,7 +21,7 @@ def ldap_initdb(dn, password):
     ldif.write(cn_usergroup)
     ldif.close()
     try:
-        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', password, '-D', 'cn=admin,dc=fysik,dc=dtu,dc=dk', '-f', '_cn_usergroup.ldif'])
+        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif'])
         process.communicate()
     finally:
         os.remove('_cn_usergroup.ldif')
@@ -37,7 +37,7 @@ def ldap_initdb(dn, password):
     ldif.write(ou_users)
     ldif.close()
     try:
-        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', password, '-D', 'cn=admin,dc=fysik,dc=dtu,dc=dk', '-f', '_ou_users.ldif'])
+        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
         process.communicate()
     finally:
         os.remove('_ou_users.ldif')

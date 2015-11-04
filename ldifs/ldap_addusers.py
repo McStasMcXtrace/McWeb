@@ -23,7 +23,7 @@ def ldap_adduser(dn, admin_password, uid, user_password='hest', uid_number=1001)
     ldif.write(cn_user)
     ldif.close()
     try:
-        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,dc=fysik,dc=dtu,dc=dk', '-f', '_cn_user.ldif'])
+        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_user.ldif'])
         process.communicate()
     finally:
         os.remove('_cn_user.ldif')
