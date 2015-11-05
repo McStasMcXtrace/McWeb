@@ -5,6 +5,5 @@ admin.autodiscover()
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^sim_file_upload/$', 'mcupload.views.sim_file_upload' , name='SimulationUpload'),
-    url(r'^sim_file_upload/upload_sim_file/$', 'mcupload.views.upload_sim_file', name='SimulationUpload'),
+    url(r'^upload_sim_file/$', 'mcupload.views.upload_sim_file', name='SimulationUpload'),
 ]

@@ -12,7 +12,7 @@
 {% block content %}
 <h1>Instrument File Upload</h1>
 
-<form enctype="multipart/form-data" method="POST" action=".">
+<form enctype="multipart/form-data" method="POST" action="/upload_sim_file/">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
     <ol>

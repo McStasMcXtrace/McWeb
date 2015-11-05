@@ -10,7 +10,7 @@ AUTH_LDAP_BIND_DN = ""
 AUTH_LDAP_BIND_PASSWORD = ""
 AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=fysik,dc=dtu,dc=dk", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
 AUTHENTICATION_BACKENDS = (
-    #'django_auth_ldap.backend.LDAPBackend',
+    #'django_auth_ldap.backend.LDAPBackend',     # this line implements the LDAP sign in
     'django.contrib.auth.backends.ModelBackend', # uncomment this line to enable local sign-on (django-db)
 )
 AUTH_USER_MODEL = ('auth.User')

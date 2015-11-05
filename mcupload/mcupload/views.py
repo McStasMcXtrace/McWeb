@@ -10,14 +10,6 @@ from sim_file_handler import shepherd, group_dirs
 # consts
 NONCE_NAME = 'csrfmiddlewaretoken'
 
-
-@templated('sim_file_upload')
-@only_safe
-def sim_file_upload(request):
-    upload_form = SimFileForm()
-    return upload_form.fields
-
-@only_unsafe
 def upload_sim_file(request):
     form = SimFileForm(request.POST, request.FILES)
     user = authenticate(username=form['username'], password=form['password'])
