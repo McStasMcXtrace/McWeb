@@ -15,7 +15,7 @@ NONCE_NAME = 'csrfmiddlewaretoken'
 @only_safe
 def sim_file_upload(request):
     upload_form = SimFileForm()
-    return upload_form
+    return upload_form.fields
 
 @only_unsafe
 def upload_sim_file(request):
