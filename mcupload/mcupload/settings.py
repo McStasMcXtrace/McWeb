@@ -1,13 +1,26 @@
 from os import path
+import ldap
+from django_auth_ldap.config import LDAPSearch
 BASE_DIR = path.dirname(path.dirname(__file__))
-
+#=============#
+# LDAP Config #
+#=============#
+AUTH_LDAP_SERVER_URI = "ldap://localhost"
+AUTH_LDAP_BIND_DN = ""
+AUTH_LDAP_BIND_PASSWORD = ""
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=fysik,dc=dtu,dc=dk", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+AUTHENTICATION_BACKENDS = (
+    #'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend', # uncomment this line to enable local sign-on (django-db)
+)
+AUTH_USER_MODEL = ('auth.User')
 #===============#
 # Django Config #
 #===============#
 # DJANGO_SETTINGS_MODULE = 'settings.py'
-SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'                    # THIS SHOULD BE SECRET! REGENERATE IT A LOT BECAUSE OF THE SERIALIZER USED. ----^
+SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'   # THIS SHOULD BE SECRET! REGENERATE IT A LOT BECAUSE OF THE SERIALIZER USED. ----^
 ALLOWED_HOSTS  = []
-DEBUG          = True # False                                                           <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false!!!!)
+DEBUG          = True # False                <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false!!!!)
 INSTALLED_APPS = (
     # mcApps #
     # ------ #
@@ -30,7 +43,7 @@ MIDDLEWARE_CLASSES = (
     # Admin Site #
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',     # Uncomment for clickjack protection
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 FILE_UPLOAD_PERMISSIONS = 0644
 #-----------------#
@@ -41,10 +54,10 @@ ADMINS     = (
     ('Mark Lewis', 'lewis@fysik.dtu.dk'),
     )
 MANAGERS   = ADMINS
-DB_LOCATION = '../mcweb/DB/mcwww.sqlite3'    # THIS NEEDS TO BE CHANGED SO THE USER CAN USE THE LDAP LOGIN
-DATABASES  = {                                                            # keys not read by sqlite removed.
+DB_LOCATION = '../DB/mcwww.sqlite3'
+DATABASES  = {
     'default': { 'ENGINE': 'django.db.backends.sqlite3',
-                 'NAME': path.join(BASE_DIR, DB_LOCATION),     # (sqlite3: NAME = path to db file)
+                 'NAME': path.join(BASE_DIR, DB_LOCATION),
                  }
     }
 #---------------#
@@ -70,12 +83,12 @@ TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates',
                            },
               }, ]
 STATIC_ROOT      = ''                       # Store custom static files in apps/static/ subdirectories and in STATICFILES_DIRS.
-STATIC_URL       = '/static/'               # URL prefix for static files.
-STATICFILES_DIRS = (                        # Absolute paths of static files.
+STATIC_URL       = '/static/'
+STATICFILES_DIRS = (
     BASE_DIR + '/static/',
     BASE_DIR + '/out/'
 )
-STATICFILES_FINDERS = (                     # Classes that find static files.
+STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
