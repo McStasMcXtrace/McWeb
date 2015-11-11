@@ -1,0 +1,33 @@
+<html>
+<head>
+<script language="javascript">
+<!--
+function OnButton1()
+{
+    document.Form1.action = "/moodle/login/index.php"    // First target
+    document.Form1.target = "iframe1";    // Open in a iframe
+    document.Form1.submit();        // Submit the page
+    document.Form1.action = "/login/try/"
+    document.Form1.target = "iframe2";    // Open in a iframe
+    document.Form1.submit();        // Submit the page
+    return true;
+}
+-->
+</script>
+</head>
+<body>
+<form name=Form1 action= "login1.php" method=post>
+Username <input type="text" name="username">
+Password <input type="password" name="password">
+<input type='hidden' name='csrfmiddlewaretoken' value='UyIcAfYJcopZgjeSdw70NuZsJnP6GlZV' />
+<input type="submit" value="Send" name="button1" 
+                     onclick="return OnButton1();">
+<br>
+<iframe NAME="iframe1" WIDTH="800" HEIGHT="160"></iframe>
+<br>
+<iframe NAME="iframe2" WIDTH="800" HEIGHT="160"></iframe>
+</body
+
+<!-- See https://www.mediawiki.org/wiki/API:Login wrt. to possible -->
+<!-- mediawiki solution -->
+
