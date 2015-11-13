@@ -9,7 +9,7 @@ def group_dirs():
     for group_dir_path, _, filenames in walk(current_sim_dir):
         for f in filenames:
             if f.endswith('.instr'):
-                group_tups =group_tups + ((group_dir_path.replace('../sim/', ''), group_dir_path),)
+                group_tups = group_tups + ((group_dir_path.replace('../sim/', ''), group_dir_path),)
                 break
     return group_tups
 
