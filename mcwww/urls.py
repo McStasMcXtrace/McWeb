@@ -9,22 +9,22 @@ RUNREF_RE='[\w\.:-]+'
 urlpatterns = patterns(
     '',
 
-    url(r'^login/$',     'mcwww.views.login_form' , name='login_form'),
-    url(r'^login/try/$', 'mcwww.views.loginPOST',   name='loginPOST'),
-    url(r'^logout/$',    'mcwww.views.logout_user', name='logout_user'),
+    url(r'^login/?$',     'mcwww.views.login_form' , name='login_form'),
+    url(r'^login/try/?$', 'mcwww.views.loginPOST',   name='loginPOST'),
+    url(r'^logout/?$',    'mcwww.views.logout_user', name='logout_user'),
 
-    url(r'^sim/latest/', 'mcsimulator.views.latest', name='latest'),
+    url(r'^sim/latest/?', 'mcsimulator.views.latest', name='latest'),
 
     url(r'^$', 'mcsimulator.views.home', name='home'),
 
-    url(r'^job/(?P<jobref>\w+)/$',        'mcsimulator.views.configure',     name='configure'),
-    url(r'^job/update/(?P<jobref>\w+)/$', 'mcsimulator.views.configurePOST', name='configurePOST'),
+    url(r'^job/(?P<jobref>\w+)/?$',        'mcsimulator.views.configure',     name='configure'),
+    url(r'^job/update/(?P<jobref>\w+)/?$', 'mcsimulator.views.configurePOST', name='configurePOST'),
 
-    url(r'^sim/(?P<jobref>\w+)/$', 'mcsimulator.views.simulatePOST', name='simulatePOST'),
+    url(r'^sim/(?P<jobref>\w+)/?$', 'mcsimulator.views.simulatePOST', name='simulatePOST'),
 
-    url(r'^status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
+    url(r'^status/(?P<runref>'+RUNREF_RE+')/?$', 'mcsimulator.views.status', name='status'),
 
-    url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
+    url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/?$', 'mcsimulator.views.status', name='status'),
     
     url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/(?P<compN>.+)', 'mcsimulator.views.status', name='status'),
 
@@ -39,5 +39,5 @@ urlpatterns = patterns(
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/?', include(admin.site.urls)),
 )
