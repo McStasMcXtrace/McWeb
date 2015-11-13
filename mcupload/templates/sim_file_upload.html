@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Instrument File Upload{% endblock %}
+{% block head_extra %}
+<style type="text/css">
+    p { color: #336699; }
+    div.centered {
+    margin: 10px 0px 10px 0px;
+    text-align: center;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<h1>Instrument File Upload</h1>
+
+<form enctype="multipart/form-data" method="POST" action="/upload_sim_file/">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <ol>
+        <li>
+            <label for=username>Username:</label>
+            <input type="text" name="username" id="username"><br/>
+
+            <label for=password>Password:</label>
+            <input type="password" name="password" id="password">
+        </li>
+    </ol>
+    <ol>
+        <li>
+            <label for=sim_file>Simulation File:</label>
+            <input type="file" value="sim_file" name="sim_file" id="sim_file"><br/>
+
+            <label for=group>Simulation Group:</label>
+            <input type="text" name="group" id="group">
+        </li>
+    </ol>
+    <input type="submit">
+
+</form>
+
+
+{% endblock %}
