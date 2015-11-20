@@ -1,0 +1,3 @@
+# m h  dom mon dow   command
+0-59/10	* * * * /home/mcroot/bin/sim_update.sh > /dev/null
+
