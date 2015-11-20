@@ -18,11 +18,11 @@
             document.Form.action = "/login/try/" ;
             document.Form.target = "iframe2" ;                    // Open in iframe2
             document.Form.submit() ;                              // Submit the page
-            document.Form.action = wikiauth(document.Form.username,
-                                            document.Form.password,
-                                            ) ;
-            document.Form.target = "iframe3" ;                    // Open in iframe3
-            document.Form.submit() ;                              // Submit the page
+//            document.Form.action = wikiauth(document.Form.username,
+//                                            document.Form.password,
+//                                            ) ;
+//            document.Form.target = "iframe3" ;                    // Open in iframe3
+//            document.Form.submit() ;                              // Submit the page
 
             return true;
         }
@@ -55,7 +55,7 @@ $(document).ready(function(){
 {% block content %}
   <h1>Login</h1>
 
-  <form name=Form method="POST" action="login1.php">
+  <form name=Form method="POST">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
     <ol>
@@ -73,6 +73,6 @@ $(document).ready(function(){
 
 <iframe type="hidden" NAME="iframe1" WIDTH="800" HEIGHT="160"></iframe><br>
 <iframe type="hidden" NAME="iframe2" WIDTH="800" HEIGHT="160"></iframe>
-<iframe type="hidden" NAME="iframe3" WIDTH="800" HEIGHT="160"></iframe>
+<!-- <iframe type="hidden" NAME="iframe3" WIDTH="800" HEIGHT="160"></iframe> -->
 
 {% endblock %}
