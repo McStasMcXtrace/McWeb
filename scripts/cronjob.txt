@@ -1,0 +1,2 @@
+# m h  dom mon dow   command
+0-59/10	* * * * /srv/mcweb/scripts/update_instr.sh

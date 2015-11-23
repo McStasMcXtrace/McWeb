@@ -1,4 +1,6 @@
 #!/bin/bash
+cd /srv/mcweb/McWeb
+
 OLD=$(cat checksum)
 
 find sim/ -type f -exec md5sum {} \; | sort -k 34 | md5sum | cut -d' ' -f1 > newchecksum
