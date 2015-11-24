@@ -30,6 +30,8 @@ def ldap_adduser(dn, admin_password, uid, user_password='hest', uid_number=1001)
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
+
+    # NOTE: use 'sudo slapcat | head -n1 | cut -d" " -f2' to get the dn
     
     with open(args.users_csv[0], 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
