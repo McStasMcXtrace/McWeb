@@ -14,7 +14,7 @@ if [ $OLD == $NEW ]; then
 elif [ $OLD != $NEW ]; then
 	echo sim folder checksum has changed, running updatesimulations.sh ...
 	echo
-	bin/update-simulations.sh
+	scripts/__compile_instr.sh
 	echo updating django instrument db ...
 	echo
 	python manage.py populate_db
