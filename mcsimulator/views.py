@@ -36,17 +36,15 @@
 #     admin accounts.               #
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
-
+from django.contrib.auth.models import Group
 from django.shortcuts import redirect
-from django.http import HttpResponse
 
 import os
 
-from mcsimulator.models import * # Will have to limit this import as going to build more DB objects that I don't want the std view to have access to.
+from mcsimulator.models import *
 from common import *
 
-from mcwww.settings import STATIC_URL, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
+from mcwww.settings import MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 NONCE_NAME = 'csrfmiddlewaretoken'
 
@@ -82,11 +80,7 @@ def convert_type(default, str_value):
 @login_required
 @only_safe
 def home(req):
-    sim = get_or_404(Simulation.objects.all()[:1])
-    job = Job.new(ref=new_key(), sim=sim)
-    job.save()
-
-    return redirect('configure', jobref=job.ref)
+    return redirect('configure', group='ISIS')
 
 #   configure()
 #  =============
@@ -105,10 +99,16 @@ def home(req):
 @login_required
 @only_safe
 @templated('mcsimulator/configure')
-def configure(req, jobref):
-    job = get_or_404(Job, ref=jobref)
-    sims = Simulation.objects.all().filter(simgroup__in=req.user.groups.values_list('name',flat=True))
-    return dict(job=job, jobid=job.ref, sims=sims, 
+def configure(req, group):
+    
+    sims = Simulation.objects.all().filter(simgroup__in = [group])
+    groups = Group.objects.all()
+    
+    sim = sims[:1]
+    job = Job.new(ref=new_key(), sim=sim[0])
+    job.save()
+    
+    return dict(job=job, jobid=job.ref, groupid=group, groups=groups, sims=sims, 
                 max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)
 
 #  configurePOST()
@@ -124,7 +124,7 @@ def configure(req, jobref):
 #
 @login_required
 @only_unsafe
-def configurePOST(req, jobref):
+def configurePOST(req, jobref, group):
     oks    = []
     errors = []
     #  ok()
@@ -160,6 +160,7 @@ def configurePOST(req, jobref):
 
     # lookup job
     ''' requesting Job model from database, should have been created in home() '''
+    #job = Job.new(ref=new_key(), sim=Simulation.objects.all().filter(simgroup__in = [group])[0])
     job = get_or_404(Job, ref=jobref)
 
     seed    = ok("seed",    seed,    lambda : abs(int(form['seed'])))

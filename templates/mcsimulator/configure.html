@@ -28,7 +28,7 @@
   <script type="text/javascript" src="{% static 'configure.js' %}"></script>
   <script language="javascript">
     var jobid = "{{ jobid }}";
-
+    var groupid = "{{ groupid }}";
     var max_samples = {{ max_samples }},
         max_npoints = {{ max_npoints }};
 
@@ -76,12 +76,15 @@
 
 
 
-  <form method=post action="/job/update/{{ jobid }}/"
-        onsubmit="return false;" id="form">
+  <form method=post action="/job/update/{{ jobid }}/{{ groupid }}/" onsubmit="return false;" id="form">
     {% csrf_token %}
 
     <fieldset>
-      <legend>Step 1: Select simulation</legend>
+      <legend>Step 1: Select simulation ({{ groupid }})</legend>
+      Available simulation sets: 
+      {% for group in groups %}
+        <a href="/job/{{ group }}">{{ group }}</a> 
+      {% endfor %}
       <ol>
         <li>
           <label for=sim class="forlabel">Choose simulation:</label>
@@ -124,10 +127,7 @@
     </fieldset>
 
     <fieldset>
-      <input type=submit id="btnSave"
-             value="Save" onclick="save();" />
-      <input type=submit id="btnRun" style="float:right"
-             value="Run this config!" onclick="run();" />
+      <input type=submit id="btnRun" style="float:right" value="Run this config!" onclick="run();" />
     </fieldset>
   </form>
   <br>
