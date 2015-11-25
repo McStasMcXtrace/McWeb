@@ -7,11 +7,11 @@ find sim/ -type f -exec md5sum {} \; | sort -k 34 | md5sum | cut -d' ' -f1 > new
 NEW=$(cat newchecksum)
 rm newchecksum
 
-if [ $OLD == $NEW ]; then
+if [ "$OLD" == $NEW ]; then
 	echo sim folder checksum has not changed, exiting.
 	echo
 	exit
-elif [ $OLD != $NEW ]; then
+elif [ "$OLD" != $NEW ]; then
 	echo sim folder checksum has changed, running updatesimulations.sh ...
 	echo
 	scripts/__compile_instr.sh
