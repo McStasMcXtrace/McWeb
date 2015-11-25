@@ -58,8 +58,6 @@ function update_defaults(sim) {
     // update documentation location
     $('#docLink').attr("href", "/doc/" + sim);
 
-    console.log(sim);
-    
     // update parameters
     var ps = $("#params");
     // clear old
@@ -178,10 +176,12 @@ function save(cb) {
         },
         error: function(xhr, reason) {
             if (reason == "timeout") {
-                alert("Timeout: Your session may have expired.\n" + "Refresh to try again (" + xhr.status + ")");
+                alert("Timeout! Your session may have expired.\n" +
+                      "Refresh page to login and try again (" + xhr.status + ")");
             } else {
                 // damn, what's up?
-                alert("Error response from server or django urls "miss"" + "(" + xhr.status + ")");
+                alert("An error occured while saving your stuff :/ " +
+                      "(" + xhr.status + ")");
             }
             btn.val("Not saved (error!)")
                 .attr("disabled", false)
@@ -196,7 +196,7 @@ function save(cb) {
 function run() {
     save(function(success) {
         if(!success) {
-            alert("Configuration contains errors");
+            alert("Configuration contains errors :/");
         } else {
             var nonce = $('input[name="csrfmiddlewaretoken"]');
             var form = $('<form />').attr({'target': '_blank',
@@ -205,8 +205,8 @@ function run() {
             $('#hiddenDiv').html(form);
             form.submit();
             $('#form').append(nonce);
-            
-			// jaga-151125: reload to get a new job DB instance required for new params config
+
+            // jaga-151125: reload to get a new job DB instance required for new params config
             window.location.reload();
         }
     });
@@ -242,3 +242,4 @@ function setLatest() {
         $('#latest').html('');
     }
 }
+
