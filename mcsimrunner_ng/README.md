@@ -16,7 +16,9 @@ To run, use in separate shells:
 # Requirements: 
 
 mcrun
+
 mcdisplay
+
 mcplot-gnuplot-py
 
 etc.
