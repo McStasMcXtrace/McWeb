@@ -58,11 +58,8 @@ function update_defaults(sim) {
     // update documentation location
     $('#docLink').attr("href", "/doc/" + sim);
 
-    console.log("update_defaults(sim), sim=" + sim);
-
     // update parameters
     var ps = $("#params");
-
     // clear old
     ps.html("");
 
@@ -105,7 +102,7 @@ function update_defaults(sim) {
         // choose between user value or default
         if (chosen[sim]        != undefined &&
             chosen[sim][param] != undefined) {
-	    // Remove spaces and brackets if present (occurs when 'reconfiguring' a scan)
+        // Remove spaces and brackets if present (occurs when 'reconfiguring' a scan)
             inp.val(chosen[sim][param].replace(/[\[\]\ ]+/g,''));
         } else {
             inp.val(defaults[sim][param]["value"]);
@@ -123,8 +120,6 @@ function update_defaults(sim) {
 
 
 function save(cb) {
-    console.log("save(cb)");
-
     // update button
     var btn = $("#btnSave");
 
@@ -154,7 +149,7 @@ function save(cb) {
     // save
     $.ajax({
         type: 'POST',
-        url: "/job/update/" + jobid + '/' + groupid + '/',
+        url: "/job/update/" + jobid + '/',
         data: data,
         dataType: "json",
         timeout: 5000,
@@ -210,9 +205,6 @@ function run() {
             $('#hiddenDiv').html(form);
             form.submit();
             $('#form').append(nonce);
-
-            // jaga-151125: reload to get a new job DB instance required for new params config
-            window.location.reload();
         }
     });
 }
@@ -247,4 +239,3 @@ function setLatest() {
         $('#latest').html('');
     }
 }
-
