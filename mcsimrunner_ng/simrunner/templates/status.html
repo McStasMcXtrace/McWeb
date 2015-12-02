@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>simrunner</title>
+    <meta http-equiv="refresh" content="{{ refresh_rate }}" />
+</head>
+<body>
+    <h3>{{ instr_displayname }}</h3>
+    <fieldset>
+        <legend>Simulation run info</legend>
+        <p><strong>status:</strong> {{ status }}</p>
+        <p><strong>created:</strong> {{ date_time_created }}</p>
+        <p><strong>completed:</strong> {{ date_time_completed }}</p>
+    </fieldset>
+
+    <fieldset>
+        <legend>Configuration</legend>
+        <p><strong>neutron rays:</strong> {{ neutrons }}<p>
+        <p><strong>random seed:</strong> {{ seed }}</p>
+        <p><strong>simulation steps:</strong> {{ scanpoints }}</p>
+        <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
+    </fieldset>
+
+    <fieldset style="visibility: {{ data_visibility }}">
+        <legend>Data plots (<a href="{{ lin_log_url }}">click here for {{ lin_log }}-scale</a>)</legend>
+        {% for f in plot_files %}
+        <img src="../{{ f }}"/>
+        {% endfor %}
+    </fieldset>
+
+    <fieldset style="visibility: {{ data_visibility }}">
+        <legend>Instrument layout</legend>
+        {% load static from staticfiles %}
+        <img src="../{{ data_folder }}/layout.png"/>
+    </fieldset>
+</body>

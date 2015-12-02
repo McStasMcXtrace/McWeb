@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>simrunner</title>
+</head>
+<body>
+    <form method=post action="/startsim" target="_blank">
+    {% csrf_token %}
+        <input type="hidden" name="group_name" value="{{ group_name }}">
+        <input type="hidden" name="instr_displayname" value="{{ instr_displayname }}">
+        <input type="hidden" name="params_jsonified" value="{{ params_jsonified }}">
+
+        <fieldset>
+            <legend>Browse instrument groups</legend>
+            <ul>
+                {% for g in group_names %}
+                <li>
+                    <a href="/instrument/{{ g }}">{{ g }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </fieldset>
+
+        <fieldset>
+            <legend>Instruments in {{ group_name }}</legend>
+            <ul>
+                {% for i in instr_displaynames %}
+                <li>
+                    <a href="/instrument/{{ group_name }}/{{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </fieldset>
+
+        <fieldset>
+            <legend>{{ instr_displayname }}</legend>
+            <ul>
+                {% for p in params %}
+                <li>
+                    <label>{{ p.0 }}:
+                        <input type="text" name="{{ p.0 }}" value="{{ p.1 }}">
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+        </fieldset>
+
+        <fieldset>
+            <legend>Runtime configuration</legend>
+            <ul>
+                <li>
+                    <label>neutron rays:
+                        <input type="text" name="neutrons" value="{{ neutrons }}"/>
+                    </label>
+                </li>
+                <li>
+                    <label>simulation steps:
+                         <input type="text" name="scanpoints" value="{{ scanpoints }}"/>
+                    </label>
+                </li>
+                <li>
+                    <label>random seed:
+                        <input type="text" name="seed" value="{{ seed }}"/>
+                    </label>
+                </li>
+            </ul>
+        </fieldset>
+
+        <fieldset>
+            <legend>Start simulation run</legend>
+            <input type="submit" style="float:right" value="Run"/>
+        </fieldset>
+    </form>
+</body>
+</html>

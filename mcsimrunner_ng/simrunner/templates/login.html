@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>simrunner</title>
+</head>
+<body>
+    <form method="POST" action="/login">
+    {% csrf_token %}
+        <fieldset>
+            <legend>Login</legend>
+            <ul>
+                <li>
+                    <label>Username:
+                        <input type="text" name="username">
+                    </label>
+                </li>
+                <li>
+                    <label>Password:
+                        <input type="password" name="password">
+                    </label>
+                </li>
+            </ul>
+        </fieldset>
+
+        </fieldset>
+            <input type="submit" style="float:right" value="Login">
+        </fieldset>
+    </form>
+</body>
+</html>
