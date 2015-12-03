@@ -24,13 +24,19 @@
     <fieldset style="visibility: {{ data_visibility }}">
         <legend>Data plots (<a href="{{ lin_log_url }}">click here for {{ lin_log }}-scale</a>)</legend>
         {% for f in plot_files %}
-        <img src="../{{ f }}"/>
+        <img src="/{{ f }}"/>
         {% endfor %}
     </fieldset>
 
     <fieldset style="visibility: {{ data_visibility }}">
         <legend>Instrument layout</legend>
-        {% load static from staticfiles %}
-        <img src="../{{ data_folder }}/layout.png"/>
+        <img src="/{{ data_folder_rel }}/layout.png"/>
+    </fieldset>
+
+    <fieldset style="visibility: {{ data_visibility }}">
+        <legend>Download output files</legend>
+        <a href="/{{ data_folder_rel }}/simrun.tar.gz">simrun.tar.gz</a>
+        <a href="/{{ data_folder_rel }}/stdout.txt">stdout.txt</a>
+        <a href="/{{ data_folder_rel }}/stderr.txt">stderr.txt</a>
     </fieldset>
 </body>

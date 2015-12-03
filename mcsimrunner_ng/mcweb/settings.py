@@ -107,7 +107,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-
-# used in deplotyment setup and for running the command "collectstatic"
-# (required for deployment and admin site)
-STATIC_ROOT = os.path.join(BASE_DIR,  "static")
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
+STATIC_ROOT = os.path.join(BASE_DIR)

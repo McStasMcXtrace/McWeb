@@ -167,7 +167,7 @@ def mcrun(simrun, print_mcrun_output=False):
 def init_processing(simrun):
     ''' creates data folder, copies instr files and updates simrun object '''
     try: 
-        simrun.data_folder = os.path.join(os.path.join(STATIC_ROOT, DATA_DIRNAME), simrun.__str__())
+        simrun.data_folder = os.path.join(os.path.join(STATIC_ROOT, STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
         os.mkdir(simrun.data_folder)
         simrun.save()
         
@@ -246,7 +246,7 @@ class Command(BaseCommand):
         
         # ensure data output dir exists: 
         try:
-            data_basedir = os.path.join(STATIC_ROOT, DATA_DIRNAME)
+            data_basedir = os.path.join(STATIC_ROOT, STATIC_URL.lstrip('/'), DATA_DIRNAME)
             if not os.path.exists(data_basedir):
                 os.mkdir(data_basedir)
         except:

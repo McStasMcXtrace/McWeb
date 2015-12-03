@@ -5,6 +5,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from models import InstrGroup, Instrument, SimRun
 import json
+from os.path import basename, join
+from mcweb.settings import DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, STATIC_URL
 
 def home(req):
     return render(req, template_name='login.html')
@@ -75,10 +77,6 @@ def instrument_post(req):
     simrun.save()
     return redirect('simrun', sim_id=simrun.id)
 
-def simrun_lin(req, sim_id):
-    ''' used for viewing lin scale images '''
-    return simrun(req, sim_id=sim_id, scale='lin')
-
 def simrun_log(req, sim_id):
     ''' used for viewing lin scale images '''
     return simrun(req, sim_id=sim_id, scale='log')
@@ -87,29 +85,34 @@ def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id) 
     
+    # lin / log stuff
+    plot_files = simrun.plot_files
     new_scale = 'log'
+    lin_log_url = '/simrun-log/%s/' % sim_id
     if scale == 'log':
+        plot_files = simrun.plot_files_log
+        lin_log_url = '/simrun/%s/' % sim_id
         new_scale = 'lin'
     
     time_complete = 'n/a'
     if simrun.complete:
         time_complete = simrun.complete.strftime("%H:%M")
-    
-    lin_log_url = '/sim/%s/%s' % (sim_id, new_scale)
-    
+        
     # TODO: impl data-visible and refresh meta-tag properly using template inheritance
     data_visibility = 'hidden'
     refresh_rate = 4
+    data_folder_rel = ''
     if simrun.complete:
         data_visibility = 'visible'
         refresh_rate = 3600
+        data_folder_rel = join(STATIC_URL.lstrip('/'), DATA_DIRNAME, basename(simrun.data_folder))
     
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
                                        'date_time_created': simrun.created.strftime("%H:%M %d/%m %Y"), 'date_time_completed': time_complete, 
                                        'status': simrun.status, 'data_visibility': data_visibility, 'refresh_rate': refresh_rate,
-                                       'data_folder': simrun.data_folder, 'lin_log': new_scale, 'lin_log_url': lin_log_url,
-                                       'plot_files': simrun.plot_files})
+                                       'data_folder_rel': data_folder_rel, 'lin_log': new_scale, 'lin_log_url': lin_log_url,
+                                       'plot_files': plot_files})
 
 
 
