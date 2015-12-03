@@ -108,9 +108,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# used in deplotyment setup
+# used in deplotyment setup and for running the command "collectstatic"
+# (required for deployment and admin site)
 STATIC_ROOT = os.path.join(BASE_DIR,  "static")
-
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
-)
