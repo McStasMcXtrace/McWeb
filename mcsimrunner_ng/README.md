@@ -13,7 +13,15 @@ To run, use in separate shells:
         $ python manage.py runworker
         $ python manage.py runserver
 
-# Requirements: 
+# admin site (and deployment)
+
+In order to get css, js and so on (static files and content) working on the admin site, and in deployment, run:
+
+        $ python manage.py collectstatic
+
+Say "yes" to overwrite existing files. Static content should either be hosted in apps, and will be copied to a subfolder by that name.
+
+# requirements: 
 
 mcrun
 
