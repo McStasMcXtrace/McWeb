@@ -80,4 +80,4 @@ class SimRun(Model):
             return 'init'
     
     def __str__(self):
-        return "%s_%s_%s" % (self.owner_username, self.instr_displayname, str(self.created.strftime("%Y-%m-%d_%H:%M:%S")))
+        return "%s_%s_%s" % (self.owner_username, self.instr_displayname, str(self.created.strftime("%Y%m%d_%H%M%S")))

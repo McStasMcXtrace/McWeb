@@ -7,19 +7,31 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
+from mcweb.settings import STATIC_URL, STATIC_ROOT, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME
 import subprocess
 import os
 import time
+import shutil
+import tarfile
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun fail '''
     pass
 
+def maketar(simrun):
+    try: 
+        with tarfile.open(os.path.join(simrun.data_folder, 'simrun.tar.gz'), "w:gz") as tar:
+            tar.add(simrun.data_folder, arcname=os.path.basename(simrun.data_folder))
+    except:
+        raise Exception('tarfile fail')
+    
 def mcplot(simrun, print_mcplot_output=False):
     ''' generates plots from simrun output data '''
-    allfiles = [f for f in os.listdir(simrun.data_folder) if os.path.isfile(os.path.join(simrun.data_folder, f))]
+    outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
+    
+    allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
     datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
-    datfiles = map(lambda f: os.path.join(simrun.data_folder, f), datfiles_nodir)
+    datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
     plot_files = []
     
     for f in datfiles: 
@@ -35,20 +47,42 @@ def mcplot(simrun, print_mcplot_output=False):
             if (stderrdata is not None) and (stderrdata != ''):
                 raise Exception('mcplot error: %s' % stderrdata)
         
-        p = os.path.splitext(f)[0] + '.png'
+        p = os.path.basename(f)
+        p = os.path.splitext(p)[0] + '.png'
+        p = os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME, os.path.basename(simrun.data_folder), MCRUN_OUTPUT_DIRNAME, p)
+        
         print('plot: %s' % p)
-    
         plot_files.append(p)
     
     simrun.plot_files = plot_files
     simrun.save()
 
+def clear_c_out_files(simrun):
+    ''' removes .c and .out files from simrun data dir (NOTE: data dir should exists else exception). '''
+    try: 
+        dataf = simrun.data_folder
+        dname = simrun.instr_displayname
+        
+        f_c = dataf + '/' + dname + '.c'
+        if os.path.exists(f_c) or os.path.exists(f_c):
+            os.remove(f_c)
+        f_out = dataf + '/' + dname + '.out'
+        if os.path.exists(f_out) or os.path.exists(f_out):
+            os.remove(f_out)
+        
+    except Exception as e:
+        raise Exception('clear_c_out_files: error clearing directory (%s)' % e.__str__())
+
 def mcdisplay(simrun, print_mcdisplay_output=False):
     ''' uses mcdisplay to generate layout.png and moves this file to simrun.data_folder '''
-    cmd = 'mcdisplay -png --multi %s -n1 ' % (simrun.instr_filepath)
+    # assemble command (WARNING: mcdisplay dont like abs paths, therefore we assume project root and assemble relpath)
+    static_dirname = STATIC_URL.lstrip('/')
+    instr_relpath = '%s/%s.instr' % (os.path.join(static_dirname, DATA_DIRNAME, os.path.basename(simrun.data_folder)), simrun.instr_displayname)
+    cmd = 'mcdisplay -png --multi %s -n1 ' % (instr_relpath)
     for p in simrun.params:
         cmd = cmd + ' %s=%s' % (p[0], p[1])
     
+    # start mcdisplay process, wait
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -70,9 +104,11 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
 
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
-    # assemble the run command 
-    # NOTE: if we wanted e.g. "mpi=4", then that goes before instr_filepath
-    runstr = 'mcrun ' + simrun.instr_filepath + ' -d ' + simrun.data_folder
+    # sanity reset    
+    clear_c_out_files(simrun)
+    
+    # assemble the run command (NOTE: if we wanted e.g. "mpi=4", then that goes before instr_filepath).
+    runstr = 'mcrun ' + simrun.instr_filepath + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     runstr = runstr + ' -N ' + str(simrun.scanpoints)
     if simrun.seed > 0:
@@ -88,27 +124,36 @@ def mcrun(simrun, print_mcrun_output=False):
                                shell=True)
     
     # TODO: implement a timeout (max simulation time)
-    (stdoutdata, stderrdata) = process.communicate()
-    if print_mcrun_output:
-        print(stdoutdata)
-        if (stderrdata is not None) and (stderrdata != ''):
-            print(stderrdata)
+    (stdout, stderr) = process.communicate()
+    
+    o = open('%s/stdout.txt' % simrun.data_folder, 'w')
+    o.write(stdout)
+    o.close()
+    e = open('%s/stderr.txt' % simrun.data_folder, 'w')
+    e.write(stderr)
+    e.close()
     
     if process.returncode != 0:
-        raise Exception('Instrument compile error.')
+        raise Exception('Instrument run failure (see stdout and stderr in data dir).')
     
     print('data: %s' % simrun.data_folder)
 
-def create_instr_filepath(instr_basedir, group_name, instr_displayname):
-    ''' constructs and returns full instrument filepath (system is tested for relative paths) '''
-    return '%s/%s/%s.instr' % (instr_basedir, group_name, instr_displayname)
-
-def get_data_folderpath(subfolder, basefolder):
-    ''' checks if basefolder exists, returns data folder (does not create it) '''
-    if not os.path.exists(basefolder):
-        raise ExitException('Base output folder %s does not exist, exiting.' % basefolder)
-    
-    return os.path.join(basefolder, subfolder) 
+def init_processing(simrun):
+    ''' creates data folder, copies instr files and updates simrun object '''
+    try: 
+        simrun.data_folder = os.path.join(os.path.join(STATIC_ROOT, DATA_DIRNAME), simrun.__str__())
+        os.mkdir(simrun.data_folder)
+        simrun.save()
+        
+        instr_source = '%s/%s/%s.instr' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
+        instr = '%s/%s.instr' % (simrun.data_folder, simrun.instr_displayname)
+        shutil.copyfile(instr_source, instr)
+        
+        simrun.instr_filepath = instr
+        simrun.save()
+        
+    except Exception as e: 
+        raise Exception('init_processing failed with msg: %s' % e.__str__())
 
 def check_age(simrun, max_mins):
     ''' checks simrun age: raises an exception if age is greater than max_mins. (Does not alter object simrun.) '''
@@ -134,14 +179,15 @@ def work():
             check_age(simrun, max_mins=30)
             
             # init processing
-            simrun.data_folder = get_data_folderpath(simrun.__str__(), 'out')
-            simrun.instr_filepath = create_instr_filepath('sim', simrun.group_name, simrun.instr_displayname)
-            simrun.save()
+            init_processing(simrun)
             
             # process
             mcrun(simrun)
             mcdisplay(simrun)
             mcplot(simrun)
+            
+            # post-processing
+            maketar(simrun)
             
             # finish
             simrun.complete = timezone.now()
@@ -154,9 +200,9 @@ def work():
                 exit()
 
             simrun.failed = timezone.now()
-            simrun.fail_str = e.message
+            simrun.fail_str = e.__str__()
             simrun.save()
-            print('simrun fail: %s') % e.message
+            print('simrun fail: %s') % e.__str__()
     
     if len(simrun_set) > 0:
         print("idle...")
@@ -171,7 +217,15 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         ''' implements main execution loop and debug run '''
-
+        
+        # ensure data output dir exists: 
+        try:
+            data_basedir = os.path.join(STATIC_ROOT, DATA_DIRNAME)
+            if not os.path.exists(data_basedir):
+                os.mkdir(data_basedir)
+        except:
+            raise ExitException('Could not find or create base data folder, exiting (%s).' % data_basedir)            
+            
         # debug run
         if options['debug']:
             work()

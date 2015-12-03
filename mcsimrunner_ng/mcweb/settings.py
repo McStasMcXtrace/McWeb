@@ -10,11 +10,19 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# folder containing subfolders (aka "groups") containing instruments
+SIM_DIR = os.path.join(BASE_DIR, 'sim')
+
+# data dir is located within static root
+DATA_DIRNAME = 'data'
+
+# applied as mcrun -d parameter in runworker
+MCRUN_OUTPUT_DIRNAME = 'mcstas'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -27,9 +35,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -100,8 +106,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/out/'
+STATIC_URL = '/static/'
+
+# used in deplotyment setup
+STATIC_ROOT = os.path.join(BASE_DIR,  "static")
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR, "out"),
 )
