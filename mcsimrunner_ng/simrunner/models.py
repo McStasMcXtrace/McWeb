@@ -53,7 +53,8 @@ class SimRun(Model):
     
     data_folder = CharField(max_length=200, blank=True, null=True)
     instr_filepath = CharField(max_length=200, blank=True, null=True)
-    plot_files_str = CharField(max_length=1000, default='[]')
+    plot_files_str = CharField(max_length=2000, default='[]')
+    plot_files_log_str = CharField(max_length=2000, default='[]')
     
     @property
     def plot_files(self):
@@ -61,6 +62,13 @@ class SimRun(Model):
     @plot_files.setter
     def plot_files(self, pf):
         self.plot_files_str = json.dumps(pf)
+    
+    @property
+    def plot_files_log(self):
+        return json.loads(self.plot_files_log_str)
+    @plot_files_log.setter
+    def plot_files_log(self, pf):
+        self.plot_files_log_str = json.dumps(pf)
     
     @property
     def params(self):

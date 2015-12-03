@@ -15,10 +15,11 @@ import shutil
 import tarfile
 
 class ExitException(Exception):
-    ''' used to signal a runworker shutdown, rather than a simrun fail '''
+    ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
     pass
 
 def maketar(simrun):
+    ''' makes the tar-file for download from the status page '''
     try: 
         with tarfile.open(os.path.join(simrun.data_folder, 'simrun.tar.gz'), "w:gz") as tar:
             tar.add(simrun.data_folder, arcname=os.path.basename(simrun.data_folder))
@@ -32,7 +33,10 @@ def mcplot(simrun, print_mcplot_output=False):
     allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
     datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
     datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+    
     plot_files = []
+    plot_files_log = []
+    plot_dir = os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME, os.path.basename(simrun.data_folder), MCRUN_OUTPUT_DIRNAME)
     
     for f in datfiles: 
         cmd = 'mcplot-gnuplot-py -s %s' % f
@@ -49,12 +53,34 @@ def mcplot(simrun, print_mcplot_output=False):
         
         p = os.path.basename(f)
         p = os.path.splitext(p)[0] + '.png'
-        p = os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME, os.path.basename(simrun.data_folder), MCRUN_OUTPUT_DIRNAME, p)
+        p = os.path.join(plot_dir, p)
         
         print('plot: %s' % p)
         plot_files.append(p)
     
+    # NOTE: the following only works with mcplot-gnuplot-py
+    for f in datfiles: 
+        cmd = 'mcplot-gnuplot-py -l -s %s' % f
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=True)
+        (stdoutdata, stderrdata) = process.communicate()
+        
+        if print_mcplot_output:
+            print(stdoutdata)
+            if (stderrdata is not None) and (stderrdata != ''):
+                raise Exception('mcplot error: %s' % stderrdata)
+        
+        p = os.path.basename(f)
+        p = os.path.splitext(p)[0] + '_log.png'
+        p = os.path.join(plot_dir, p)
+        
+        print('plot: %s' % p)
+        plot_files_log.append(p)
+    
     simrun.plot_files = plot_files
+    simrun.plot_files_log = plot_files_log
     simrun.save()
 
 def clear_c_out_files(simrun):
