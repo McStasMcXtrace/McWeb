@@ -19,7 +19,7 @@ In order to get css, js and so on (static files and content) working on the admi
 
         $ python manage.py collectstatic
 
-Say "yes" to overwrite existing files. Static content should either be hosted in apps, and will be copied to a subfolder by that name.
+Say "yes" to overwrite existing files. Static content should either be hosted in apps, in which case files will be copied to a subfolder by that name, or at another location in the static dir (for generic, project-wide static files).
 
 # requirements: 
 
