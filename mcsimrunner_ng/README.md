@@ -8,7 +8,9 @@ To install,  use:
 
 The collect_instr command populates the db with groups and instruments based on the sim folder. To re-create based on another set of folders with instruments, first use the admin interface to delete all InstrGroup and Instrument objects. This will not require any SimRun objects to be deleted, but they may no longer refer to existing instrument objects or files.
 
-To run, use in separate shells:
+NOTE: When updating database schemes (models.py files), run 'python manage.py makemigrations \<app\>' and commit the migration file, stored in \<app\>/migrations. This process is designed make 'migrate', as used above, work for all.
+
+To run, use (in separate shells, to monitor stdout):
 
         $ python manage.py runworker
         $ python manage.py runserver
@@ -28,5 +30,3 @@ mcrun
 mcdisplay
 
 mcplot-gnuplot-py
-
-etc.
