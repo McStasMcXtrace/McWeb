@@ -130,7 +130,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
 
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
-    # sanity reset    
+    # sanity reset
     clear_c_out_files(simrun)
     
     # assemble the run command (NOTE: if we wanted e.g. "mpi=4", then that goes before instr_filepath).
@@ -144,6 +144,7 @@ def mcrun(simrun, print_mcrun_output=False):
     
     print('simrun (%s)...' % runstr)
     
+    # TODO: , cwd=os.path.join('sim', instr_grp)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
