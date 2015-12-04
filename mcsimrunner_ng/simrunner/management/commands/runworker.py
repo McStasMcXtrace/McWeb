@@ -125,16 +125,11 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         print(stdoutdata)
         if (stderrdata is not None) and (stderrdata != ''):
             print(stderrdata)
-<<<<<<< HEAD
     if print_mcdisplay_output:
         print(stdoutdata2)
         if (stderrdata2 is not None) and (stderrdata2 != ''):
             print(stderrdata2)    
-    oldfilename = '%s.out.png' % os.path.splitext(simrun.instr_filepath)[0]
-=======
-    
     oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
->>>>>>> removed "instr_filepath" from models.SimRun
     newfilename = os.path.join(simrun.data_folder, 'layout.png')
     oldwrlfilename = 'mcdisplay_commands.wrl'
     newwrlfilename = os.path.join(simrun.data_folder, 'layout.wrl')
