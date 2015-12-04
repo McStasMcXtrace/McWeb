@@ -37,14 +37,17 @@ def make_html_docs(group):
     (stdoutdata, stderrdata) = process.communicate()
         
 def get_group_instrs(basedir):
-    ''' returns a dict of {group: [instr_files]}, assuming depth of one from basedir '''
+    ''' returns a dict of {group: [instr_files]}, assuming depth of one from basedir NOTE: "datafiles" is omited '''
     files_instr = []
     grp_instr = {}
     i = 0
     for (dirpath, dirname, files) in os.walk(basedir):
         if i == 0: 
             for d in dirname:
-                grp_instr[d] = [] 
+                if not d == 'datafiles':
+                    grp_instr[d] = []
+                else:
+                    print('avoiding folder: datafiles')
     
         for f in files:
             if os.path.splitext(f)[1] == '.instr':
@@ -64,7 +67,8 @@ def get_instr_params(instr_grp, instr_file):
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
-                               shell=True, cwd=os.path.join('sim', instr_grp))
+                               shell=True, 
+                               cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
         raise Exception('instrument compile error.')
@@ -73,7 +77,8 @@ def get_instr_params(instr_grp, instr_file):
     process2 = subprocess.Popen(cmd2, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
-                               shell=True, cwd=os.path.join('sim', instr_grp))
+                               shell=True, 
+                               cwd=os.path.join('sim', instr_grp))
     (stdoutdata2, stderrdata2) = process2.communicate()
     
     if process.returncode != 0:
@@ -106,20 +111,20 @@ class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
     
     def handle(self, *args, **options):
-        grp_instr = get_group_instrs('sim/')
+        print 'collecting instruments one depth in sim/...'
         
+        grp_instr = get_group_instrs('sim/')
         for g in grp_instr:
             try:
                 group = InstrGroup.objects.get(name=g)
-                print "group %s" % g
+                print "group %s exists in db" % g
             except InstrGroup.DoesNotExist:
                 group = InstrGroup(name=g)
-                print "group %s created" % g
                 group.save()
-                print "group %s saved" % g
+                print "group %s created" % g
         
             mkdir_p( "static/doc/%s" % g )
-            print "Updating doc folder static/doc/%s" % g
+            print "doc folder static/doc/%s touched" % g
             
             try:
                 make_html_docs(g)
@@ -131,6 +136,7 @@ class Command(BaseCommand):
                 name = g + "_" + i
                 try: 
                     instr = Instrument.objects.get(name=name)
+                    print "instrument %s exists in db" % i
                 except Instrument.DoesNotExist:    
                     instr = Instrument(group=group, name=name, displayname=displayname)
                     print "instrument %s created" % i
@@ -138,6 +144,6 @@ class Command(BaseCommand):
                 # update instr params
                 instr.params = get_instr_params(g, i)
                 instr.save()
-                print "instrument %s saved" % i
+                print "instrument %s params updated" % i
                 
-        print 'collect_instr run done'
+        print 'collect_instr done.'
