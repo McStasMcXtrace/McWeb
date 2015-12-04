@@ -7,7 +7,7 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, STATIC_ROOT, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME
 import subprocess
 import os
 import time
@@ -182,7 +182,7 @@ def mcrun(simrun, print_mcrun_output=False):
 def init_processing(simrun):
     ''' creates data folder, copies instr files and updates simrun object '''
     try: 
-        simrun.data_folder = os.path.join(os.path.join(STATIC_ROOT, STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
+        simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
         os.mkdir(simrun.data_folder)
         simrun.save()
         
@@ -261,7 +261,7 @@ class Command(BaseCommand):
         
         # ensure data output dir exists: 
         try:
-            data_basedir = os.path.join(STATIC_ROOT, STATIC_URL.lstrip('/'), DATA_DIRNAME)
+            data_basedir = os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME)
             if not os.path.exists(data_basedir):
                 os.mkdir(data_basedir)
         except:
