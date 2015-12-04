@@ -125,11 +125,16 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         print(stdoutdata)
         if (stderrdata is not None) and (stderrdata != ''):
             print(stderrdata)
+<<<<<<< HEAD
     if print_mcdisplay_output:
         print(stdoutdata2)
         if (stderrdata2 is not None) and (stderrdata2 != ''):
             print(stderrdata2)    
     oldfilename = '%s.out.png' % os.path.splitext(simrun.instr_filepath)[0]
+=======
+    
+    oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
+>>>>>>> removed "instr_filepath" from models.SimRun
     newfilename = os.path.join(simrun.data_folder, 'layout.png')
     oldwrlfilename = 'mcdisplay_commands.wrl'
     newwrlfilename = os.path.join(simrun.data_folder, 'layout.wrl')
@@ -147,8 +152,9 @@ def mcrun(simrun, print_mcrun_output=False):
     # sanity reset
     clear_c_out_files(simrun)
     
-    # assemble the run command (NOTE: if we wanted e.g. "mpi=4", then that goes before instr_filepath).
-    runstr = 'mcrun ' + simrun.instr_filepath + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
+    # assemble the run command (NOTE: if we wanted e.g. "mpi=4"
+    instr = os.path.join(simrun.data_folder, simrun.instr_displayname)
+    runstr = 'mcrun ' + instr + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     runstr = runstr + ' -N ' + str(simrun.scanpoints)
     if simrun.seed > 0:
@@ -186,15 +192,13 @@ def init_processing(simrun):
         os.mkdir(simrun.data_folder)
         simrun.save()
         
+        # copy instrument from sim folder to simrun data folder 
         instr_source = '%s/%s/%s.instr' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
         instr = '%s/%s.instr' % (simrun.data_folder, simrun.instr_displayname)
         shutil.copyfile(instr_source, instr)
         
-        simrun.instr_filepath = instr
-        simrun.save()
-        
     except Exception as e: 
-        raise Exception('init_processing failed with msg: %s' % e.__str__())
+        raise Exception('init_processing failed: %s' % e.__str__())
 
 def check_age(simrun, max_mins):
     ''' checks simrun age: raises an exception if age is greater than max_mins. (Does not alter object simrun.) '''
