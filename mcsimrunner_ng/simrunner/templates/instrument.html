@@ -32,13 +32,20 @@
             </ul>
         </fieldset>
 
+	<fieldset>
+             <legend><a href="/static/doc/{{ group_name }}/{{ instr_displayname }}.html" target=_blank>{{ instr_displayname }} documentation</a></legend>
+	     {{ instr_image }}
+	     {{ instr_infostring }}
+        </fieldset>
+
         <fieldset>
             <legend>{{ instr_displayname }}</legend>
             <ul>
                 {% for p in params %}
                 <li>
-                    <label>{{ p.0 }}:
-                        <input type="text" name="{{ p.0 }}" value="{{ p.1 }}">
+                    <label>{{ p.0 }} {{p.2}} :
+                      <input type="text" name="{{ p.0 }}" value="{{ p.1 }}">
+		      {{ p.3 }}
                     </label>
                 </li>
                 {% endfor %}
