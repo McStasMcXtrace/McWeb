@@ -26,62 +26,119 @@ def maketar(simrun):
     except:
         raise Exception('tarfile fail')
     
+def plot_file(f, log=False):
+    cmd = 'mcplot-gnuplot-py -s %s' % f
+    if log:
+        cmd = 'mcplot-gnuplot-py -l -s %s' % f
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               shell=True)
+    (stdoutdata, stderrdata) = process.communicate()
+    return (stdoutdata, stderrdata)
+    
 def mcplot(simrun, print_mcplot_output=False):
     ''' generates plots from simrun output data '''
-    outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
-    
-    allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
-    datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
-    datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
-    
-    plot_files = []
-    plot_files_log = []
-    plot_dir = os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME, os.path.basename(simrun.data_folder), MCRUN_OUTPUT_DIRNAME)
-    
-    for f in datfiles: 
-        cmd = 'mcplot-gnuplot-py -s %s' % f
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   shell=True)
-        (stdoutdata, stderrdata) = process.communicate()
+    try:
+        if simrun.scanpoints > 1:
+            plot_files = []
+            plot_files_log = []
+            
+            # plot and store mccode.dat NOTE: the special case, mccode.png should be taken care of in the view, although this is kinda bad practice
+            f = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, 'mccode.dat')
+            plot_file(f)
+            plot_file(f, log=True)
+            p = os.path.basename(f)
+            p = os.path.splitext(p)[0] + '.png'
+            p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
+            plot_files.append(p)
+            p_log = os.path.basename(f)
+            p_log = os.path.splitext(p_log)[0] + '.png'
+            p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, p_log)
+            plot_files_log.append(p_log)
+            print('plot_linlog: %s' % p)
+            
+            for i in range(simrun.scanpoints):
+                outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
+                
+                allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
+                datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
+                datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+                
+                for f in datfiles:
+                    plot_file(f)
+                    plot_file(f, log=True)
+                    
+                    p = os.path.basename(f)
+                    p = os.path.splitext(p)[0] + '.png'
+                    p = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p)
+                    p_log = os.path.basename(f)
+                    p_log = os.path.splitext(p_log)[0] + '.png'
+                    p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p_log)
+                    
+                    if i == 0:
+                        print('plot_linlog: %s' % p)
+                        plot_files.append(p)
+                        plot_files_log.append(p_log)
+                
+                print('plot_linlog (scanpoint index %d)...' % i)
+        else:
+            outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
+            
+            allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
+            datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
+            datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+            
+            plot_files = []
+            plot_files_log = []
         
-        if print_mcplot_output:
-            print(stdoutdata)
-            if (stderrdata is not None) and (stderrdata != ''):
-                raise Exception('mcplot error: %s' % stderrdata)
+            for f in datfiles: 
+                cmd = 'mcplot-gnuplot-py -s %s' % f
+                process = subprocess.Popen(cmd,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE,
+                                           shell=True)
+                (stdoutdata, stderrdata) = process.communicate()
+                
+                if print_mcplot_output:
+                    print(stdoutdata)
+                    if (stderrdata is not None) and (stderrdata != ''):
+                        raise Exception('mcplot error: %s' % stderrdata)
+                
+                p = os.path.basename(f)
+                p = os.path.splitext(p)[0] + '.png'
+                p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
+                
+                print('plot: %s' % p)
+                plot_files.append(p)
+            
+            # NOTE: the following only works with mcplot-gnuplot-py
+            for f in datfiles: 
+                cmd = 'mcplot-gnuplot-py -l -s %s' % f
+                process = subprocess.Popen(cmd,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE,
+                                           shell=True)
+                (stdoutdata, stderrdata2) = process.communicate()
+                
+                if print_mcplot_output:
+                    print(stdoutdata)
+                    if (stderrdata2 is not None) and (stderrdata2 != ''):
+                        raise Exception('mcplot error: %s' % stderrdata2)
+                
+                p = os.path.basename(f)
+                p = os.path.splitext(p)[0] + '_log.png'
+                p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
+                
+                print('plot: %s' % p)
+                plot_files_log.append(p)
         
-        p = os.path.basename(f)
-        p = os.path.splitext(p)[0] + '.png'
-        p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
-        
-        print('plot: %s' % p)
-        plot_files.append(p)
-    
-    # NOTE: the following only works with mcplot-gnuplot-py
-    for f in datfiles: 
-        cmd = 'mcplot-gnuplot-py -l -s %s' % f
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   shell=True)
-        (stdoutdata, stderrdata) = process.communicate()
-        
-        if print_mcplot_output:
-            print(stdoutdata)
-            if (stderrdata is not None) and (stderrdata != ''):
-                raise Exception('mcplot error: %s' % stderrdata)
-        
-        p = os.path.basename(f)
-        p = os.path.splitext(p)[0] + '_log.png'
-        p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
-        
-        print('plot: %s' % p)
-        plot_files_log.append(p)
-    
-    simrun.plot_files = plot_files
-    simrun.plot_files_log = plot_files_log
-    simrun.save()
+        simrun.plot_files = plot_files
+        simrun.plot_files_log = plot_files_log
+        simrun.save()
+
+    except Exception as e:
+        raise Exception('mcplot fail: %s \nwith stderr:     %s \n     stderr_log: %s' % e.__str__(), stderrdata, stderrdata2)
 
 def clear_c_out_files(simrun):
     ''' removes .c and .out files from simrun data dir (NOTE: data dir should exists else exception). '''
@@ -104,8 +161,8 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     try:
         instr = '%s.instr' % simrun.instr_displayname
         
-        cmd = 'mcdisplay -png --multi %s -n1 ' % (instr)
-        vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % (instr)
+        cmd = 'mcdisplay -png --multi %s -n1 ' % instr
+        vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % instr
         for p in simrun.params:
             s = str(p[1])
             # support for scan sweeps; if a param contains comma, get str before (mcdisplay dont like comma)
@@ -221,7 +278,11 @@ def work():
         # exceptions raised during the processing block are written to the simrun object as fail, but do not break the processing loop
         try:
             # mark object as processing initiated
-            print('processing simrun for %s...' % simrun.instr_displayname)
+            if simrun.scanpoints == 1:
+                print('processing simrun for %s...' % simrun.instr_displayname)
+            else:
+                print('processing simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
+            
             simrun.started = timezone.now()
             simrun.save()
             
@@ -252,7 +313,7 @@ def work():
             simrun.failed = timezone.now()
             simrun.fail_str = e.__str__()
             simrun.save()
-            print('simrun fail: %s') % e.__str__()
+            print('fail: %s') % e.__str__()
     
     if len(simrun_set) > 0:
         print("idle...")
