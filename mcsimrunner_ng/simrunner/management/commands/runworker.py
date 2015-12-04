@@ -53,7 +53,7 @@ def mcplot(simrun, print_mcplot_output=False):
         
         p = os.path.basename(f)
         p = os.path.splitext(p)[0] + '.png'
-        p = os.path.join(plot_dir, p)
+        p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
         
         print('plot: %s' % p)
         plot_files.append(p)
@@ -74,7 +74,7 @@ def mcplot(simrun, print_mcplot_output=False):
         
         p = os.path.basename(f)
         p = os.path.splitext(p)[0] + '_log.png'
-        p = os.path.join(plot_dir, p)
+        p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
         
         print('plot: %s' % p)
         plot_files_log.append(p)
@@ -104,6 +104,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     # assemble command (WARNING: mcdisplay dont like abs paths, therefore we assume project root and assemble relpath)
     static_dirname = STATIC_URL.lstrip('/')
     instr_relpath = '%s/%s.instr' % (os.path.join(static_dirname, DATA_DIRNAME, os.path.basename(simrun.data_folder)), simrun.instr_displayname)
+    
     cmd = 'mcdisplay -png --multi %s -n1 ' % (instr_relpath)
     vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % (instr_relpath)
     for p in simrun.params:
@@ -121,6 +122,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata2, stderrdata2) = process2.communicate()
+    
     if print_mcdisplay_output:
         print(stdoutdata)
         if (stderrdata is not None) and (stderrdata != ''):
@@ -129,6 +131,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         print(stdoutdata2)
         if (stderrdata2 is not None) and (stderrdata2 != ''):
             print(stderrdata2)    
+    
     oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
     newfilename = os.path.join(simrun.data_folder, 'layout.png')
     oldwrlfilename = 'mcdisplay_commands.wrl'

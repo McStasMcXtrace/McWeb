@@ -85,11 +85,11 @@ def simrun(req, sim_id, scale='lin'):
     simrun = SimRun.objects.get(id=sim_id) 
     
     # lin / log stuff
-    plot_files = simrun.plot_files
+    plot_files = map(lambda f: join(simrun.data_folder, f), simrun.plot_files)
     new_scale = 'log'
     lin_log_url = '/simrun-log/%s/' % sim_id
     if scale == 'log':
-        plot_files = simrun.plot_files_log
+        plot_files = map(lambda f: join(simrun.data_folder, f), simrun.plot_files_log)
         lin_log_url = '/simrun/%s/' % sim_id
         new_scale = 'lin'
     
