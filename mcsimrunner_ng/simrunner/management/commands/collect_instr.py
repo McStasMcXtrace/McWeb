@@ -23,7 +23,8 @@ def make_html_docs(group):
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
-                               shell=True, cwd='sim/' + group)
+                               shell=True, 
+                               cwd='sim/' + group)
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
         raise Exception('instrument doc generation error.')
@@ -34,8 +35,6 @@ def make_html_docs(group):
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
-    # silently ignore errors here 
-
         
 def get_group_instrs(basedir):
     ''' returns a dict of {group: [instr_files]}, assuming depth of one from basedir '''
@@ -58,7 +57,7 @@ def get_group_instrs(basedir):
     
     return grp_instr
 
-def get_instr_params(instr_grp,instr_file):
+def get_instr_params(instr_grp, instr_file):
     ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
     
     cmd = 'mcrun --mpi ' + instr_file + " --info"
@@ -118,13 +117,14 @@ class Command(BaseCommand):
                 print "group %s created" % g
                 group.save()
                 print "group %s saved" % g
+        
+            mkdir_p( "static/doc/%s" % g )
+            print "Updating doc folder static/doc/%s" % g
+            
             try:
-                mkdir_p( "static/doc/%s" % g )
-                print "Updating doc folder static/doc/%s" % g
-                
+                make_html_docs(g)
             except:
-                print "Updating folder static/doc/%s failed!" % g 
-            make_html_docs(g)
+                raise Exception('make_html_docs failed')
                 
             for i in grp_instr[g]:
                 displayname = i
