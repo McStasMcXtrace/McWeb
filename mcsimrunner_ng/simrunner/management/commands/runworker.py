@@ -37,8 +37,18 @@ def plot_file(f, log=False):
     (stdoutdata, stderrdata) = process.communicate()
     return (stdoutdata, stderrdata)
     
+def rename_mcstas_to_mccode(simrun):
+    ''' run before mcplot to avoid issues with old versions of mcstas '''
+    for token in ['.sim', '.dat']:
+        wrong = os.path.join(simrun.data_folder, 'mcstas%s' % token)
+        right = os.path.join(simrun.data_folder, 'mccode%s' % token)
+        if os.path.exists(wrong):
+            os.rename(wrong, right)
+
 def mcplot(simrun):
     ''' generates plots from simrun output data '''
+    rename_mcstas_to_mccode(simrun)
+    
     try:
         if simrun.scanpoints > 1:
             # init
@@ -146,22 +156,6 @@ def mcplot(simrun):
     except Exception as e:
         raise Exception('mcplot fail: %s' % e.__str__())
 
-def clear_c_out_files(simrun):
-    ''' removes .c and .out files from simrun data dir (NOTE: data dir should exists else exception). '''
-    try: 
-        dataf = simrun.data_folder
-        dname = simrun.instr_displayname
-        
-        f_c = dataf + '/' + dname + '.c'
-        if os.path.exists(f_c) or os.path.exists(f_c):
-            os.remove(f_c)
-        f_out = dataf + '/' + dname + '.out'
-        if os.path.exists(f_out) or os.path.exists(f_out):
-            os.remove(f_out)
-        
-    except Exception as e:
-        raise Exception('clear_c_out_files: error clearing directory (%s)' % e.__str__())
-
 def mcdisplay(simrun, print_mcdisplay_output=False):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
     try:
@@ -217,12 +211,9 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
-    # sanity reset
-    clear_c_out_files(simrun)
-    
     # assemble the run command (NOTE: if we wanted e.g. "mpi=4"
     instr = os.path.join(simrun.data_folder, simrun.instr_displayname)
-    runstr = 'mcrun ' + instr + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
+    runstr = 'mcrun --mpi ' + instr + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     runstr = runstr + ' -N ' + str(simrun.scanpoints)
     if simrun.seed > 0:
@@ -264,6 +255,14 @@ def init_processing(simrun):
         instr_source = '%s/%s/%s.instr' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
         instr = '%s/%s.instr' % (simrun.data_folder, simrun.instr_displayname)
         shutil.copyfile(instr_source, instr)
+        
+        # symlink the .c and the .out files
+        src_c = '%s/%s.c' % (os.path.join('..','..', '..', 'sim', simrun.group_name), simrun.instr_displayname)
+        src_out = '%s/%s.c' % (os.path.join('..', '..','..', 'sim', simrun.group_name), simrun.instr_displayname)
+        ln_c = '%s/%s.c' % (simrun.data_folder, simrun.instr_displayname)
+        ln_out = '%s/%s.out' % (simrun.data_folder, simrun.instr_displayname)
+        os.symlink(src_c, ln_c)
+        os.symlink(src_out, ln_out)
         
     except Exception as e: 
         raise Exception('init_processing failed: %s' % e.__str__())
