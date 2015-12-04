@@ -266,15 +266,22 @@ class Command(BaseCommand):
                 os.mkdir(data_basedir)
         except:
             raise ExitException('Could not find or create base data folder, exiting (%s).' % data_basedir)            
+        
+        # graceful exiting
+        try:
+            # debug run
+            if options['debug']:
+                work()
+                exit()
             
-        # debug run
-        if options['debug']:
-            work()
-            exit()
+            print("looking for simruns...")
+            
+            # main runworker execution loop
+            while True:
+                work()
+                time.sleep(1)
         
-        print("looking for simruns...")
-        
-        # main runworker execution loop
-        while True:
-            work()
-            time.sleep(1)
+        # ctr-c exits
+        except KeyboardInterrupt:
+            print ""
+            print "shutdown requested, exiting..."
