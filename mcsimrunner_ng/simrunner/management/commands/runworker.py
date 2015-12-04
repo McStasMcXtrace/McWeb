@@ -37,30 +37,43 @@ def plot_file(f, log=False):
     (stdoutdata, stderrdata) = process.communicate()
     return (stdoutdata, stderrdata)
     
-def mcplot(simrun, print_mcplot_output=False):
+def mcplot(simrun):
     ''' generates plots from simrun output data '''
     try:
         if simrun.scanpoints > 1:
+            # init
             plot_files = []
             plot_files_log = []
+            data_files = []
             
-            # plot and store mccode.dat NOTE: the special case, mccode.png should be taken care of in the view, although this is kinda bad practice
+            # plot and store mccode.dat, which must exist
             f = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, 'mccode.dat')
+            
             plot_file(f)
-            plot_file(f, log=True)
             p = os.path.basename(f)
             p = os.path.splitext(p)[0] + '.png'
             p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
             plot_files.append(p)
+            
+            plot_file(f, log=True)
             p_log = os.path.basename(f)
             p_log = os.path.splitext(p_log)[0] + '.png'
             p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, p_log)
             plot_files_log.append(p_log)
+            
+            d = os.path.basename(f)
+            d = os.path.join(MCRUN_OUTPUT_DIRNAME, d)
+            data_files.append(d)
+            
             print('plot_linlog: %s' % p)
             
             for i in range(simrun.scanpoints):
+                if i > 0:
+                    print('plot_linlog (scanpoint index %d)...' % i)
+                
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
                 
+                # TODO: make a get_sim_files() function which parses mccode.sim
                 allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
                 datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
                 datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
@@ -72,38 +85,34 @@ def mcplot(simrun, print_mcplot_output=False):
                     p = os.path.basename(f)
                     p = os.path.splitext(p)[0] + '.png'
                     p = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p)
+                    
                     p_log = os.path.basename(f)
                     p_log = os.path.splitext(p_log)[0] + '.png'
                     p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p_log)
+                    
+                    d = os.path.basename(f)
+                    d = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), d)
                     
                     if i == 0:
                         print('plot_linlog: %s' % p)
                         plot_files.append(p)
                         plot_files_log.append(p_log)
+                        data_files.append(d)
                 
-                print('plot_linlog (scanpoint index %d)...' % i)
         else:
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
             
+            # TODO: make a get_sim_files() function which parses mccode.sim
             allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
             datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
             datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
             
+            data_files = []
             plot_files = []
             plot_files_log = []
         
             for f in datfiles: 
-                cmd = 'mcplot-gnuplot-py -s %s' % f
-                process = subprocess.Popen(cmd,
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE,
-                                           shell=True)
-                (stdoutdata, stderrdata) = process.communicate()
-                
-                if print_mcplot_output:
-                    print(stdoutdata)
-                    if (stderrdata is not None) and (stderrdata != ''):
-                        raise Exception('mcplot error: %s' % stderrdata)
+                plot_file(f)
                 
                 p = os.path.basename(f)
                 p = os.path.splitext(p)[0] + '.png'
@@ -114,31 +123,28 @@ def mcplot(simrun, print_mcplot_output=False):
             
             # NOTE: the following only works with mcplot-gnuplot-py
             for f in datfiles: 
-                cmd = 'mcplot-gnuplot-py -l -s %s' % f
-                process = subprocess.Popen(cmd,
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE,
-                                           shell=True)
-                (stdoutdata, stderrdata2) = process.communicate()
+                plot_file(f, log=True)
                 
-                if print_mcplot_output:
-                    print(stdoutdata)
-                    if (stderrdata2 is not None) and (stderrdata2 != ''):
-                        raise Exception('mcplot error: %s' % stderrdata2)
+                l = os.path.basename(f)
+                l = os.path.splitext(l)[0] + '_log.png'
+                l = os.path.join(MCRUN_OUTPUT_DIRNAME, l)
                 
-                p = os.path.basename(f)
-                p = os.path.splitext(p)[0] + '_log.png'
-                p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
+                print('plot: %s' % l)
+                plot_files_log.append(l)
+            
+            for f in datfiles:
+                d = os.path.basename(f)
+                d = os.path.join(MCRUN_OUTPUT_DIRNAME, d)
                 
-                print('plot: %s' % p)
-                plot_files_log.append(p)
-        
+                data_files.append(d)
+            
+        simrun.data_files = data_files
         simrun.plot_files = plot_files
         simrun.plot_files_log = plot_files_log
         simrun.save()
 
     except Exception as e:
-        raise Exception('mcplot fail: %s \nwith stderr:     %s \n     stderr_log: %s' % e.__str__(), stderrdata, stderrdata2)
+        raise Exception('mcplot fail: %s' % e.__str__())
 
 def clear_c_out_files(simrun):
     ''' removes .c and .out files from simrun data dir (NOTE: data dir should exists else exception). '''
