@@ -105,7 +105,14 @@ def get_instr_params(instr_grp, instr_file):
                     s.append(unit)
                     s.append(info)
             params.append(s)
-    return params
+    
+    # check uniqueness of params:
+    params_4real = []
+    for p in params:
+        if p not in params_4real:
+            params_4real.append(p)
+    
+    return params_4real
 
 class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
