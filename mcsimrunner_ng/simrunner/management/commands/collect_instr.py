@@ -152,6 +152,7 @@ class Command(BaseCommand):
                 if os.path.isfile('sim/' + g + '/' + i + '.png'):
                     instr.image = "/static/doc/" + g + "/" + i + ".png"
                     shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
+                    print "Adding image for instrument %s" % i
                 else:
                     instr.image = ''
 
