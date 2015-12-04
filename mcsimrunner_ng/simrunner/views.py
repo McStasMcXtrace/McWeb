@@ -49,7 +49,8 @@ def instrument(req, group_name, instr_name=None):
     seed = 0
     scanpoints = 1
     
-    return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname, 
+    return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
+                                           'instr_image': instr.image,
                                            'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params)})
     
 def instrument_post(req):

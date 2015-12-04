@@ -6,6 +6,7 @@ are updated with current params info.
 from django.core.management.base import BaseCommand
 import subprocess
 import os, errno
+import shutil
 from simrunner.models import InstrGroup, Instrument
 
 def mkdir_p(path):
@@ -147,7 +148,13 @@ class Command(BaseCommand):
                 except Instrument.DoesNotExist:    
                     instr = Instrument(group=group, name=name, displayname=displayname)
                     print "instrument %s created" % i
-                
+                    
+                if os.path.isfile('sim/' + g + '/' + i + '.png'):
+                    instr.image = "/static/doc/" + g + "/" + i + ".png"
+                    shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
+                else:
+                    instr.image = ''
+
                 # update instr params
                 instr.params = get_instr_params(g, i)
                 instr.save()

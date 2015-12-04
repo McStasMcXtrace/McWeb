@@ -21,6 +21,10 @@ class Instrument(Model):
     docs = TextField()
     
     params_str = CharField(max_length=1000)
+
+    image = CharField(max_length=200)
+
+    infostring = CharField(max_length=1024)
     
     @property
     def params(self):
