@@ -264,6 +264,16 @@ def init_processing(simrun):
         os.symlink(src_c, ln_c)
         os.symlink(src_out, ln_out)
         
+        # symlink the contents of sim/datafiles/
+        
+        allfiles = [f for f in os.listdir('sim/datafiles/') if os.path.isfile(os.path.join('sim/datafiles/', f))]
+        if '.gitignore' in allfiles:
+            allfiles.remove('.gitignore')
+        for f in allfiles:
+            src = os.path.join('..', '..', '..', 'sim', 'datafiles', f)
+            ln = '%s/%s' % (simrun.data_folder, f)
+            os.symlink(src, ln)
+        
     except Exception as e: 
         raise Exception('init_processing failed: %s' % e.__str__())
 
