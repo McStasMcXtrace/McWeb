@@ -1,2 +1,8 @@
+db.sqlite3
 *.pyc
-db.sqlite
+*.out
+*.c
+static/data
+static/doc
+static/admin
+
