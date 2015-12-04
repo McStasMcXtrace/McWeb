@@ -5,8 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from models import InstrGroup, Instrument, SimRun
 import json
-from os.path import basename, join
-from mcweb.settings import DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, STATIC_URL
+from os.path import join
 
 def home(req):
     return render(req, template_name='login.html')
@@ -97,14 +96,14 @@ def simrun(req, sim_id, scale='lin'):
     if simrun.complete:
         time_complete = simrun.complete.strftime("%H:%M")
         
-    # TODO: impl data-visible and refresh meta-tag properly using template inheritance
+    # TODO: impl data-visible and refresh meta-tag properly, using template inheritance
     data_visibility = 'hidden'
     refresh_rate = 4
     data_folder_rel = ''
     if simrun.complete:
         data_visibility = 'visible'
         refresh_rate = 3600
-        data_folder_rel = join(STATIC_URL.lstrip('/'), DATA_DIRNAME, basename(simrun.data_folder))
+        data_folder_rel = simrun.data_folder
     
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
@@ -112,8 +111,4 @@ def simrun(req, sim_id, scale='lin'):
                                        'status': simrun.status, 'data_visibility': data_visibility, 'refresh_rate': refresh_rate,
                                        'data_folder_rel': data_folder_rel, 'lin_log': new_scale, 'lin_log_url': lin_log_url,
                                        'plot_files': plot_files})
-
-
-
-
 
