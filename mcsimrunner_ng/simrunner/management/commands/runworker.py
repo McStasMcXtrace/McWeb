@@ -101,50 +101,57 @@ def clear_c_out_files(simrun):
 
 def mcdisplay(simrun, print_mcdisplay_output=False):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
-    # assemble command (WARNING: mcdisplay dont like abs paths, therefore we assume project root and assemble relpath)
-    static_dirname = STATIC_URL.lstrip('/')
-    instr_relpath = '%s/%s.instr' % (os.path.join(static_dirname, DATA_DIRNAME, os.path.basename(simrun.data_folder)), simrun.instr_displayname)
-    
-    cmd = 'mcdisplay -png --multi %s -n1 ' % (instr_relpath)
-    vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % (instr_relpath)
-    for p in simrun.params:
-        cmd = cmd + ' %s=%s' % (p[0], p[1])
-        vrmlcmd = vrmlcmd + ' %s=%s' % (p[0], p[1])
+    try:
+        instr = '%s.instr' % simrun.instr_displayname
         
-    # start mcdisplay process, wait
-    process = subprocess.Popen(cmd,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               shell=True)
-    (stdoutdata, stderrdata) = process.communicate()
-    process2 = subprocess.Popen(vrmlcmd,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               shell=True)
-    (stdoutdata2, stderrdata2) = process2.communicate()
-    
-    if print_mcdisplay_output:
-        print(stdoutdata)
-        if (stderrdata is not None) and (stderrdata != ''):
-            print(stderrdata)
-    if print_mcdisplay_output:
-        print(stdoutdata2)
-        if (stderrdata2 is not None) and (stderrdata2 != ''):
-            print(stderrdata2)    
-    
-    oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
-    newfilename = os.path.join(simrun.data_folder, 'layout.png')
-    oldwrlfilename = 'mcdisplay_commands.wrl'
-    newwrlfilename = os.path.join(simrun.data_folder, 'layout.wrl')
-    if os.path.exists(simrun.data_folder):
+        cmd = 'mcdisplay -png --multi %s -n1 ' % (instr)
+        vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % (instr)
+        for p in simrun.params:
+            s = str(p[1])
+            # support for scan sweeps; if a param contains comma, get str before (mcdisplay dont like comma)
+            # (NOTE: perhaps better to make a layout.png file for every scan point)
+            if ',' in s:
+                s = s.split(',')[0]  
+            cmd = cmd + ' %s=%s' % (p[0], s)
+            vrmlcmd = vrmlcmd + ' %s=%s' % (p[0], s)
+            
+        # start mcdisplay process, wait
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=True,
+                                   cwd = simrun.data_folder)
+        (stdoutdata, stderrdata) = process.communicate()
+        process2 = subprocess.Popen(vrmlcmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=True, 
+                                   cwd = simrun.data_folder)
+        (stdoutdata2, stderrdata2) = process2.communicate()
+        
+        if print_mcdisplay_output:
+            print(stdoutdata)
+            if (stderrdata is not None) and (stderrdata != ''):
+                print(stderrdata)
+        if print_mcdisplay_output:
+            print(stdoutdata2)
+            if (stderrdata2 is not None) and (stderrdata2 != ''):
+                print(stderrdata2)    
+        
+        oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
+        newfilename = os.path.join(simrun.data_folder, 'layout.png')
+        oldwrlfilename = os.path.join(simrun.data_folder,'mcdisplay_commands.wrl')
+        newwrlfilename = os.path.join(simrun.data_folder, 'layout.wrl')
+        
         os.rename(oldfilename, newfilename)
         os.rename(oldwrlfilename, newwrlfilename)
-    else:
-        raise Exception('Data folder must exist before running this function (runworker.mcdisplay).')
+            
+        print 'layout: %s' % newfilename
+        print 'layout: %s' % newwrlfilename
         
-    print 'layout: %s' % newfilename
-    print 'layout: %s' % newwrlfilename
-
+    except Exception as e:
+        raise Exception('mcdisplay fail: %s \nwith stderr:      %s \n     stderr_wrml: %s' % e.__str__(), stderrdata, stderrdata2)
+    
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
     # sanity reset
