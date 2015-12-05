@@ -7,7 +7,7 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD
 import subprocess
 import os
 import time
@@ -27,14 +27,23 @@ def maketar(simrun):
         raise Exception('tarfile fail')
     
 def plot_file(f, log=False):
-    cmd = 'mcplot-gnuplot-py -s %s' % f
+    cmd = '%s %s' % (MCPLOT_CMD,f)
     if log:
-        cmd = 'mcplot-gnuplot-py -l -s %s' % f
+        cmd = '%s %s' % (MCPLOT_LOGCMD,f)
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
+    print "Wrong filename ... " + f + ".png"
+    if os.path.isfile( f + '.png'):
+        print "Wrong filename ... " + f + ".png"
+        if log:
+            os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '_log.png')
+        else:    
+            os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
+    else:
+        print "Leaving it as is"
     return (stdoutdata, stderrdata)
     
 def rename_mcstas_to_mccode(simrun):
