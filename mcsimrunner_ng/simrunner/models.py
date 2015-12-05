@@ -76,7 +76,7 @@ class SimRun(Model):
     
     @property
     def data_files(self):
-        return json.loads(self.data_files)
+        return json.loads(self.data_files_str)
     @data_files.setter
     def data_files(self, df):
         self.data_files_str = json.dumps(df)
