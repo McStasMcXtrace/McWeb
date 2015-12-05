@@ -2,7 +2,7 @@
 <html>
 <head><title>simrun</title></head>
 <body>
-    <fieldset><legend></legend>
+    <fieldset><legend>{{ legend }}</legend>
         <ul>{% for monitor in html_png_dat %}
             <li><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" width="400px"/></a>{% endfor %}
         </ul>
