@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from models import InstrGroup, Instrument, SimRun
 import json
 from os.path import join
+from generate_static import McStaticDataBrowserGenerator
 
 def home(req):
     return render(req, template_name='login.html')
@@ -20,7 +21,7 @@ def login_post(req):
         return redirect(home)
     login(req, user)
 
-    # TODO: enable defaults on user object
+    # TODO: enable default group and instrument on user object
     default_group = 'group1'
     default_instr = 'PSI_DMC'
     
@@ -99,13 +100,21 @@ def simrun(req, sim_id, scale='lin'):
         
     # TODO: impl data-visible and refresh meta-tag properly, using template inheritance
     data_visibility = 'hidden'
-    refresh_rate = 4
+    refresh_rate = 3
     data_folder_rel = ''
     if simrun.complete:
-        data_visibility = 'visible'
-        refresh_rate = 3600
-        data_folder_rel = simrun.data_folder
-    
+        # generate data browser
+        gen = McStaticDataBrowserGenerator()
+        gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+        
+        return redirect('/%s/browse.html' % simrun.data_folder)
+        
+        # holding on to the old way a little longer: 
+        #data_visibility = 'visible'
+        #refresh_rate = 3600
+        #data_folder_rel = simrun.data_folder
+        
+        
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
                                        'date_time_created': simrun.created.strftime("%H:%M %d/%m %Y"), 'date_time_completed': time_complete, 
