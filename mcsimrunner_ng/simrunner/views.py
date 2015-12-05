@@ -104,6 +104,7 @@ def simrun(req, sim_id, scale='lin'):
     data_folder_rel = ''
     if simrun.complete:
         # generate data browser
+        ''' comment-in to enable:
         if simrun.scanpoints == 1:
             gen = McStaticDataBrowserGenerator()
             gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
@@ -114,11 +115,11 @@ def simrun(req, sim_id, scale='lin'):
             gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
             
             return redirect('/%s/browse.html' % simrun.data_folder)
-            
-        # holding on to the old way a little longer: 
-        #data_visibility = 'visible'
-        #refresh_rate = 3600
-        #data_folder_rel = simrun.data_folder
+        ''' 
+        
+        data_visibility = 'visible'
+        refresh_rate = 3600
+        data_folder_rel = simrun.data_folder
         
         
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
