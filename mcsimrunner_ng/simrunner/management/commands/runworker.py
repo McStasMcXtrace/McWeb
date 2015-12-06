@@ -35,15 +35,11 @@ def plot_file(f, log=False):
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
-    print "Wrong filename ... " + f + ".png"
     if os.path.isfile( f + '.png'):
-        print "Wrong filename ... " + f + ".png"
         if log:
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '_log.png')
         else:    
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
-    else:
-        print "Leaving it as is"
     return (stdoutdata, stderrdata)
     
 def rename_mcstas_to_mccode(simrun):
