@@ -1,6 +1,6 @@
 {% extends 'static_base.html' %}
 {% block content %}
-<legend>Data plots</legend>
+<legend>Data plots for {{ monitor_name }}</legend>
     <ul>
         {% for monitor in html_png_dat %}
         <li><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" width="400px"/></a></li>

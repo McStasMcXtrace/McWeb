@@ -9,7 +9,18 @@ from os.path import basename, join, splitext
 from django.template.loader import get_template
 
 class McStaticDataBrowserGenerator():
-    ''' implements functionality to generate static html site for data browsing '''    
+    ''' implements functionality to generate static html site for data browsing '''   
+     
+    __base_c_dict = None
+    def set_base_context(self, dict):
+        ''' sets the dict that is passed to every context '''
+        self.__base_c_dict = dict
+    def get_context(self, dict):
+        ''' combile "local" context with base context set at the beginning '''
+        d = self.__base_c_dict.copy()
+        d.update(dict)
+        return Context(d) 
+    
     def generate_browsepage(self, data_folder, png_files, dat_files):
         ''' png_files AND dat_files must be of the correct path relative to data_folder 
             note: having dat_files be relative paths reduces assumptions and increases flexibility
@@ -35,22 +46,15 @@ class McStaticDataBrowserGenerator():
         # write <monitor>.html for each png/dat file
         for i in range(len(png_files)):
             png_dat = [png_base[i], dat_base[i]]
-            c = Context({'png_dat': png_dat})
-            html = t.render(c)
             
-            f = open(html_paths[i], 'w')
-            f.write(html)
-            f.close()
-        
+            c = Context({'png_dat': png_dat})
+            write_html(html_paths[i], t.render(c))
+            
         # 2) write browse.html
         
         t = get_template('static_browse.html')
-        c = Context({'html_png_dat': html_png_dat})
-        html = t.render(c)
-        
-        f = open(join(data_folder, 'browse.html'), 'w')
-        f.write(html)
-        f.close()
+        c = self.get_context({'html_png_dat': html_png_dat})
+        write_html(join(data_folder, 'browse.html'), t.render(c))
         
     def generate_browsepage_sweep(self, data_folder, png_files, dat_files, scanpoints):
         ''' as above, but handles the simulation scan case '''
@@ -67,32 +71,22 @@ class McStaticDataBrowserGenerator():
             for i in range(len(png_files)):
                 if i == 0:
                     continue
-                
                 png = png_base[i].replace('/0/', '/%s/' % str(j))
                 dat = dat_base[i].replace('/0/', '/%s/' % str(j))
                 
                 png_dat = [png, dat]
                 c = Context({'png_dat': png_dat})
-                html = t.render(c)
+                write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), t.render(c))
                 
-                html_path = html_paths[i].replace('/0/', '/%s/' % str(j))
-                f = open(html_path, 'w')
-                f.write(html)
-                f.close()
-        
         # special case: mccode.dat : sweep overview
         png_dat = [png_base[0], dat_base[0]]
         c = Context({'png_dat': png_dat})
-        html = t.render(c)
-        
-        f = open(html_paths[0], 'w')
-        f.write(html)
-        f.close()
+        write_html(html_paths[0], t.render(c))
         
         # 2 write <monitor>_ss.html
         
         # get data for each monitor_ss.html and write it immediately
-        t = get_template('monitor_ss.html')
+        t = get_template('static_monitor_sweep.html')
         for i in range(len(png_files)):
             if i == 0:
                 continue
@@ -109,13 +103,9 @@ class McStaticDataBrowserGenerator():
                 
                 html_png_dat.append([html, png, dat])
                 
-            c = Context({'legend': monitor_name, 'html_png_dat': html_png_dat})
-            html = t.render(c)
+            c = self.get_context({'monitor_name': monitor_name, 'html_png_dat': html_png_dat})
+            write_html(join(data_folder, '%s_sweep.html' % monitor_name), t.render(c))
             
-            f = open(join(data_folder, '%s_sweep.html' % monitor_name), 'w')
-            f.write(html)
-            f.close()
-        
         # 3) write browse.html
         
         # get data for browse_ss.html
@@ -131,11 +121,13 @@ class McStaticDataBrowserGenerator():
             html_filepath = join(data_folder, '%s_sweep.html' % monitor_name)
             html_name.append([html_filepath, monitor_name]) 
         
-        t = get_template('static_browse_ss.html')
-        c = Context({'sim_html': sim_html, 'sim_png': sim_png, 'html_name': html_name})
-        html = t.render(c)
-        
-        f = open(join(data_folder, 'browse.html'), 'w')
-        f.write(html)
-        f.close()
+        # write browse.html
+        t = get_template('static_browse_sweep.html')
+        c = self.get_context({'sim_html': sim_html, 'sim_png': sim_png, 'html_name': html_name})
+        write_html(join(data_folder, 'browse.html'), t.render(c))
 
+def write_html(filepath, text):
+    ''' writes file <filepath> with content <text> to disk '''
+    f = open(filepath, 'w')
+    f.write(text)
+    f.close()

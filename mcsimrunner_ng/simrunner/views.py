@@ -104,28 +104,24 @@ def simrun(req, sim_id, scale='lin'):
     data_folder_rel = ''
     if simrun.complete:
         # generate data browser
-        ''' comment-in to enable:
+        age = 'age: impl.'
+        lin_log_html = 'lin_log_url: impl.'
+        gen = McStaticDataBrowserGenerator()
+        gen.set_base_context({'instr_displayname': simrun.instr_displayname, 'date_time_completed': time_complete, 'age': age,
+                              'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
+                              'lin_log_html': lin_log_html,
+                              'data_folder': simrun.data_folder})
+        # TODO: make sure static page generation only happens once
         if simrun.scanpoints == 1:
-            gen = McStaticDataBrowserGenerator()
             gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
-            
-            return redirect('/%s/browse.html' % simrun.data_folder)
         else:
-            gen = McStaticDataBrowserGenerator()
             gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
-            
-            return redirect('/%s/browse.html' % simrun.data_folder)
-        ''' 
-        
-        data_visibility = 'visible'
-        refresh_rate = 3600
-        data_folder_rel = simrun.data_folder
-        
-        
+        # redirect to static
+        return redirect('/%s/browse.html' % simrun.data_folder)
+
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
                                        'date_time_created': simrun.created.strftime("%H:%M %d/%m %Y"), 'date_time_completed': time_complete, 
                                        'status': simrun.status, 'data_visibility': data_visibility, 'refresh_rate': refresh_rate,
                                        'data_folder_rel': data_folder_rel, 'lin_log': new_scale, 'lin_log_url': lin_log_url,
                                        'plot_files': plot_files})
-

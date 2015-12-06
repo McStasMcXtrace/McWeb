@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>simrunner</title>
+</head>
+<body>
+    <h3>{{ instr_displayname }}</h3>
+    <p>{{ date_time_completed }} ({{ age }})</p>
+    <fieldset>
+        <legend>Simulation</legend>
+        <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
+        <p><strong>neutron rays:</strong> {{ neutrons }}<p>
+        <p><strong>random seed:</strong> {{ seed }}</p>
+        <p><strong>simulation steps:</strong> {{ scanpoints }}</p>
+    </fieldset>
+
+    <fieldset>
+        <!--<legend>Data plots (<a href="{{ lin_log_html }}">click here for {{ lin_log }}-scale</a>)</legend>-->
+        {% block content %}
+        {% endblock %}
+    </fieldset>
+
+    <fieldset>
+        <legend>Instrument layout</legend>
+        <img src="/{{ data_folder }}/layout.png"/>
+	    <p><a href="/{{ data_folder }}/layout.wrl">VRML view the instrument</a></p>
+    </fieldset>
+
+    <fieldset>
+        <legend>Download output files</legend>
+        <a href="/{{ data_folder }}/simrun.tar.gz">simrun.tar.gz</a>
+        <a href="/{{ data_folder }}/{{ instr_displayname }}.instr">{{ instr_displayname }}.instr</a>
+        <a href="/{{ data_folder }}/stdout.txt" target=_blank>stdout</a>
+        <a href="/{{ data_folder }}/stderr.txt" target=_blank>stderr</a>
+    </fieldset>
+</body>
