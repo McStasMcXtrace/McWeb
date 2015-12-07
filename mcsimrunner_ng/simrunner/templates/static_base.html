@@ -6,6 +6,7 @@
 <body>
     <h3>{{ instr_displayname }}</h3>
     <p>Completed {{ date_time_completed }}</p>
+    <p><a href="/instrument/{{ group_name }}/{{ instr_displayname }}">Reconfigure</a></p>
     <fieldset>
         <legend>Simulation</legend>
         <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>

@@ -87,13 +87,13 @@ def simrun_log(req, sim_id):
 @login_required
 def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
-    simrun = SimRun.objects.get(id=sim_id) 
+    simrun = SimRun.objects.get(id=sim_id)
 
     if simrun.complete:
         # generate data browser
         lin_log_html = 'lin_log_url: impl.'
         gen = McStaticDataBrowserGenerator()
-        gen.set_base_context({'instr_displayname': simrun.instr_displayname, 'date_time_completed': simrun.complete.strftime("%H:%M:%S, %d/%m-%Y"),
+        gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': simrun.complete.strftime("%H:%M:%S, %d/%m-%Y"),
                               'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                               'lin_log_html': lin_log_html,
                               'data_folder': simrun.data_folder})
@@ -106,6 +106,6 @@ def simrun(req, sim_id, scale='lin'):
         # redirect to static
         return redirect('/%s/browse.html' % simrun.data_folder)
 
-    return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
+    return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
                                        'status': simrun.status, 'date_time_created': simrun.created.strftime("%H:%M:%S")})
