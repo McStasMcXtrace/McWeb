@@ -184,7 +184,7 @@ class McStaticDataBrowserGenerator():
         
         # browse_log.html
         t = get_template('static_browse_sweep.html')
-        c = self.get_context({'sim_html': sim_html, 'sim_png': sim_png_log, 'html_name': html_name_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
+        c = self.get_context({'sim_html': sim_html_log, 'sim_png': sim_png_log, 'html_name': html_name_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
         write_html(join(data_folder, 'browse_log.html'), t.render(c))
 
 def write_html(filepath, text):
