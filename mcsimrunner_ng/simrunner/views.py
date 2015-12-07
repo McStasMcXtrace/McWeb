@@ -3,10 +3,9 @@ simrunner functional views
 '''
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from models import InstrGroup, Instrument, SimRun
 import json
-from os.path import join
 from generate_static import McStaticDataBrowserGenerator
 
 def home(req):
@@ -20,6 +19,7 @@ def login_post(req):
     user = authenticate(username=username, password=password)
     if user is None or not user.is_active:
         return redirect(home)
+    
     login(req, user)
 
     # TODO: enable default group and instrument on user object
@@ -29,11 +29,11 @@ def login_post(req):
     return redirect('instrument', group_name=default_group, instr_name=default_instr)
 
 def logout_user(req):
-    if req.user is not None:
-        logout(req)
+    logout(req)
     
     return redirect(home)
-
+    
+@login_required
 def instrument(req, group_name, instr_name=None):
     group = InstrGroup.objects.get(name=group_name)
     
@@ -54,7 +54,8 @@ def instrument(req, group_name, instr_name=None):
     return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
                                            'instr_image': instr.image,
                                            'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params)})
-    
+
+@login_required    
 def instrument_post(req):
     form = req.POST
     
@@ -78,10 +79,12 @@ def instrument_post(req):
     simrun.save()
     return redirect('simrun', sim_id=simrun.id)
 
+@login_required
 def simrun_log(req, sim_id):
     ''' used for viewing lin scale images '''
     return simrun(req, sim_id=sim_id, scale='log')
 
+@login_required
 def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id) 

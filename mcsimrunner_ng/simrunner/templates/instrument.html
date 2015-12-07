@@ -4,6 +4,13 @@
     <title>simrunner</title>
 </head>
 <body>
+    <fieldset>
+        <form method=post action="/logout">
+        {% csrf_token %}
+            <input type="submit" style="float:left" value="Logout"/>
+        </form>
+    </fieldset>
+
     <form method=post action="/startsim" target="_blank">
     {% csrf_token %}
         <input type="hidden" name="group_name" value="{{ group_name }}">
