@@ -7,7 +7,8 @@
     <fieldset>
         <form method=post action="/logout">
         {% csrf_token %}
-            <input type="submit" style="float:left" value="Logout"/>
+            <label>Logged in as {{ user }}</label>
+            <input type="submit" value="Logout"/>
         </form>
     </fieldset>
 
@@ -82,7 +83,7 @@
 
         <fieldset>
             <legend>Start simulation run</legend>
-            <input type="submit" style="float:right" value="Run"/>
+            <input type="submit" value="Run"/>
         </fieldset>
     </form>
 </body>
