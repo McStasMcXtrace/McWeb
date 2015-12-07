@@ -32,6 +32,14 @@ class McStaticDataBrowserGenerator():
             dat = dat_files[i]
             html = splitext(png_files[i])[0] + '.html'
             html_png_dat.append([html, png, dat])
+            
+        # create twin data for log
+        html_png_dat_log = []
+        for i in range(len(png_files)):
+            png = splitext(png_files[i])[0] + '_log.png'
+            dat = dat_files[i]
+            html = splitext(png_files[i])[0] + '_log.html'
+            html_png_dat_log.append([html, png, dat])
         
         # 1) write <monitor>.html:
         
@@ -43,18 +51,27 @@ class McStaticDataBrowserGenerator():
         # get template for <monitor>.html
         t = get_template('static_monitor.html')
 
-        # write <monitor>.html for each png/dat file
+        # write <monitor>.html and <monitor>_log.html for each png/dat file
         for i in range(len(png_files)):
             png_dat = [png_base[i], dat_base[i]]
             
             c = Context({'png_dat': png_dat})
             write_html(html_paths[i], t.render(c))
             
+            # log versions of monitor files
+            png_dat_log = [splitext(png_base[i])[0] + '_log.png', dat_base[i]]
+            
+            c = Context({'png_dat': png_dat_log})
+            write_html(splitext(html_paths[i])[0] + '_log.html', t.render(c))
+        
         # 2) write browse.html
         
         t = get_template('static_browse.html')
-        c = self.get_context({'html_png_dat': html_png_dat})
+        c = self.get_context({'html_png_dat': html_png_dat, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'})
         write_html(join(data_folder, 'browse.html'), t.render(c))
+        
+        c = self.get_context({'html_png_dat': html_png_dat_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
+        write_html(join(data_folder, 'browse_log.html'), t.render(c))
         
     def generate_browsepage_sweep(self, data_folder, png_files, dat_files, scanpoints):
         ''' as above, but handles the simulation scan case '''
