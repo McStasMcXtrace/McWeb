@@ -2,42 +2,16 @@
 <html>
 <head>
     <title>simrunner</title>
-    <meta http-equiv="refresh" content="{{ refresh_rate }}" />
+    <meta http-equiv="refresh" content="3" />
 </head>
 <body>
     <h3>{{ instr_displayname }}</h3>
+    <p>Started {{ date_time_created }}</p>
     <fieldset>
-        <legend>Simulation run info</legend>
-        <p><strong>status:</strong> {{ status }}</p>
-        <p><strong>created:</strong> {{ date_time_created }}</p>
-        <p><strong>completed:</strong> {{ date_time_completed }}</p>
-    </fieldset>
-
-    <fieldset>
-        <legend>Configuration</legend>
+        <legend>Simulation - {{ status }}</legend>
+        <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
         <p><strong>neutron rays:</strong> {{ neutrons }}<p>
         <p><strong>random seed:</strong> {{ seed }}</p>
         <p><strong>simulation steps:</strong> {{ scanpoints }}</p>
-        <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
-    </fieldset>
-
-    <fieldset style="visibility: {{ data_visibility }}">
-        <legend>Data plots (<a href="{{ lin_log_url }}">click here for {{ lin_log }}-scale</a>)</legend>
-        {% for f in plot_files %}
-        <img src="/{{ f }}"/>
-        {% endfor %}
-    </fieldset>
-
-    <fieldset style="visibility: {{ data_visibility }}">
-        <legend>Instrument layout</legend>
-        <img src="/{{ data_folder_rel }}/layout.png"/><br>
-	<a href="/{{ data_folder_rel }}/layout.wrl">VRML view the instrument</a>
-    </fieldset>
-
-    <fieldset style="visibility: {{ data_visibility }}">
-        <legend>Download output files</legend>
-        <a href="/{{ data_folder_rel }}/simrun.tar.gz">simrun.tar.gz</a>
-        <a href="/{{ data_folder_rel }}/stdout.txt" target=_blank>stdout.txt</a>
-        <a href="/{{ data_folder_rel }}/stderr.txt" target=_blank>stderr.txt</a>
     </fieldset>
 </body>

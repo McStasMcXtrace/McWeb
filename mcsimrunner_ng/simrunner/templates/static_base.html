@@ -5,7 +5,7 @@
 </head>
 <body>
     <h3>{{ instr_displayname }}</h3>
-    <p>{{ date_time_completed }} ({{ age }})</p>
+    <p>Completed {{ date_time_completed }}</p>
     <fieldset>
         <legend>Simulation</legend>
         <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>

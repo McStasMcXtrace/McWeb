@@ -3,6 +3,7 @@ simrunner functional views
 '''
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from models import InstrGroup, Instrument, SimRun
 import json
 from os.path import join
@@ -84,33 +85,16 @@ def simrun_log(req, sim_id):
 def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id) 
-    
-    # lin / log stuff
-    plot_files = map(lambda f: join(simrun.data_folder, f), simrun.plot_files)
-    new_scale = 'log'
-    lin_log_url = '/simrun-log/%s/' % sim_id
-    if scale == 'log':
-        plot_files = map(lambda f: join(simrun.data_folder, f), simrun.plot_files_log)
-        lin_log_url = '/simrun/%s/' % sim_id
-        new_scale = 'lin'
-    
-    time_complete = 'n/a'
-    if simrun.complete:
-        time_complete = simrun.complete.strftime("%H:%M")
-        
-    # TODO: impl data-visible and refresh meta-tag properly, using template inheritance
-    data_visibility = 'hidden'
-    refresh_rate = 3
-    data_folder_rel = ''
+
     if simrun.complete:
         # generate data browser
-        age = 'age: impl.'
         lin_log_html = 'lin_log_url: impl.'
         gen = McStaticDataBrowserGenerator()
-        gen.set_base_context({'instr_displayname': simrun.instr_displayname, 'date_time_completed': time_complete, 'age': age,
+        gen.set_base_context({'instr_displayname': simrun.instr_displayname, 'date_time_completed': simrun.complete.strftime("%H:%M:%S, %d/%m-%Y"),
                               'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                               'lin_log_html': lin_log_html,
                               'data_folder': simrun.data_folder})
+
         # TODO: make sure static page generation only happens once
         if simrun.scanpoints == 1:
             gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
@@ -121,7 +105,4 @@ def simrun(req, sim_id, scale='lin'):
 
     return render(req, 'status.html', {'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
-                                       'date_time_created': simrun.created.strftime("%H:%M %d/%m %Y"), 'date_time_completed': time_complete, 
-                                       'status': simrun.status, 'data_visibility': data_visibility, 'refresh_rate': refresh_rate,
-                                       'data_folder_rel': data_folder_rel, 'lin_log': new_scale, 'lin_log_url': lin_log_url,
-                                       'plot_files': plot_files})
+                                       'status': simrun.status, 'date_time_created': simrun.created.strftime("%H:%M:%S")})
