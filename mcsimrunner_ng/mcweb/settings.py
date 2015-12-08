@@ -17,11 +17,11 @@ MPI_PR_WORKER=2
 
 # mcplot configuration
 #  For Python + Gnuplot use 
-MCPLOT_CMD = "mcplot-gnuplot-py -s"
-MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
+#MCPLOT_CMD = "mcplot-gnuplot-py -s"
+#MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
 #  For Perl + PGPLOT use
-# MCPLOT_CMD = "mcplot -png"
-# MCPLOT_LOGCMD = "mcplot -png -log"
+MCPLOT_CMD = "mcplot -png"
+MCPLOT_LOGCMD = "mcplot -png -log"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
