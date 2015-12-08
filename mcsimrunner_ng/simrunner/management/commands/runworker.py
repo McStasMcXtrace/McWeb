@@ -50,6 +50,12 @@ def rename_mcstas_to_mccode(simrun):
         if os.path.exists(wrong):
             os.rename(wrong, right)
 
+def get_monitor_files(mccode_sim):
+    '''  '''
+    monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(mccode_sim).readlines())
+    monitor_files = map(lambda f: f.rstrip('\n').split(':')[1].strip(), monitor_files)
+    return monitor_files
+
 def mcplot(simrun):
     ''' generates plots from simrun output data '''
     rename_mcstas_to_mccode(simrun)
@@ -88,9 +94,7 @@ def mcplot(simrun):
                 
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
                 
-                # TODO: make a get_sim_files() function which parses mccode.sim
-                allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
-                datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
+                datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
                 datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
                 
                 for f in datfiles:
@@ -117,9 +121,7 @@ def mcplot(simrun):
         else:
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
             
-            # TODO: make a get_sim_files() function which parses mccode.sim
-            allfiles = [f for f in os.listdir(outdir) if os.path.isfile(os.path.join(outdir, f))]
-            datfiles_nodir = [f for f in allfiles if os.path.splitext(f)[1] == '.dat']
+            datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
             datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
             
             data_files = []
