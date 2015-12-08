@@ -1,6 +1,6 @@
 {% extends 'static_base.html' %}
 {% block content %}
-<legend>Data plots (<a href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
+<legend>Data plots (<a id="linlog" href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
 <a href="/{{ sim_html }}"><img src="{{ sim_png }}"></a>
 <ul>
     {% for monitor in html_name %}
