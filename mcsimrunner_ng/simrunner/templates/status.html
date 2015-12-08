@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>simrunner</title>
+    <title>Simulation Status</title>
     <meta http-equiv="refresh" content="3" />
 </head>
 <body>
     <h3>{{ instr_displayname }}</h3>
     <p>Started {{ date_time_created }}</p>
-    <p><a href="/instrument/{{ group_name }}/{{ instr_displayname }}">Reconfigure</a></p>
     <fieldset>
-        <legend>Simulation - {{ status }}</legend>
+        <legend>Simulation Status: {{ status }}</legend>
         <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
         <p><strong>neutron rays:</strong> {{ neutrons }}<p>
         <p><strong>random seed:</strong> {{ seed }}</p>
