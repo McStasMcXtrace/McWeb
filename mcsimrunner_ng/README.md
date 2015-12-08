@@ -25,8 +25,14 @@ Say "yes" to overwrite existing files. Static content should either be hosted in
 
 # requirements: 
 
-mcrun
+A recent version of McStas including the mcrun, mcdisplaym and mcplot (either oldschool PGPLOT mcplot or mcplot-gnuplot-py)
 
-mcdisplay
+# Unconfigure use of whitedune for VRML display:
+sudo sed -i s/whitedune/echo/g /usr/share/mcstas/VERSION/tools/Perl/perl/mccode_config.perl
+(Or store in the local $HOME/.mcstas/mccode_config.perl of the webserver user)
 
-mcplot-gnuplot-py
+# Incomplete: For WebGL based 3D rendering of the instrument install - probably requires Ubuntu 14.04!
+InstantReality from http://www.instantreality.org/downloads/
+(has these dependencies: freeglut3 libalut0 libavahi-compat-libdnssd1 libavcodec54 libavcodec-extra-54 libavformat54 libavutil52 libboost-system1.54.0 libboost-thread1.54.0)
+
+
