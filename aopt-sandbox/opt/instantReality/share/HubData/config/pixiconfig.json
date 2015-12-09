@@ -1,0 +1,40 @@
+{
+  "renderer" : [
+	{
+	  "class"    : "opengl",
+	  "gpus"     : 1,
+	  "cpus"     : 1,
+	  "outputs"  : ["framebuffer", "visibitybuffer", "gbuffer"],
+      "displays" : [":0.0", ":0.1", ":0.2", ":0.3"],
+	  "port"     : 42000,
+
+
+	  "exeX"     : "appPixi",
+	  "exe"      : 
+	       "/home/gerrit/Projects/OpenSG/svn/OpenSG.build/bin/testSimpleGLUT",
+
+	  "portOpt"  : "--port",
+	  "classOpt" : "--class",
+	  "gpuOpt"   : "--gpus",
+	  "cpuOpt"   : "--cpus",
+	  "outOpt"   : "--output",
+	  "addOpt"   : "--foobar"
+	},
+	{
+      "class"    : "embree",
+      "cpus"     : 5,
+      "outputs"  : ["framebuffer", "visibilitybuffer", "guffer"],
+      "displays" : [":0.0", ":0.1", ":0.2", ":0.3"],
+	  "port"     : 42100,
+
+	  "exe"      : "appPixi",
+
+	  "portOpt"  : "--port",
+	  "classOpt" : "--class",
+	  "gpuOpt"   : "--gpus",
+	  "cpuOpt"   : "--cpus",
+	  "outOpt"   : "--output",
+	  "addOpt"   : "--foobar"
+	}
+  ]
+}

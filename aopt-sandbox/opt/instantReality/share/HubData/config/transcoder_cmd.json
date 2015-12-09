@@ -1,0 +1,424 @@
+{
+    "transcoderCommands" :
+    [
+        {
+            "name"              : "PLMXML to HSI",
+            "groups"            : [ "hsiGen" ],
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": ["hsiGen -i \"${INPUT_URL[0]}\"", 
+                     "gzip struct/tree.hsi struct/data.json"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "PLMXML to HSI, regen struct",
+            "groups"            : [ "hsiGen Regen Structure" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": ["hsiGen -i \"${INPUT_URL[0]}\"", 
+                     "gzip struct/tree.hsi struct/data.json"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "PLMXML to HSI, regen all",
+            "groups"            : [ "hsiGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "addToCmds"         : ["--ignore-cache true"],
+
+            "cmds": ["hsiGen -i \"${INPUT_URL[0]}\"", 
+                     "gzip struct/tree.hsi struct/data.json"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "X3D to HSI",
+            "groups"            : [ "hsiGen" ],
+            "acceptedMimetypes" : ["model/x3d+xml"],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": [ "hsiGen -i \"${INPUT_URL[0]}\" -m model/x3d+xml", 
+                      "gzip struct/tree.hsi struct/data.json"         ],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "X3D to HSI, Regen Structure",
+            "groups"            : [ "hsiGen Regen Structure" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : ["model/x3d+xml"],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": [ "hsiGen -i \"${INPUT_URL[0]}\" -m model/x3d+xml", 
+                      "gzip struct/tree.hsi struct/data.json"         ],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "X3D to HSI, Regen All",
+            "groups"            : [ "hsiGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : ["model/x3d+xml"],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+            "addToCmds"         : ["--ignore-cache true"],
+
+            "cmds": [ "hsiGen -i \"${INPUT_URL[0]}\" -m model/x3d+xml", 
+                      "gzip struct/tree.hsi struct/data.json"         ],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "X3D with geo to HSI",
+            "groups"            : [ "hsiGen X3DGeo" ],
+            "acceptedMimetypes" : ["model/x3d+xml"],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": [ "aopt -i \"${INPUT_URL[0]}\" -Y \"nodeType(Shape),sharedSRCs(true),resolveIndices(true),encodingPreset(CMP3),collapseGraph(true)\" -W tmp.hsi",
+                      "hsiGen -i ./tmp.hsi" ],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "X3D with geo to HSI, regen",
+            "groups"            : [ "hsiGen X3DGeo Regen" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : ["model/x3d+xml"],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 50,
+
+            "cmds": [ "aopt -i \"${INPUT_URL[0]}\" -Y \"nodeType(Shape),sharedSRCs(true),resolveIndices(true),encodingPreset(CMP3),collapseGraph(true)\" -W tmp.hsi",
+                      "hsiGen -i ./tmp.hsi" ],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "PLMXML to l3d, l3dGen, aopt",
+            "groups"            : [ "l3dGen-aopt" ],
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/vnd.siemens.plmxml --postfix \"\""],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "PLMXML to l3d, l3dGen, aopt, regen struct",
+            "groups"            : [ "l3dGen-aopt Regen Structure", "l3dGen-aopt Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/vnd.siemens.plmxml --postfix \"\""],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "Step AP242 to l3d, l3dGen, aopt",
+            "groups"            : [ "l3dGen-aopt" ],
+            "acceptedMimetypes" : [ "model/iso.step.ap242+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/iso.step.ap242+xml  --postfix \"\""],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "Step AP242 to l3d, l3dGen, aopt, regen struct",
+            "groups"            : [ "l3dGen-aopt Regen Structure", "l3dGen-aopt Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/iso.step.ap242+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/iso.step.ap242+xml --postfix \"\""],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "OpenJT to HSI, l3dGen-aopt",
+            "groups"            : [ "l3dGen-aopt", "l3dGen-aopt Regen Structure" ],
+            "acceptedMimetypes" : [ "model/vnd.siemens.openjt", "model/jt" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": [ "aopt -i \"${INPUT_URL[0]}:lod(1)\" -F \"Scene:alphaGeometry(1),cacheopt(1)\" -Y \"nodeType(Scene),sharedSRCs(true),collapseGraph(true),encodingPreset(CMP3)\"", 
+                      "gzip src0.src" ],
+
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "OpenJT to HSI, l3dGen-aopt, regen",
+            "groups"            : [ "l3dGen-aopt Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/vnd.siemens.openjt", "model/jt" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 60,
+
+            "cmds": [ "aopt -i \"${INPUT_URL[0]}:lod(1)\" -F \"Scene:alphaGeometry(1),cacheopt(1)\" -Y \"nodeType(Scene),sharedSRCs(true),collapseGraph(true),encodingPreset(CMP3)\"", 
+                      "gzip src0.src" ],
+
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+        {
+            "name"              : "PLMXML to l3d, l3dGen",
+            "groups"            : [ "l3dGen" ],
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/vnd.siemens.plmxml"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "PLMXML to l3d, l3dGen, regen struct",
+            "groups"            : [ "l3dGen Regen Structure", "l3dGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "application/x-plmxml",
+                                    "model/vnd.siemens.plmxml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/vnd.siemens.plmxml"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "Step AP242 to l3d, l3dGen",
+            "groups"            : [ "l3dGen" ],
+            "acceptedMimetypes" : [ "model/iso.step.ap242+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m "],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "Step AP242 to l3d, l3dGen, regen struct",
+            "groups"            : [ "l3dGen Regen Structure", "l3dGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/iso.step.ap242+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m "],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+
+       {
+            "name"              : "X3D to l3d, l3dGen",
+            "groups"            : [ "l3dGen" ],
+            "acceptedMimetypes" : [ "model/x3d+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+	        "priority"          : 70,
+
+            "cmds": ["aopt -i \"${INPUT_URL[0]}\" -f Inline:load:false -e -:.osb | l3dGen -i - -u \"${INPUT_URL[0]}\" -o . -m model/osb"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "X3D to l3d, l3dGen, regen",
+            "groups"            : [ "l3dGen Regen Structure", "l3dGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/x3d+xml" ],
+            "resultMimetype"    : "model/x-l3d",
+	        "priority"          : 70,
+
+            "cmds": ["aopt -i \"${INPUT_URL[0]}\" -f Inline:load:false -e -:.osb | l3dGen -i - -u \"${INPUT_URL[0]}\" -o . -m model/osb"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+
+
+
+
+
+
+
+
+
+
+        {
+            "name"              : "OpenJT to l3d, l3dGen",
+            "groups"            : [ "l3dGen", "l3dGen Regen Structure" ],
+            "acceptedMimetypes" : [ "model/vnd.siemens.openjt", "model/jt" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/jt"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "OpenJT to l3d, l3dGen, regen JT struct",
+            "groups"            : [ "l3dGen Regen JT Structure" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/vnd.siemens.openjt", "model/jt" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/jt"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        },
+        {
+            "name"              : "OpenJT to l3d, l3dGen, regen",
+            "groups"            : [ "l3dGen Regen All" ],
+            "ignoreCachedResult": true,
+            "acceptedMimetypes" : [ "model/vnd.siemens.openjt", "model/jt" ],
+            "resultMimetype"    : "model/x-l3d",
+            "priority"          : 70,
+
+            "cmds": ["l3dGen -i \"${INPUT_URL[0]}\" -o . -m model/jt"],
+            "env": 
+            [
+              [ "JTK_LAYER_FILTERS", "DEFAULT" ]
+            ]
+        }
+    ]
+}

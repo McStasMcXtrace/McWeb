@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-Hub-method-constructor'><span id='webvis-Hub'>/**
+</span></span> * @class webvis.Hub
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @constructor
+ * Creates a new Hub instance.
+ */
+webvis.Hub = function( params )
+{
+//----------------------------------------------------------------------------------------------------------------------
+// Extends
+//----------------------------------------------------------------------------------------------------------------------
+
+    webvis.utils.Extend( this, new webvis.EventTarget() );
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Hub-property-_host'>    /**
+</span>     * @property {string}
+     * The URL of the Host where the Hub is running.
+     * @private
+     */
+    var _host = null;
+
+<span id='webvis-Hub-property-_port'>    /**
+</span>     * @property {String}
+     * The port number the Hub is listening.
+     * @private
+     */
+    var _port = null;
+
+//----------------------------------------------------------------------------------------------------------------------
+// Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Hub-method-initialize'>    /**
+</span>     * @method initialize
+     * TODO Description
+     * @private
+     */
+    var initialize = function () {
+        params = webvis.utils.CheckParameters( params, [
+            { key: &quot;host&quot;, required: true, default: null },
+            { key: &quot;port&quot;, required: false, default: &quot;80&quot; }
+        ] );
+
+        if ( !params.valid )
+        {
+            console.error( &quot;[Hub] Invalid parameters&quot; );
+        }
+        else
+        {
+            _host = params.host;
+            _port = params.port;
+        }
+    };
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Hub-property-Host'>    /**
+</span>     * @property Host
+     * Get or set the host.
+     * @type {String}
+     */
+    Object.defineProperty( this, &quot;Host&quot;, {
+        get: function () {
+            return _host;
+        },
+        set: function ( val ) {
+            _host = val;
+        }
+    });
+
+<span id='webvis-Hub-property-Port'>    /**
+</span>     * @property Port
+     * Get or set the port.
+     * @type {String}
+     */
+    Object.defineProperty( this, &quot;Port&quot;, {
+        get: function () {
+            return _port;
+        },
+        set: function ( val ) {
+            _port = val;
+        }
+    });
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Hub-method-UploadFile'>    /**
+</span>     * @method UploadFile
+     * Upload a file to the hub server.
+     * @param {File} file
+     */
+    this.UploadFile = function ( file )
+    {
+        if ( !file )
+        {
+            console.error( &quot;[Hub -&gt; UploadFile] Invalid parameters&quot; );
+        }
+        else
+        {
+            //Create new XMLHttpRequest
+            var xhr = new XMLHttpRequest();
+
+            //Check upload functionality
+            if ( !xhr.upload )
+            {
+                console.error( &quot;[Hub -&gt; UploadFile] XMLHttpRequest upload functionality not available&quot; );
+            }
+            else
+            {
+                var that = this;
+
+                //Initialize the request.
+                //TODO uncomment port if Hub is a real service
+                xhr.open( &quot;POST&quot;, _host + /*&quot;:&quot; + _port +*/ &quot;/upload.php&quot;, true );
+
+                //Set X_FILENAME header to pass of as AJAX request
+                xhr.setRequestHeader( &quot;X_FILENAME&quot;, file.name );
+
+                //Add onload event listener
+                xhr.addEventListener( &quot;progress&quot;, function ( event ) {
+                    that.DispatchEvent( event );
+                }, false);
+
+                //Add onprogress event listener
+                xhr.addEventListener( &quot;load&quot;, function ( event ) {
+                    console.log( &quot;filename: &quot; + file.name + &quot; filetype: &quot; + file.type );
+                    that.DispatchEvent( event );
+                }, false);
+
+                //Send request
+                xhr.send( file );
+            }
+        }
+    };
+
+//----------------------------------------------------------------------------------------------------------------------
+// Execute Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+    initialize();
+};</pre>
+</body>
+</html>

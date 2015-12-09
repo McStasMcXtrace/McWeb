@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Name=Instant Player
+Name[de]=Instant Player
+Exec=/opt/instantReality/bin/InstantPlayer %U
+TryExec=/opt/instantReality/bin/InstantPlayer
+Icon=instantReality-Player.png
+Categories=Graphics;3DGraphics
+MimeType=model/x3d+xml;model/x3d+vrml;model/x3d+binary;model/vrml;application/x-avalon-engine+vrml;application/x-avalon-engine+xml;application/x-avalon-engine+binary;application/x-irlicense;application/x-opensg+ascii;application/x-opensg+binary

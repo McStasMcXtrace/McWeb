@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Name=Instant IO
+Name[de]=Instant IO
+Exec=/opt/instantReality/bin/InstantIO %U
+TryExec=/opt/instantReality/bin/InstantIO
+Icon=instantReality-IO.png
+Categories=Graphics;3DGraphics

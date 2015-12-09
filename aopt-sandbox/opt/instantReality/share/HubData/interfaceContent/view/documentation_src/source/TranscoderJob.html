@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-TranscoderJob-method-constructor'><span id='webvis-TranscoderJob'>/**
+</span></span> * @class webvis.TranscoderJob
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @constructor
+ * Creates a new TranscoderJob instance.
+ */
+webvis.TranscoderJob = function( params ) {
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+    var self = this;
+
+    webvis.EventTarget.call(this);
+
+<span id='webvis-TranscoderJob-property-_id'>    /**
+</span>     * @property {string}
+     * @private
+     */
+    this._id = params.id || null;
+
+<span id='webvis-TranscoderJob-property-_state'>    /**
+</span>     * @property {string}
+     * @private
+     */
+    this._state = webvis.TranscoderJobState.OPEN;
+
+<span id='webvis-TranscoderJob-property-_resource'>    /**
+</span>     * @property {string}
+     * @private
+     */
+    this._resource = params.resource || null;
+
+<span id='webvis-TranscoderJob-property-_type'>    /**
+</span>     * @property {webvis.DeliveryFormat}
+     * @private
+     */
+    this._type = params.jobType || webvis.TranscoderJobType.CLASSIC;
+
+<span id='webvis-TranscoderJob-property-_deliveryFormat'>    /**
+</span>     * @property {webvis.DeliveryFormat}
+     * @private
+     */
+    this._deliveryFormat = params.deliveryFormat || webvis.DeliveryFormat.X3D;
+
+<span id='webvis-TranscoderJob-property-_optimizationMode'>    /**
+</span>     * @property {webvis.OptimizationMode}
+     * @private
+     */
+    this._optimizationMode = params.optimizationMode || webvis.OptimizationMode.RESTRUCTURE;
+
+<span id='webvis-TranscoderJob-property-_conversionMode'>    /**
+</span>     * @property {webvis.ConversionMode}
+     * @private
+     */
+    this._conversionMode = params.conversionMode || webvis.ConversionMode.BINARY_GEOMETRY;
+
+<span id='webvis-TranscoderJob-property-_replyType'>    /**
+</span>     * @property {boolean}
+     * @private
+     */
+    this._replyType = params.replyType || webvis.ReplyType.RESULT;
+
+<span id='webvis-TranscoderJob-property-_htmlHeaderFields'>    /**
+</span>     * @property {Array}
+     * @private
+     */
+    this._htmlHeaderFields = params.htmlHeaderFields || [];
+
+<span id='webvis-TranscoderJob-property-_commands'>    /**
+</span>     * @property {Array}
+     * @private
+     */
+    this._commands = params.commands || null;
+
+<span id='webvis-TranscoderJob-property-_mimeType'>    /**
+</span>     * @property {string}
+     * @private
+     */
+    this._mimeType = params.mimeType || null;
+
+<span id='webvis-TranscoderJob-property-_reply'>    /**
+</span>     * @property {string}
+     * @private
+     */
+    this._reply = null;
+
+    this._replyLocation = null;
+
+    this._filename = params.filename || null;
+
+    this._urlOnly = params.urlOnly || false;
+
+    this._protocol = params._protocol || &quot;POST&quot;;
+    this._url = params.url;
+    this._callback = params.callback || function(){};
+
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// Extends
+//----------------------------------------------------------------------------------------------------------------------
+webvis.TranscoderJob.prototype = Object.create(webvis.EventTarget.prototype);
+webvis.TranscoderJob.prototype.constructor = webvis.TranscoderJob;
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-TranscoderJob-property-ID'>/**
+</span> * @property ID
+ * Get or set the job id.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;ID&quot;, {
+    get: function () {
+        return this._id;
+    },
+    set: function ( val ) {
+        this._id = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-Resource'>/**
+</span> * @property Resource
+ * Get or set the resource to transcode.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;Resource&quot;, {
+    get: function () {
+        return this._resource;
+    },
+    set: function ( val ) {
+        this._resource = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-State'>/**
+</span> * @property State
+ * Get the state of the job.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;State&quot;, {
+    get: function () {
+        return this._state;
+    },
+    set: function ( val ) {
+        if ( this._state != val )
+        {
+            this._state = val;
+            this.DispatchEvent( webvis.EventType.TRANSCODINGSTATE_CHANGED );
+        }
+    }
+});
+
+<span id='webvis-TranscoderJob-property-ConversionMode'>/**
+</span> * @property ConversionMode
+ * Get or set the conversion mode.
+ * @type {webvis.ConversionMode}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;ConversionMode&quot;, {
+    get: function () {
+        return this._conversionMode;
+    },
+    set: function ( val ) {
+        this._conversionMode = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-DeliveryMode'>/**
+</span> * @property DeliveryMode
+ * Get or set the delivery mode.
+ * @type {webvis.DeliveryFormat}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;DeliveryFormat&quot;, {
+    get: function () {
+        return this._deliveryFormat;
+    },
+    set: function ( val ) {
+        this._deliveryFormat = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-OptimizationMode'>/**
+</span> * @property OptimizationMode
+ * Get or set the optimization mode.
+ * @type {webvis.OptimizationMode}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;OptimizationMode&quot;, {
+    get: function () {
+        return this._optimizationMode;
+    },
+    set: function ( val ) {
+        this._optimizationMode = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-ReplyType'>/**
+</span> * @property ReplyType
+ * Get or set the reply type.
+ * @type {Boolean}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;ReplyType&quot;, {
+    get: function () {
+        return this._replyType;
+    },
+    set: function ( val ) {
+        this._replyType = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-Reply'>/**
+</span> * @property Reply
+ * Get or set the reply.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;Reply&quot;, {
+    get: function () {
+        return this._reply;
+    },
+    set: function ( val ) {
+        this._reply = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-ReplyLocation'>/**
+</span> * @property ReplyLocation
+ * Get or set the replyLocation.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;ReplyLocation&quot;, {
+    get: function () {
+        return this._replyLocation;
+    },
+    set: function ( val ) {
+        this._replyLocation = val;
+    }
+});
+
+<span id='webvis-TranscoderJob-property-State'>/**
+</span> * @property State
+ * Get the state of the job.
+ * @type {String}
+ */
+Object.defineProperty( webvis.TranscoderJob.prototype, &quot;Request&quot;, {
+    get: function () {
+
+        var params = null;
+
+        if ( this._type == webvis.TranscoderJobType.CLASSIC )
+        {
+            params = {
+                &quot;resource&quot;: this._resource,
+                &quot;ops&quot;: this._optimizationMode + &quot;,&quot; + this._conversionMode,
+                &quot;format&quot;: this._deliveryFormat,
+                &quot;reply&quot;: this._replyType,
+                &quot;html-header-fields&quot;: this._htmlHeaderFields,
+                &quot;mimetype&quot;: this._mimeType
+            };
+        }
+        else if ( this._type == webvis.TranscoderJobType.SECURECOMMANDBATCH )
+        {
+            params = {
+                &quot;type&quot;: this._type,
+                &quot;cmds&quot;: this._commands,
+                &quot;reply&quot;: this._replyType,
+                &quot;env&quot; : [ [&quot;JTK_LAYER_FILTERS&quot;, &quot;DEFAULT&quot;] ]
+            };
+        }
+
+        return { ServiceClass : &quot;TranscoderService&quot;, Parameters : params};
+    },
+    set: function () {
+        console.error(&quot;TranscoderJob] Request is read-only&quot;)
+    }
+});
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.TranscoderJob.prototype.CheckStatus = function CheckStatus() {
+    var that = this;
+    //Check if id is valid
+    //if ( this._replyLocation != null )
+    this._url = this._replyLocation + &quot;/&quot; +  this._filename;
+
+    this._protocol = this._urlOnly ? &quot;HEAD&quot; : &quot;GET&quot;;
+
+    this._callback = function ()
+        {
+            var s = this.status;
+            var r = this.responseText;
+            if( s == 404 ) {
+                that.State = webvis.TranscoderJobState.ERROR;
+            } else if ( s == 203 || s == 202) {
+
+                webVIS.getTranscoder().AddJob(that);
+                that.State = webvis.TranscoderJobState.INPROGESS;
+
+            } else if ( s == 200) {
+                that.Reply = that._urlOnly ? that._url : r;
+                that.State = webvis.TranscoderJobState.CLOSED;
+            }
+            else
+            {
+                console.log(&quot;status is &quot; + s);
+            }
+        };
+};</pre>
+</body>
+</html>

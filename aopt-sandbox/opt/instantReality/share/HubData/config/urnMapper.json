@@ -1,0 +1,46 @@
+[
+    {
+        "namespace": "x-i3d",
+        "specifier": "shape",
+        "urlTemplate": "$(HUB)/repo/shape/$(1).osb",
+        "urlContentType": [
+            "opensg"
+        ]
+    },
+    {
+        "namespace": "bmw",
+        "specifier": "prisma:dokuid",
+        "urlTemplate": "http://localhost:4714/data/ByDocId/$(1)",
+        "urlContentType": [
+            "openjt",
+            "plmxml"
+        ]
+    },
+    {
+        "namespace": "igd",
+        "specifier": "bmw:prisma:dokuid",
+        "urlTemplate": "http://gpucloud01.igd.fraunhofer.de/hubtestset2/BMW-Vaas/ByDocId/$(1)",
+        "urlContentType": [
+            "openjt",
+            "plmxml"
+        ]
+    },
+    {
+        "namespace": "bmw",
+        "specifier": "tegggi",
+        "urlTemplate": "https://tcgateway.local?ID:$(1)",
+        "urlContentType": [
+            "openjt",
+            "plmxml"
+        ]
+    },
+    {
+        "namespace": "igd",
+        "specifier": "bmw:tegggi",
+        "urlTemplate": "http://gpucloud01.igd.fraunhofer.de/hubtestset2/BMW-Vaas/ByDocId/$(1)",
+        "urlContentType": [
+            "openjt",
+            "plmxml"
+        ]
+    }
+]

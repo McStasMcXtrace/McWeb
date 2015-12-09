@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-Volume-method-constructor'><span id='webvis-Volume'>/**
+</span></span> * @class webvis.Volume
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @constructor
+ * Creates a new Volume instance.
+ */
+webvis.Volume = function( params ) {
+
+    //Check Parameters
+    params = webvis.utils.CheckParameters( params, [
+        { key: &quot;min&quot;, required: false, default: new webvis.Vector3() },
+        { key: &quot;max&quot;, required: false, default: new webvis.Vector3() }
+    ]);
+
+<span id='webvis-Volume-property-_min'>    /**
+</span>     * Holds the minimal values of the volume
+     * @type {webvis.Vector3}
+     * @private
+     */
+    this._min = params.min;
+
+<span id='webvis-Volume-property-_max'>    /**
+</span>     * Holds the maximal values of the volume
+     * @type {webvis.Vector3}
+     * @private
+     */
+    this._max = params.max;
+
+<span id='webvis-Volume-property-_center'>    /**
+</span>     * Holds the center of the volume
+     * @type {webvis.Vector3}
+     * @private
+     */
+    this._center = this._min.Add( this._max ).Scale( 0.5 );
+
+<span id='webvis-Volume-property-_size'>    /**
+</span>     * Holds the size of the volume
+     * @type {webvis.Vector3}
+     * @private
+     */
+    this._size = this._max.Sub( this._min );
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+//TODO: invalidate and recompute center/size here
+<span id='webvis-Volume-property-Min'>/**
+</span> * @property Min
+ * Get or set the minimal value of the volume.
+ * @type {webvis.Vector3}
+ */
+Object.defineProperty( webvis.Volume.prototype, &quot;Min&quot;, {
+    get: function () {
+        return this._min;
+    },
+    set: function ( val ) {
+        this._min = val;
+    }
+});
+
+
+//TODO: invalidate and recompute center/size here
+<span id='webvis-Volume-property-Max'>/**
+</span> * @property Max
+ * Get or set the maximal value of the volume.
+ * @type {webvis.Vector3}
+ */
+Object.defineProperty( webvis.Volume.prototype, &quot;Max&quot;, {
+    get: function () {
+        return this._max;
+    },
+    set: function ( val ) {
+        this._max = val;
+    }
+});
+
+
+<span id='webvis-Volume-property-Center'>/**
+</span> * @property Center
+ * Get the center of the volume.
+ * @type {webvis.Vector3}
+ */
+Object.defineProperty( webvis.Volume.prototype, &quot;Center&quot;, {
+    get: function () {
+        return this._center;
+    },
+    set: function ( ) {
+        console.error( &quot;[Volume] Center is read only&quot;);
+    }
+});
+
+
+<span id='webvis-Volume-property-Size'>/**
+</span> * @property Size
+ * Get the size of the volume.
+ * @type {webvis.Vector3}
+ */
+Object.defineProperty( webvis.Volume.prototype, &quot;Size&quot;, {
+    get: function () {
+        return this._size;
+    },
+    set: function ( ) {
+        console.error( &quot;[Volume] Size is read only&quot;);
+    }
+});
+</pre>
+</body>
+</html>

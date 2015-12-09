@@ -1,0 +1,147 @@
+<div class="container" ng-controller="jobController as jc">
+<div class="container" ng-controller="hubServicesController as hs">
+
+	<div class="row">
+		<nav class="navbar navbar-default full b-b-1-l sc-view" role="navigation">
+		  <div class="custom-container">
+            <ul class="breadcrumb p-15">
+                <li>
+                    <span class="breadcrumb-link" ng-class="hs.getViewScope() == hs.viewScopes.SERVICE_LIST ? 'active' : 'inactive'"
+                    ng-click="hs.setViewScope(hs.viewScopes.SERVICE_LIST)">Services</span>
+                </li>
+                <li ng-show="(hs.getViewScope() == hs.viewScopes.JOB_LIST) || (hs.getViewScope() == hs.viewScopes.JOB_DETAILS)">
+                    <span class="breadcrumb-link" ng-class="hs.getViewScope() == hs.viewScopes.JOB_LIST ? 'active' : 'inactive'"
+                    ng-click="hs.setViewScope(hs.viewScopes.JOB_LIST)">{{hs.services.currService.serviceName}}</span>
+                </li>
+                <li ng-show="hs.getViewScope() == hs.viewScopes.JOB_DETAILS">
+                    <span class="breadcrumb-link" ng-class="hs.getViewScope() == hs.viewScopes.JOB_DETAILS ? 'active' : 'inactive'">{{hs.services.currService.jobSet.currentJob.id}}</span>
+                </li>
+            </ul>
+		  </div>
+		</nav>
+	</div>
+
+	<div class="mt-50 b-t-1-l full sc-view" ng-controller="gridCtrl as gc">
+	<!-- <div class="full sc-view" ng-controller="gridCtrl as gc"> -->
+
+		<div class="col-md-4 h100 b-r-1-l" ng-show="hs.getViewScope() == hs.viewScopes.SERVICE_LIST" ng-class="col-md-4"> <!--ng-class="hs.showDetails == false ? 'col-md-6' : 'col-md-4' "-->
+			<div class="ulWrapper full sc-view">
+				<ul class="itemsUL sc-view">
+					<li class="big-li" ng-repeat="service in hs.services.elements" ng-class="hs.services.currService == service ? 'active' : 'inactive'" ng-click="hs.services.setCurrentService(service)">
+						<div class="liLabel sc-view">
+		                    <span>
+                              <strong>Service: </strong>{{service.serviceName}}
+                              <strong>Host: </strong>{{service.host}}
+                            </span>
+		                </div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<!-- ng-class="col-md-6" -->
+		<div class="col-md-8 h100 b-r-1-l" ng-show="(hs.getViewScope() == hs.viewScopes.SERVICE_LIST) || (hs.getViewScope() == hs.viewScopes.JOB_LIST)" ng-class="hs.getViewScope() == hs.viewScopes.SERVICE_LIST ? 'col-md-8' : 'col-md-4' ">
+			<div class="container">
+				<div class="m-l20-t10 full sc-view">
+					<fieldset>
+						<legend>Service Description for <strong>{{hs.services.currService.serviceName}}</strong> at {{hs.services.currService.host}}</legend>
+							<span class="legend-s">Status</span>
+							<ul class="desc-ul">
+								<li class="light"><strong>Version:</strong> {{hs.services.currService.version}}</li>
+								<li class="light"><strong>License:</strong> {{hs.services.currService.license}}</li>
+								<li class="light"><strong>Worker Threads:</strong> {{hs.services.currService.threads}}</li>
+                            </ul>
+						    <span class="legend-s">Options</span>
+							<ul class="desc-ul">
+                                <li class="light link" ng-click="gc.loadJobData(); hs.toggleJobList(); gc.setAutoRefresh((hs.getViewScope() == hs.viewScopes.JOB_LIST) || (hs.getViewScope() == hs.viewScopes.JOB_DETAILS));">
+									<span>Job List</span>
+                                    <i class="fa fa-arrow-circle-right"></i>
+   
+									<!--<i class="btn_round link icon-keyboard-arrow-right"></i>-->
+								</li>
+<!--							<li class="light link">Statistics <i class="btn_round link icon-keyboard-arrow-right"></i></li>
+								<li class="light link">REST API Description <i class="btn_round link icon-keyboard-arrow-right"></i></li>-->
+                            </ul>
+						    <span class="legend-s">System</span>
+                            <ul class="desc-ul">
+								<li class="light"> <strong>Host Name:</strong> {{hs.services.currService.host}}</li>
+								<li class="light"> <strong>Port:</strong> {{hs.services.currService.port}}</li>
+								<li class="light"> <strong>Machine Type:</strong> {{hs.services.currService.machine}}</li>
+								<li class="light"> <strong>CPU Count:</strong> {{hs.services.currService.cpu_count}}</li>
+								<li class="light"> <strong>OS:</strong> {{hs.services.currService.os}}</li>
+								<li class="light" ng-show="hs.services.currService.serviceName == 'TranscoderService'"><strong>Delivery:</strong> {{hs.services.currService.delivery}}</li>
+							</ul>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+
+		<div ng-show="(hs.getViewScope() == hs.viewScopes.JOB_LIST) || (hs.getViewScope() == hs.viewScopes.JOB_DETAILS)" class="h100 grid-wrapper b-r-1-l" ng-class="hs.getViewScope() == hs.viewScopes.JOB_DETAILS ? 'col-md-4' : 'col-md-8'">
+			<div class="container full">
+				<div class="nav-header b-b-1-l sc-view">
+					<div class="row">
+                        <div class="col-md-8 p-l-30">
+                            <strong>Total Jobs:</strong> {{ gridOptions.data.length | number }} ({{hs.services.currService.jobSet.failedJobs | number }} failed)
+                        </div>
+                        <div class="col-md-4 text-right p-r-30">
+                            <span ng-show="gc.loading == true">
+                                <span class="invisible">.</span><i class="fa fa-refresh fa-spin"></i>
+                            </span>
+                            <span class="pointer" ng-show="gc.loading == false" ng-click="gc.loadJobData();">
+                                <span class="invisible">.</span><i class="fa fa-refresh"></i>
+                            </span>
+                        </div>
+
+                    </div>
+				</div>
+				<div class="fadeIn ulWrapper full mt-50 sc-view" ng-show="gc.loaded == true">
+					<div ui-grid="gridOptions" ui-grid-pagination ui-grid-auto-resize ui-grid-selection class="grid"></div>
+				</div>
+			</div>
+		</div>
+
+        <div ng-show="hs.getViewScope() == hs.viewScopes.JOB_DETAILS" class="col-md-8 h100 b-r-1-l">
+           <div class="container full">
+				<div class="nav-header b-b-1-l sc-view">
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li ng-class="jc.getActiveJobTab() == jc.JobTabs.GENERAL ? 'active' : 'inactive'" class="nav-item" ng-click="jc.setActiveJobTab(jc.JobTabs.GENERAL)">
+                                <a class="jobTab" href="#"><i class="fa fa-bar-chart"></i>&nbsp; General</a>
+                            </li>
+                            <li ng-class="jc.getActiveJobTab() == jc.JobTabs.ACC ? 'active' : 'inactive'" class="nav-item" ng-click="jc.setActiveJobTab(jc.JobTabs.ACC)">
+                                <a class="jobTab" href="#">Acc</a>
+                            </li>
+                            <li ng-class="jc.getActiveJobTab() == jc.JobTabs.STRUCT ? 'active' : 'inactive'" class="nav-item" ng-click="jc.setActiveJobTab(jc.JobTabs.STRUCT)">
+                                <a class="jobTab" href="#"><i class="fa fa-sitemap"></i>&nbsp; Struct</a>
+                            </li>
+                            <li ng-class="jc.getActiveJobTab() == jc.JobTabs.LOG ? 'active' : 'inactive'" class="nav-item" ng-click="jc.setActiveJobTab(jc.JobTabs.LOG)">
+                                <a class="jobTab" href="#"><i class="fa fa-server"></i>&nbsp;  Log</a>
+                            </li>
+                        <ul>
+                    </div>
+				</div>
+				<div class="fadeIn ulWrapper full mt-50 sc-view">
+                    <div role="tabpanel" class="fadeIn full scroll-content sc-view h100" ng-show="jc.getActiveJobTab() == jc.JobTabs.GENERAL">
+                        <div stats-vis stats-data="hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.GENERAL]" class="stats-graphics h100"></div>
+                    </div>
+                    <div role="tabpanel" class="fadeIn full scroll-content sc-view h100" ng-show="jc.getActiveJobTab() == jc.JobTabs.ACC">
+                        <pre>{{hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.ACC]}}</pre>
+                    </div>
+                    <div role="tabpanel" class="fadeIn full scroll-content sc-view h100" ng-show="jc.getActiveJobTab() == jc.JobTabs.STRUCT">
+                        <div class="h100" ng-if="hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.STRUCT] != null">
+                            <div ng-show="hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.STRUCT].status != 200">
+                                <pre>This job does not have structure information. Try an hsiGen job!</pre>
+                            </div>
+                            <div class="h100" ng-show="hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.STRUCT].status == 200">
+                                <div struct-tree-vis graph-data="hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.STRUCT]" class="struct-graphics h100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="fadeIn full scroll-content sc-view" ng-show="jc.getActiveJobTab() == jc.JobTabs.LOG">
+                        <pre>{{hs.services.currService.jobSet.currentJob.statistics[jc.JobTabs.LOG].data}}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>

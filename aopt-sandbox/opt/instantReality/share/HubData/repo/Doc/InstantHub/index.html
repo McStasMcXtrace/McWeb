@@ -1,0 +1,106 @@
+<html><header></header><body>
+
+<h1>instantHub REST API Description</h1>
+
+<ul>
+  <li><i>/</i> - Frontpage
+  </li><br>
+
+  <li><i>/index</i> - Frontpage
+  </li><br>
+
+  <li><i>/hub</i> - instantHub self description
+    <ul><br>
+      <li> allowed http verbs: GET, HEAD</li>
+      <li> default output: HTML</li>
+      <li> alternative output json (Accept: application/json)</li>
+    </ul><br>
+  </li>
+
+  <li><i>/service</i> - instantService registry
+    <ul><br>
+      <li>GET - retrieve registeres service list
+        <ul><br>
+          <li> query parameter: <i>class</i>, only list services of type class
+          <li> default output: HTML</li>
+          <li> alternative output json (Accept: application/json)</li>
+        </ul><br>
+      </li>
+      
+      <li>POST - register instantService</li>
+    </ul>
+  </li><br>
+
+  <li><i>/job</i> - job registry 
+    <ul><br>
+      <li>GET - retrieve job list
+        <ul><br>
+          <li> query parameter: <i>class</i>, only list services of type class
+          <li> default output: HTML</li>
+          <li> alternative output json (Accept: application/json)</li>
+        </ul>
+      </li><br>
+      <li>POST - add a job
+        <ul><br>
+          <li>POST request - expects a JSON file describing the job service
+            class and job parameters
+          </li> 
+          <li> The POST request JSON block follows the template below
+            <pre>
+              {
+                "ServiceClass" : "&lt;Requested ServiceClass&gt;"
+                "Parameters"   :
+                {
+                  "&lt;parameter name 0&gt;" : "&lt;parameter value 0&gt;",
+                  "&lt;parameter name 1&gt;" : "&lt;parameter value 1&gt;",
+                  .
+                  .
+                  .
+                  "&lt;parameter name N&gt;" : "&lt;parameter value N&gt;",
+                }
+              }
+            </pre>
+
+          </li>
+          <li>Return value:
+            <ul>
+              <li>Default: the URI of the result
+              </li> 
+              <li>
+                The return value might be modified by the reply parameter
+                (service class dependent)
+              </li> 
+            </ul>
+          </li>
+        </ul>
+      </li><br>
+    </ul>
+  </li>
+
+  <li><i>/job/[jobid]</i> - job details
+    <ul><br>
+      <li>GET - retrieve job details
+        <ul><br>
+          <li> default output: HTML</li>
+          <li> alternative output json (Accept: application/json)</li>
+        </ul>
+      </li><br>
+      <li>DELETE - delete a job
+      </li><br>
+    </ul>
+  </li>
+
+  <li><i>/job/updateState</i> - batch job state update
+    <ul><br>
+      <li>POST - retrieve job details
+        <ul><br>
+          <li> default output json</li>
+        </ul>
+      </li><br>
+    </ul>
+  </li>
+</ul>
+
+
+</body></html>
+

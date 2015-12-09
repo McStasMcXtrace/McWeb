@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">var Module = {
+    'noExitRuntime' : true
+};
+Module.TOTAL_MEMORY = 536870912;
+
+/*callbacks */
+
+_addTraverseNodeBoxVolume = function (id, depth, minX, minY, minZ, maxX, maxY, maxZ)
+{
+   pre.ASMCuller.instance.addNodeAsBoxVolume(id, depth, minX, minY, minZ, maxX, maxY, maxZ);
+};
+
+_renderDrawable =  function (id, coverage)
+{
+    pre.ASMCuller.instance.addRenderTreeNodeForRendering(id, coverage);
+};
+
+//only called for geometry rendering
+_triggerRender = function (state)
+{
+    pre.ASMCuller.instance.triggerRendering(state);
+};
+
+_getRenderState = function()
+{
+    return pre.ASMCuller.instance.getRenderState();
+};
+
+_createQuery = function (id)
+{
+    var queries = pre.ASMCuller.instance._occlusionQueries;
+    if(queries.length != id )
+        console.log(&quot;wrong hoq id &quot;+id+&quot; should be &quot;+queries.length);
+
+    queries.push(new pre.OcclusionQuery(id));
+};
+
+_deleteQuery = function (id)
+{
+    pre.ASMCuller.instance._occlusionQueries[id].deleteQuery();
+};
+
+_resultAvailable = function (id)
+{
+    return pre.ASMCuller.instance._occlusionQueries[id].resultAvailable();
+};
+
+_getQueryResult = function (id)
+{
+    return pre.ASMCuller.instance._occlusionQueries[id].getQueryResult();
+};
+
+_processQuery = function(id)
+{
+    var qry = pre.ASMCuller.instance._occlusionQueries[id];
+    qry.beginQuery();
+
+    _triggerRender(1);
+
+    qry.endQuery();
+};
+
+_addNode = function (queryId, nodeId)
+{
+    pre.ASMCuller.instance._occlusionQueries[queryId].addNode(pre.ASMCuller.instance._nodeMatrices[nodeId]);
+};
+
+_reset = function(id)
+{
+    return pre.ASMCuller.instance._occlusionQueries[id].reset();
+};
+
+_setCompileStats = function (numberOfNodes, numberOfLeaves, depth, maxObjects)
+{
+    var group = &quot;SPATIAL&quot;, stats = util.Statistics.getInstance();
+
+   stats.addValue(&quot;#NODES&quot;, numberOfNodes, group);
+   stats.addValue(&quot;#LEAFS&quot;, numberOfLeaves, group);
+   stats.addValue(&quot;DEPTH&quot;, depth, group);
+   stats.addValue(&quot;#MAX OBJ&quot;, maxObjects, group);
+};
+
+_setCullingStats = function (
+    nodesTraversed, nodesRendered, nodesViewFrustumCulled, nodesSmallFeatureCulled,
+    drawablesSmallFeatureCulled, drawablesRendered, numIssuedQueries, nodesQueryCulled,
+    traverseTime, sortTime)
+{
+    var group = &quot;VISIBILITY&quot;, stats = util.Statistics.getInstance();
+
+    stats.addValue(&quot;#TRAVERSED&quot;, nodesTraversed, group);
+    stats.addValue(&quot;#RENDERED&quot;, nodesRendered, group);
+    stats.addValue(&quot;#VFC CULLED&quot;, nodesViewFrustumCulled, group);
+    stats.addValue(&quot;#SF CULLED&quot;, nodesSmallFeatureCulled, group);
+    stats.addValue(&quot;#QUERIES&quot;, numIssuedQueries, group);
+    stats.addValue(&quot;#OCC CULLED&quot;, nodesQueryCulled, group);
+};
+
+_enablePolyOffsetFill = function()
+{
+    var stateManager = pre.ASMCuller.instance._renderer.getStateManager();
+    stateManager.caps(stateManager.getConstants().POLYGON_OFFSET_FILL, true);
+};
+
+_polygonOffset = function (factor, unit)
+{
+    var stateManager = pre.ASMCuller.instance._renderer.getStateManager();
+    stateManager.poly
+};
+
+_disablePolygonOffsetFill = function()
+{
+    var stateManager = pre.ASMCuller.instance._renderer.getStateManager();
+    stateManager.caps(stateManager.getConstants().POLYGON_OFFSET_FILL, false);
+};
+</pre>
+</body>
+</html>

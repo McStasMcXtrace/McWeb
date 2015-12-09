@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+var NUM_FACETS_PER_MEASUREMENT_CONE = 12;
+var MEASUREMENT_CONE_HEIGHT         = 0.0025; //in meters //TODO:EDF
+var MEASUREMENT_CONE_RADIUS         = 0.0025; //in meters //TODO:EDF
+
+
+//temporary helper functions until we have a proper handling of reference systems
+var __scaleFactor = 1; //TODO:EDF
+
+var __glVecToEngineerVec = function(vec)
+{
+    return [(1/__scaleFactor) *  vec[0],
+            (1/ __scaleFactor) * vec[1],
+            (1/ __scaleFactor) * vec[2]];
+    /*return [(1/__scaleFactor) *  vec[0], //TODO:EDF
+            (1/ __scaleFactor) * -vec[2],
+            (1/ __scaleFactor) * vec[1]];*/
+};
+var __engineerVecToGLVec = function(vec)
+{
+    return [__scaleFactor *  vec[0],
+            __scaleFactor *  vec[1],
+            __scaleFactor *  vec[2]];
+    /*return [__scaleFactor *  vec[0], //TODO:EDF
+            __scaleFactor *  vec[2],
+            __scaleFactor * -vec[1]];*/
+};
+
+
+//TODO: Should we properly adjust the Measure.js class and use the result instead?
+//      Actually, the Measurement object we need should only be a struct with basic information,
+//      and not perform DOM manipulation or things like that.
+<span id='MeasurementInfo'>/**
+</span> * Simple helper structure for measurements.
+ */
+MeasurementInfo = function (id)
+{
+    this.startPoint = null;
+    this.endPoint   = null;
+    this.id         = id;
+
+    //getters, only as an interface for the UI functions (mimics behavior of &quot;Measure&quot; class)
+    var that = this;
+
+    Object.defineProperty( this, &quot;ID&quot;, {
+        get: function () { return that.id; },
+        set: function () { console.error( &quot;[MeasurementInfo] ID is read only&quot;); }
+    });
+
+    Object.defineProperty( this, &quot;Distance&quot;, {
+        get: function () {
+            if (!that.startPoint || !that.endPoint)
+            {
+                return 0;
+            }
+
+            return vec3.distance(that.startPoint, that.endPoint);
+        },
+        set: function () { console.error( &quot;[MeasurementInfo] Distance is read only&quot;); }
+    });
+};
+
+
+SnapshotInfo = function(id, viewMatrix)
+{
+    this.viewMatrix = viewMatrix;
+    this.id         = id;
+};
+
+
+//TODO: currently, our measurement lines are always red
+var MeasurementLineColor            = [0.0, 0.4, 0.0];
+var MeasurementLineColorHighlighted = [0.2, 1.0, 0.2];
+
+
+<span id='webvis-Viewer20-method-constructor'><span id='webvis-Viewer20'>/**
+</span></span> * @class webvis.Viewer20
+ * @extends webvis.EventTarget
+ * @constructor
+ * @param {Object} node
+ * @param {String} [node.wrapper=null]
+ * @param {String} [node.rootID=null]
+ * @param {String} [node.highlightColor=&quot;yellow&quot;]
+ */
+webvis.Viewer20 = function(node) {
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+
+<span id='webvis-Viewer20-property-_rootID'>    /**
+</span>     * @property {String}
+     * Holds the unique ID of the root assembly.
+     * @private
+     */
+    this._rootID = null;
+
+
+    this._supportedMimeTypes = [
+        webvis.MimeType.SRC
+    ];
+
+
+    //private variables for 2.0 viewer:
+
+    //TODO: Can / should we move this out of the viewer classes?
+<span id='webvis-Viewer20-property-_interactionMode'>    /**
+</span>     * @property {String}
+     * Current interaction mode.
+     * @private
+     */
+    this._interactionMode = webvis.InteractionMode.DEFAULT;
+
+    this._treeRoot = null;
+    this._octree = null;
+    this._sceneRoot = null;
+
+    this._idToRenderTreeNode = {};
+    this._idToWebvisNode = {};
+    this._hasOwnRenderTreeNode = {};
+    this._renderTreeEnabledNodes = [];
+
+    this._selectionController = null;
+
+    this._preMainApplication = null;
+    this._preGizmoApplication = null;
+    this._navController = null;
+    this._partControl = null;
+
+    this._lightDirRes = null;
+
+    this._tmpVolume = new pre.BoxVolume();
+    this._sizeVec   = vec3.create();
+
+    this._defaultApperanceDescriptor = null;
+
+    this._measurementLinesRTRoot  = null;
+    this._measurementNameToRTNode = {};
+
+    this._currentMeasurement = null;
+    //TODO: is this really a viewer property? it shouldn't be
+    this._measurements = {};
+
+    this._snapshots = {};
+    this._clipPlanes = {};
+    this._clipPlaneNormals = {};
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+    //Check node
+    node = webvis.utils.CheckParameters( node, [
+        { key: &quot;wrapper&quot;,         required: false, default: null                          },
+        { key: &quot;rootID&quot;,          required: false, default: null                          },
+        { key: &quot;renderMode&quot;,      required: false, default: webvis.RenderMode.TRIANGLES   },
+        { key: &quot;explorationMode&quot;, required: false, default: webvis.ExplorationMode.ROTATE }
+    ] );
+
+    if ( !node.valid )
+    {
+        console.error( &quot;[Viewer20] Invalid parameters&quot; );
+    }
+    else
+    {
+        //Set or Generate unique scene id
+        this._rootID = node.rootID || &quot;WebVIS_Root_&quot; + webvis.utils.GenerateUniqueId();
+        var wrapperElement = node.wrapper ? document.getElementById( node.wrapper ) : document.body;
+
+        this._initPRE(wrapperElement);
+
+        //Setup appearance descriptor
+        this._defaultApperanceDescriptor = new pre.AppearanceDescriptor();
+        this._defaultApperanceDescriptor._resources[&quot;diffuseColor&quot;] =
+            new pre.Resource(pre.ResourceType.vec3f, function()
+            {
+                return vec3.fromValues(0.8,0.8,0.8);
+            });
+        this._defaultApperanceDescriptor._resources[&quot;specularColor&quot;] =
+            new pre.Resource(pre.ResourceType.vec3f, function(){
+                return vec3.fromValues(0,0,0);
+            });
+    }
+};
+//----------------------------------------------------------------------------------------------------------------------
+// Extends
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype = new webvis.EventTarget();
+webvis.Viewer20.prototype.constructor = webvis.Viewer20;
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._initPRE = function(wrapperElement)
+{
+    var that = this;
+
+    var width = wrapperElement.clientWidth, height = wrapperElement.clientHeight;
+
+    var env = pre.Environment.getInstance();
+
+    var canvas  = document.createElement('canvas');
+    this._preMainApplication = env.requestNewApplication(canvas);
+    canvas.setAttribute( &quot;style&quot;,&quot; position: absolute; width: 100%; height: 100%; margin:0; padding:0; border:none&quot; );
+    canvas.width = width;
+    canvas.height = height;
+    pre.PipelineFactory.createWebVISPipeline(this._preMainApplication);
+    wrapperElement.appendChild(canvas);
+
+    canvas = document.createElement('canvas');
+    this._preGizmoApplication = env.requestNewApplication(canvas);
+    var gizmoSize = 200;
+    canvas.setAttribute( &quot;style&quot;, &quot;position: absolute; width: &quot; + gizmoSize + &quot;px; height: &quot; + gizmoSize +&quot;px; left: calc(100% - &quot;+ gizmoSize+&quot;px);&quot; ); // top: -&quot; +height +&quot;px;
+    canvas.width = gizmoSize;
+    canvas.height = gizmoSize;
+    pre.PipelineFactory.createDefaultPipeline(this._preGizmoApplication);
+    wrapperElement.appendChild(canvas);
+
+    this._createGizmo();
+    this._preGizmoApplication.startMainLoop();
+
+    this._navController = new navigation.ExamineNavigationController();
+    this._preMainApplication.setNavigationController(this._navController);
+
+    var viewChangedListener =
+    {
+        viewChanged : function(matrix)
+        {
+            var targetMatrix = that._preGizmoApplication.getContext().getCamera().getMutableViewMatrix();
+
+            //Update orientation
+                targetMatrix[0]  = matrix[0];
+                targetMatrix[4]  = matrix[4];
+                targetMatrix[8]  = matrix[8];
+
+                targetMatrix[1]  = matrix[1];
+                targetMatrix[5]  = matrix[5];
+                targetMatrix[9]  = matrix[9];
+
+                targetMatrix[2]  = matrix[2];
+                targetMatrix[6]  = matrix[6];
+                targetMatrix[10] = matrix[10];
+
+                targetMatrix[3]  = matrix[3];
+                targetMatrix[7]  = matrix[7];
+                targetMatrix[11] = matrix[11];
+
+            that._preGizmoApplication.getContext().getCamera().dirtyMutableViewMatrix();
+        }
+    };
+
+    this._preMainApplication.getContext().getCamera().addViewChangedListener(viewChangedListener);
+
+    var inputController =
+    {
+        keyPress : function(keyCode, timestamp )
+        {
+            //'space' key: &quot;show stats&quot;
+            if (keyCode === 32)
+            {
+                that._preMainApplication.toggleStatsViewer();
+            }
+
+            //'a' key: &quot;show all&quot;
+            if (keyCode === 65)
+            {
+                that.Fit();
+            }
+            //'v' key: &quot;debug volumes&quot;
+            if (keyCode === 86)
+            {
+                var settings = that._preMainApplication.getSettings();
+                settings.showDebugVolumes = !settings.showDebugVolumes;
+                that._preMainApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.VIEW_CHANGED);
+            }
+        },
+
+        pointerMotion : function(pointerX , pointerY , normalizedPointerX , normalizedPointerY , trigger , timestamp )
+        {
+            //TODO: this is a bit dirty / dangerous: without that call, no render tree node would receive a mouse over callback
+            var mouseOverLabel = that._preMainApplication.getPicker().getPickedLabel(normalizedPointerX, normalizedPointerY,
+                                                                                     null, timestamp);
+
+            if (mouseOverLabel)
+            {
+                //TODO: here, we could throw an event that makes the UI show the label of the part currently pointed at
+            }
+        },
+
+        pointerActionTriggered : function(pointerX , pointerY , normalizedPointerX , normalizedPointerY , trigger , type , timestamp )
+        {
+            if (type == util.PointerActionType.CLICKED &amp;&amp; (trigger == util.PointerActionTrigger.FIRST || trigger == util.PointerActionTrigger.SECOND) ||
+                type == util.PointerActionType.TOUCH_PICKED)
+            {
+                //TODO: this is a bit dirty / dangerous: without that call, no render tree node would receive a pick callback
+                that._preMainApplication.getPicker().getPickedLabel(normalizedPointerX, normalizedPointerY, trigger, timestamp);
+            }
+        },
+
+        wheelScrolled : function(){}
+    };
+
+    this._preMainApplication.addKeyObserver(inputController);
+    this._preMainApplication.addPointerObserver(inputController);
+
+
+    this._treeRoot = new pre.RenderTreeNode(this._preMainApplication);
+    this._preMainApplication.setRenderTreeRoot(this._treeRoot);
+
+
+    var octree = window[&quot;useOctree&quot;];
+    this._octree = (octree ? new pre.ASMCuller(this._preMainApplication) : new pre.RenderTreeNode(this._preMainApplication));
+    if(octree)
+    {
+        this._octree.setMaxDepth(5);
+        this._octree.setTraverserType(traverserType);
+    }
+    this._treeRoot.addChild(this._octree);
+    this._octree.setParent(this._treeRoot);
+
+    var sceneRoot = new pre.RenderTreeNode(this._preMainApplication);
+
+    this._octree.addChild(sceneRoot);
+    sceneRoot.setParent(this._octree);
+
+    //apply rotation
+    var rotationMatrix = mat4.create();
+    mat4.rotateX(rotationMatrix,rotationMatrix, -1.57);
+    sceneRoot.setLocalMatrix(rotationMatrix);
+
+    this._sceneRoot = sceneRoot;
+
+    var camera = this._preMainApplication.getContext().getCamera();
+
+    //Setup lights
+    //TODO: temporary hack to test directional light,
+    this._lightDirRes = pre.Resource.Create(pre.ResourceType.vec3f,
+        vec3.fromValues(0, 0, -1));
+
+    var lightColorRes  = pre.Resource.Create(pre.ResourceType.vec3f,
+    vec3.fromValues(1, 1, 1));
+
+    var light = new pre.DirectionalLight(this._lightDirRes,  lightColorRes);
+
+    vec4.copy(this._lightDirRes.getData(), camera.getViewDir());
+    this._lightDirRes.setDirty();
+
+    this._preMainApplication.getContext().addLight(light);
+
+    this._preMainApplication.startMainLoop(
+        function()
+        {
+            //adapt headlight position
+            vec4.copy(that._lightDirRes.getData(), camera.getViewDir());
+            that._lightDirRes.setDirty();
+        }
+    );
+ };
+
+
+webvis.Viewer20.prototype._createGizmo = function(application)
+{
+    var that = this;
+
+    var text_ring_url = &quot;data/img/OB_Directions.png&quot;;
+    var src_box_url = &quot;data/orientationBox.src#mesh_0&quot;;
+    var  text_box_url= &quot;data/img/OB_Sides.png&quot;;
+    var src_ring_url = &quot;data/orientationBox.src#mesh_1&quot;;
+
+    var flagResTrue = pre.Resource.Create(pre.ResourceType.bool, new Int32Array([1]));
+    var flagResFalse = pre.Resource.Create(pre.ResourceType.bool, new Int32Array([0]));
+    var specRes = pre.Resource.Create(pre.ResourceType.vec3f, new Float32Array([0,0.5,0.5]));
+
+    var app_box = new pre.AppearanceDescriptor();
+    var boxTexRes = pre.TextureResource.CreateLazy(pre.ResourceType.imageTexture, function(callback)
+    {
+        var image = new Image();
+        image.onload = function()
+        {
+            boxTexRes.setWidth(image.width);
+            boxTexRes.setHeight(image.height);
+            callback(image);
+            that._preGizmoApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.FULL);
+            app_box._resources[&quot;diffuseTexture&quot;] = boxTexRes;
+            app_box._resources[&quot;hasDiffuseTexture&quot;] = flagResTrue;
+        };
+        image.src = text_box_url;
+        return null;
+    });
+    boxTexRes._unpackFlipY = true;
+    boxTexRes.setMinFilter(pre.FilterType[&quot;LINEAR_MIPMAP_LINEAR&quot;]);
+
+    app_box._resources[&quot;specular&quot;] = specRes;
+    app_box._resources[&quot;hasDiffuseTexture&quot;] = flagResFalse;
+
+    boxTexRes.getData();
+
+    var app_ring = new pre.AppearanceDescriptor();
+    var ringTexRes = pre.TextureResource.CreateLazy(pre.ResourceType.imageTexture, function(callback)
+    {
+        var image = new Image();
+        image.onload = function()
+        {
+            ringTexRes.setWidth(image.width);
+            ringTexRes.setHeight(image.height);
+            callback(image);
+            that._preGizmoApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.FULL);
+            app_ring._resources[&quot;diffuseTexture&quot;] = ringTexRes;
+            app_ring._resources[&quot;hasDiffuseTexture&quot;] = flagResTrue;
+        };
+        image.src = text_ring_url;
+        return null;
+    });
+    ringTexRes._unpackFlipY = true;
+    ringTexRes.setMinFilter(pre.FilterType[&quot;LINEAR_MIPMAP_LINEAR&quot;]);
+
+    app_ring._resources[&quot;hasDiffuseTexture&quot;] = flagResFalse;
+    app_ring._resources[&quot;specular&quot;] = specRes;
+
+    ringTexRes.getData();
+    var root    = new pre.RenderTreeNode(this._preGizmoApplication);
+    var rtnBox  = new pre.RenderTreeNode(this._preGizmoApplication);
+    var rtnRing = new pre.RenderTreeNode(this._preGizmoApplication);
+
+
+    var geoBox = util.ProxyShapes.createProxyGeometry(
+        this._preGizmoApplication.getIdentifier(),
+        src_box_url,
+        function(src)
+        {
+            var forms = src.requestForms(src_box_url);
+            for(var i = 0; i &lt; forms.length; ++i)
+            {
+                if (!forms[i].getAppearanceDescriptor())
+                {
+                    forms[i].setAppearanceDescriptor(app_box);
+                }
+            }
+            rtnBox.replaceDrawables(forms, true);
+            that._preGizmoApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.FULL);
+        },
+        vec3.fromValues(0,0,0), vec3.fromValues(0.2,0.2,0.2)
+    );
+    rtnBox.replaceDrawables([new pre.Form(geoBox, app_box)]);
+
+    var geoRing = util.ProxyShapes.createProxyGeometry(
+        this._preGizmoApplication.getIdentifier(),
+        src_ring_url,
+        function(src)
+        {
+            var forms = src.requestForms(src_ring_url);
+            for(var i = 0; i &lt; forms.length; ++i)
+            {
+                if (!forms[i].getAppearanceDescriptor())
+                {
+                    forms[i].setAppearanceDescriptor(app_ring);
+                }
+            }
+            rtnRing.replaceDrawables(forms, true);
+            that._preGizmoApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.FULL);
+        },
+        vec3.fromValues(0,0,0), vec3.fromValues(0.2,0.2,0.2)
+    );
+    rtnRing.replaceDrawables([new pre.Form(geoRing, app_ring)]);
+
+    root.addChild(rtnBox);
+    root.addChild(rtnRing);
+    rtnBox.setParent(root);
+    rtnRing.setParent(root);
+
+    this._preGizmoApplication.setRenderTreeRoot(root);
+
+    var position = mat4.create();
+    mat4.translate(position, position, vec3.fromValues(0,0,-3));
+    mat4.copy(this._preGizmoApplication.getContext().getCamera().getMutableViewMatrix(), position);
+
+    this._preGizmoApplication.getContext().addLight(
+        new pre.DirectionalLight(pre.Resource.Create(pre.ResourceType.vec3f, vec3.fromValues(1, 0.5, -0.5)),  pre.Resource.Create(pre.ResourceType.vec3f,
+            vec3.fromValues(0.2, 1, 0))));
+
+    this._preGizmoApplication.getContext().addLight(
+        new pre.DirectionalLight(pre.Resource.Create(pre.ResourceType.vec3f, vec3.fromValues(-1, -0.5, 0.5)),  pre.Resource.Create(pre.ResourceType.vec3f,
+            vec3.fromValues(0.2, 0, 1))));
+    this._preGizmoApplication.getContext().getCamera().toggleAutoComputeNearFar(false);
+};
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-setupRoot'>/**
+</span> * @method setupRoot
+ * Sets up the root of the viewer's scene graph.
+ * This includes the setup of special nodes, such as the render tree node that manages
+ * lines from the measurement function.
+ *
+ * @private
+ */
+webvis.Viewer20.prototype.setupRoot = function ( node )
+{
+    this._partControl = this._preMainApplication.getContext().getPartControl();
+    this._selectionController = new util.SelectionController(new util.HighlightSelectionHandler(this._preMainApplication));
+
+    this._idToRenderTreeNode[node.ID] = this._sceneRoot;
+
+    //setup and attach root node of the measurements subgraph
+    this._measurementLinesRTRoot = new pre.RenderTreeNode(this._preMainApplication);
+
+    //TODO: attention - this assumes that we have something above root, which is only the case now because root
+    //      is a transform node that moves data from a z-upwards coordinate system to the default OpenGL system (y up)
+    this._treeRoot.addChild(this._measurementLinesRTRoot);
+
+    return this._sceneRoot;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-addMeasurementLine'>/**
+</span> * Adds a line, as usually used in a measurement tool, but still keeps the render tree node disabled.
+ * The given name can be used to identify it later on from the application side.
+ *
+ * @param id   {string} - the id of the measurement line
+ */
+webvis.Viewer20.prototype.addMeasurementLine = function(id)
+{
+    //create geometry descriptor
+    var geoDesc = new pre.GeometryDescriptor();
+
+    var posRes = pre.BufferResource.Create(pre.ResourceType.FLOAT_32, new Float32Array(2*3*NUM_FACETS_PER_MEASUREMENT_CONE + 2*3), 3);
+    posRes.setUsageHint(pre.BufferUsageHint.DYNAMIC);
+    geoDesc.attachResource(&quot;position&quot;, posRes);
+
+    //setup indices
+    var idxRes        = pre.BufferResource.Create(pre.ResourceType.UINT_16, new Uint16Array(2*3*NUM_FACETS_PER_MEASUREMENT_CONE +
+                                                                                            2*3*NUM_FACETS_PER_MEASUREMENT_CONE), 1);
+    var idxBufferData = idxRes.getData();
+    var idxBufferElem = new Uint16Array(3);
+    var i;
+    var NumFacetsX3  = NUM_FACETS_PER_MEASUREMENT_CONE*3;
+    var FirstTipIdx  = 2*NUM_FACETS_PER_MEASUREMENT_CONE;
+    var SecondTipIdx = FirstTipIdx + 1;
+
+    var swp;
+
+    for (i = 0; i &lt; NUM_FACETS_PER_MEASUREMENT_CONE; ++i)
+    {
+        //first cone
+        idxBufferElem[0] = i;
+        idxBufferElem[1] = (i + 1) % NUM_FACETS_PER_MEASUREMENT_CONE;
+        idxBufferElem[2] = FirstTipIdx;
+
+        idxBufferData.set(idxBufferElem, i*3);
+
+        //second cone
+        swp = idxBufferElem[0];
+        idxBufferElem[0] = idxBufferElem[1] + NUM_FACETS_PER_MEASUREMENT_CONE;
+        idxBufferElem[1] = swp              + NUM_FACETS_PER_MEASUREMENT_CONE;
+        idxBufferElem[2] = SecondTipIdx;
+
+        idxBufferData.set(idxBufferElem, NumFacetsX3 + i*3);
+
+        //cylinder
+        idxBufferElem[0] = i;
+        idxBufferElem[1] = NUM_FACETS_PER_MEASUREMENT_CONE + i;
+        idxBufferElem[2] = NUM_FACETS_PER_MEASUREMENT_CONE + ((i + 1) % NUM_FACETS_PER_MEASUREMENT_CONE);
+
+        idxBufferData.set(idxBufferElem, 2*NumFacetsX3 + i*3);
+
+        idxBufferElem[0] = NUM_FACETS_PER_MEASUREMENT_CONE + ((i + 1) % NUM_FACETS_PER_MEASUREMENT_CONE);
+        idxBufferElem[1] = (i + 1) % NUM_FACETS_PER_MEASUREMENT_CONE;
+        idxBufferElem[2] = i;
+
+        idxBufferData.set(idxBufferElem, 3*NumFacetsX3 + i*3);
+    }
+    idxRes.setUsageHint(pre.BufferUsageHint.STATIC);
+    geoDesc.attachResource(&quot;indices&quot;, idxRes);
+
+    //TODO: we should be able to render without normals
+    var norRes = pre.BufferResource.Create(pre.ResourceType.FLOAT_32, new Float32Array(2*3*NUM_FACETS_PER_MEASUREMENT_CONE + 2*3), 3);
+    norRes.setUsageHint(pre.BufferUsageHint.DYNAMIC);
+    geoDesc.attachResource(&quot;normal&quot;, norRes);
+
+    geoDesc.setNumElements(idxBufferData.length);
+    geoDesc.setPrimitiveType(pre.PrimitiveType.TRIANGLES);
+
+    //create appearance descriptor
+    var appDesc = new pre.AppearanceDescriptor();
+    appDesc.attachResource(&quot;emissiveColor&quot;, pre.Resource.Create(pre.ResourceType.vec3f, new Float32Array(MeasurementLineColorHighlighted)));
+    appDesc.requestResource(&quot;lightingEnabled&quot;).getData().set(new Int32Array([0]));
+    appDesc.requestResource(&quot;lightingEnabled&quot;).setDirty();
+
+    //create form and attach it to the render tree node
+    //TODO: check picking functionality, add correct pick callback
+    var measurementRTNode = new pre.RenderTreeNode(this._preMainApplication);
+    measurementRTNode.replaceDrawables([new pre.Form(geoDesc, appDesc)], true, false);
+
+    measurementRTNode.setEnabled(false);
+
+    this._measurementLinesRTRoot.addChild(measurementRTNode);
+
+    //store reference in the map, using the given name
+    if (typeof this._measurementNameToRTNode[id] != 'undefined')
+    {
+        console.warn(&quot;A measurement line with the given ID &quot; + id + &quot; already exists - it will be overwritten.&quot;);
+    }
+
+    this._measurementNameToRTNode[id] = measurementRTNode;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-removeMeasurementLine'>/**
+</span> * Removes a measurement line that has formerly been added via &quot;addMeasurementLine&quot;.
+ *
+ * @param id   {string} - the id of the measurement line
+ */
+webvis.Viewer20.prototype.removeMeasurementLine = function(id)
+{
+    var measurementRTNode = this._measurementNameToRTNode[id];
+
+    if (typeof measurementRTNode != 'undefined')
+    {
+        this._measurementLinesRTRoot.removeChild(measurementRTNode);
+    }
+    else
+    {
+        console.warn(&quot;A measurement line with the given ID &quot; + id + &quot; does not exists - unable to remove it.&quot;);
+    }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-modifyMeasurementLine'>/**
+</span> * Modifies a measurment line with the given id, to connect the two given points.
+ *
+ * @param id   {string} - the id of the measurement line
+ * @param from {Array&lt;number&gt;} - the start point of the line, given as a 3-component array
+ * @param to   {Array&lt;number&gt;} - the end point of the line, given as a 3-component array
+ */
+webvis.Viewer20.prototype.modifyMeasurementLine = function(id, from, to)
+{
+    var measurementRTNode = this._measurementNameToRTNode[id];
+
+    if (typeof measurementRTNode == 'undefined')
+    {
+        console.error(&quot;A measurement line with the given ID &quot; + id + &quot; does not exist. Unable to modify.&quot;);
+        return;
+    }
+
+    var geoDesc = measurementRTNode.getDrawables()[0].getForm().getGeometryDescriptor();
+
+    geoDesc.getVolume().reset();
+    geoDesc.getVolume().includePoint(new Float32Array(from));
+    geoDesc.getVolume().includePoint(new Float32Array(to));
+
+    //setup vertex positions
+    var posBufferResource = geoDesc.requestResource(&quot;position&quot;);
+    var posBufferData     = posBufferResource.getData();
+
+    //setup tips of cones
+    posBufferData.set(from, 2*3*NUM_FACETS_PER_MEASUREMENT_CONE);
+    posBufferData.set(to,   2*3*NUM_FACETS_PER_MEASUREMENT_CONE + 3);
+
+    //setup vertices of cone's bottom rings
+    var gizmoDir        = vec3.create();
+    vec3.subtract(gizmoDir, to, from);
+    var cylinderHeight  = vec3.length(gizmoDir) - 2 * MEASUREMENT_CONE_HEIGHT;
+    vec3.normalize(gizmoDir, gizmoDir);
+
+    //first, choose a 'random' up vector, which has another direction than the direction vector
+    var gizmoUp = vec3.fromValues(0,1,0);
+    if (Math.abs(vec3.dot(gizmoUp, gizmoDir)) &gt; 0.7)
+    {
+        vec3.set(gizmoUp, 1,0,0);
+    }
+
+    var gizmoRight = vec3.create();
+    vec3.cross(gizmoRight, gizmoDir, gizmoUp);
+    vec3.normalize(gizmoRight, gizmoRight);
+
+    //find correct up vector to finally ensure an orthogonal frame
+    vec3.cross(gizmoUp, gizmoRight, gizmoDir);
+
+    var i, alpha;
+    var bufferElem = vec3.create();
+
+    for (i = 0; i &lt; NUM_FACETS_PER_MEASUREMENT_CONE; ++i)
+    {
+        alpha = 2 * Math.PI * (i / NUM_FACETS_PER_MEASUREMENT_CONE);
+
+        vec3.copy(bufferElem, from);
+
+        vec3.scaleAndAdd(bufferElem, bufferElem, gizmoDir,    MEASUREMENT_CONE_HEIGHT);
+        vec3.scaleAndAdd(bufferElem, bufferElem, gizmoRight,  MEASUREMENT_CONE_RADIUS * Math.cos(alpha));
+        vec3.scaleAndAdd(bufferElem, bufferElem, gizmoUp,    -MEASUREMENT_CONE_RADIUS * Math.sin(alpha));
+
+        //first cone's ring
+        posBufferData.set(bufferElem, i*3);
+
+        //second cone's ring
+        vec3.scaleAndAdd(bufferElem, bufferElem, gizmoDir, cylinderHeight);
+        posBufferData.set(bufferElem, (i + NUM_FACETS_PER_MEASUREMENT_CONE)*3);
+    }
+
+    posBufferResource.setDirty();
+
+    measurementRTNode.setVolumeDirty();
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-toggleMeasurementLineVisibility'>/**
+</span> * Enables or disables the display of the measurement line with the given label, if any.
+ */
+webvis.Viewer20.prototype.toggleMeasurementLineVisibility = function(id, val)
+{
+    var measurementRTNode = this._measurementNameToRTNode[id];
+
+    if (typeof measurementRTNode == 'undefined')
+    {
+        console.error(&quot;A measurement line with the given ID &quot; + id + &quot; does not exist. Unable to toggle visibility.&quot;);
+        return;
+    }
+
+    //TODO: this &quot;setVolumeDirty&quot; call should probably be part of the &quot;setEnabled&quot; function and not part of user code
+    measurementRTNode.setEnabled(val);
+    measurementRTNode.setVolumeDirty();
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-toggleMeasurementLineColor'>/**
+</span> * Toggles the color of the given measurement line.
+ * @param col {Array&lt;number&gt;} - the color to be set, given as a 3-component array
+ */
+webvis.Viewer20.prototype.toggleMeasurementLineColor = function(id, col)
+{
+    var measurementRTNode = this._measurementNameToRTNode[id];
+
+    var appDesc = measurementRTNode.getDrawables()[0].getForm().getAppearanceDescriptor();
+
+    var colorResource = appDesc.requestResource(&quot;emissiveColor&quot;);
+    colorResource.getData().set(new Float32Array(col));
+    colorResource.setDirty();
+
+    //TODO: What's the trick to tell PRE that the appearance is dirty, in a user-friendly way?
+    this._preMainApplication.getPipelineControl().setFlag(pre.PipelineControlFlags.APPEARANCE_CHANGED);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-setupRenderTreeNode'>/**
+</span> * Sets up a render tree node for the given WebVIS node.
+ * @param node The WebVIS node to add a render tree node for
+ * @param parentNode The parent node of the affected WebVIS node
+ */
+webvis.Viewer20.prototype.setupRenderTreeNode = function ( node, parentNode )
+{
+    var that = this;
+    var pickCallback = function( drawable, pickedPoint, pickedPixel, trigger, label )
+    {
+        //TODO: what to do in case of touch? this is a bit dirty
+        var button = trigger == util.PointerActionTrigger.TOUCH ? util.PointerActionTrigger.FIRST : trigger;
+
+        //create and throw event for WebVIS
+        var ev = document.createEvent('MouseEvents');
+
+        ev.initMouseEvent(&quot;click&quot;, true, false, null,
+            1, null, null, pickedPixel[0], pickedPixel[1],
+            false, false, false, false, button, null);
+
+        ev.Type   = &quot;click&quot;;
+        ev.partID = label;
+        ev.layerX = pickedPixel[0];
+        ev.layerY = pickedPixel[1];
+
+        that.DispatchEvent(ev);
+
+        //basic measurement handling
+        if (that._interactionMode == webvis.InteractionMode.MEASURE &amp;&amp; that._currentMeasurement)
+        {
+            //the first click sets up start and end point (initially both have the same coordinates)
+            if (!that._currentMeasurement.startPoint)
+            {
+                that._currentMeasurement.startPoint = __glVecToEngineerVec(pickedPoint);
+                that._currentMeasurement.endPoint   = __glVecToEngineerVec(pickedPoint);
+
+                that.toggleMeasurementLineVisibility(that._currentMeasurement.id, true);
+            }
+            //the second click finishs the measurement action
+            else
+            {
+                that._currentMeasurement.endPoint   = __glVecToEngineerVec(pickedPoint);
+
+                //TODO: also adapt cursor style - both could be encapsulated in the same function:
+                that._interactionMode = webvis.InteractionMode.DEFAULT;
+                that.DispatchEvent( new webvis.Event( {
+                    type: webvis.EventType.MEASUREMENT_FINISHED,
+                    target: that._currentMeasurement,
+                    data: {
+                        measurementInfo: that._currentMeasurement,
+                        canvasPosX: pickedPixel[0],
+                        canvasPosY: pickedPixel[1]
+                    }
+                }));
+            }
+
+            that.modifyMeasurementLine(that._currentMeasurement.id,
+                                       __engineerVecToGLVec(that._currentMeasurement.startPoint),
+                                       __engineerVecToGLVec(that._currentMeasurement.endPoint));
+        }
+    };
+
+    var mouseOverCallback = function( drawable, pickedPoint, pickedPixel, label ){
+        if (that._interactionMode == webvis.InteractionMode.MEASURE)
+        {
+            if (that._currentMeasurement.startPoint)
+            {
+                that._currentMeasurement.endPoint = __glVecToEngineerVec(pickedPoint);
+
+                that.modifyMeasurementLine(that._currentMeasurement.id,
+                                           __engineerVecToGLVec(that._currentMeasurement.startPoint),
+                                           __engineerVecToGLVec(that._currentMeasurement.endPoint));
+            }
+
+            that.DispatchEvent(new webvis.Event({
+                type: webvis.EventType.MEASUREMENT_CHANGED,
+                target: that._currentMeasurement,
+                data: {
+                    measurementInfo: that._currentMeasurement,
+                    canvasPosX: pickedPixel[0],
+                    canvasPosY: pickedPixel[1]
+                }
+            }));
+        }
+    };
+
+    //create a new render tree node, associate it with the given ID, and add it to the tree
+    var rtNode = new pre.RenderTreeNode(this._preMainApplication);
+    rtNode.setPickListener({drawablePicked : pickCallback, drawableMouseOver: mouseOverCallback});
+    parentNode.addChild(rtNode);
+    rtNode.setParent(parentNode);
+    rtNode.setEnabled(false);
+    if(node.Matrix)
+    {
+        var matrix = new Float32Array(node.Matrix);
+        rtNode.setLocalMatrix(matrix);
+    }
+
+    this._idToRenderTreeNode[node.ID] = rtNode;
+    this._hasOwnRenderTreeNode[node.ID] = true;
+    this._renderTreeEnabledNodes[rtNode.getID()] = 0;
+
+    if (node.URL)
+    {
+        if(node.URL == &quot;dummy&quot;)
+        {
+            this.setupBoxes( rtNode, node );
+        }
+        else
+        {
+            this.setupGeometry( rtNode, node );
+        }
+    }
+
+};
+
+webvis.Viewer20.prototype.setupGeometry = function ( rtNode, node )
+{
+    var forms;
+    var that = this;
+    var callback = function(src)
+    {
+        if(src)
+        {
+            forms = src.requestForms(node.URL);
+            //make sure each form has at least a default appearance descriptor assigned
+            for(var i = 0; i &lt; forms.length; ++i)
+            {
+                if (!forms[i].getAppearanceDescriptor())
+                {
+                    forms[i].setAppearanceDescriptor(that._defaultApperanceDescriptor);
+                }
+            }
+            rtNode.replaceDrawables(forms, node.Visible == webvis.VisibleState.VISIBLE);
+            rtNode.setVolumeDirty();
+        }
+    };
+
+    var min = new Float32Array(node.Volume.Min.asArray());
+    var max = new Float32Array(node.Volume.Max.asArray());
+    this._tmpVolume.setMin(min);
+    this._tmpVolume.setMax(max);
+    vec3.scale(this._sizeVec, this._tmpVolume.getRadialVec(), 2);
+
+    forms = [ util.ProxyShapes.createProxyForm( this._preMainApplication.getIdentifier(), node.URL, callback, this._tmpVolume.getCenter(), this._sizeVec ) ];
+
+    //render tree associate with the given ID, and add it to the tree
+    rtNode.replaceDrawables(forms, true);
+
+    rtNode.setVolumeDirty();
+    webVIS.getNodeTree().MapWithURL(node.URL, node);
+};
+
+webvis.Viewer20.prototype.setupBoxes = function ( rtNode, node )
+{
+    var forms;
+    var geoDesc = new pre.GeometryDescriptor();
+    util.BasicShapes.AddBoxToDescriptor(geoDesc);
+
+    var min = new Float32Array(node.Volume.Min.asArray());
+    var max = new Float32Array(node.Volume.Max.asArray());
+    this._tmpVolume.setMin(min);
+    this._tmpVolume.setMax(max);
+    vec3.scale(this._sizeVec, this._tmpVolume.getRadialVec(), 2);
+
+    var volume = new pre.BoxVolume();
+    volume.setFromCenterSize(this._tmpVolume.getCenter(), this._sizeVec);
+    geoDesc.copyVolume(volume);
+    util.ProxyShapes.setLocalVolumeToBoundingBox(geoDesc);
+
+
+
+    forms = [new pre.Form(geoDesc, util.ProxyShapes.getLoadingAppearance())];
+
+    //render tree associate with the given ID, and add it to the tree
+    rtNode.replaceDrawables(forms, true);
+
+    rtNode.setVolumeDirty();
+    webVIS.getNodeTree().MapWithURL(node.URL, node);
+};
+
+
+webvis.Viewer20.prototype.updateNodeUrl = function ( node )
+{
+    this.setupGeometry(this._idToRenderTreeNode[node.ID], node);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;RenderMode&quot;, {
+    get: function () {
+        console.log(&quot;GET RENDERMODE NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET RENDERMODE NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;ExplorationMode&quot;, {
+    get: function () {
+        console.log(&quot;GET RENDERMODE NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET RENDERMODE NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;FrustumCulling&quot;, {
+    get: function () {
+        console.log(&quot;GET FRUSTUMCULLING NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET FRUSTUMCULLING NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;SmallFeatureCulling&quot;, {
+    get: function () {
+        return this._preMainApplication.getSettings().smallFeatureCulling;
+    },
+    set: function ( val ) {
+        this._preMainApplication.getSettings().smallFeatureCulling = val;
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;SmallFeatureThreshold&quot;, {
+    get: function () {
+        console.log(&quot;GET SMALL FEATURE THRESHOLD NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET SMALL FEATURE THRESHOLD NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;LowPriorityCulling&quot;, {
+    get: function () {
+        //console.log(&quot;GET LOW PRIORITY CULLING NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        //console.log(&quot;SET LOW PRIORITY CULLING NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;LowPriorityThreshold&quot;, {
+    get: function () {
+        console.log(&quot;GET LOW PRIORITY THRESHOLD NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET LOW PRIORITY THRESHOLD NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;AdaptiveRenderControl&quot;, {
+    get: function () {
+        console.log(&quot;GET ARC NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function ( val ) {
+        console.log(&quot;SET ARC NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;SupportedMimeTypes&quot;, {
+    get: function () {
+        return this._supportedMimeTypes;
+    },
+    set: function () {
+        console.error( &quot;[Viewer20] SupportedMimeTypes is read only&quot;);
+    }
+});
+
+
+Object.defineProperty( webvis.Viewer20.prototype, &quot;InteractionMode&quot;, {
+    get: function () {
+        console.log(&quot;GET INTERACTION MODE NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+    },
+    set: function () {
+        console.error( &quot;[Viewer20] InteractionMode is read only&quot;);
+    }
+});
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.AddNode = function ( node )
+{
+
+    if (!node) {
+        console.error(&quot;[Viewer20 -&gt; AddNode] Invalid parameters&quot;);
+        return;
+    }
+
+    if (this._idToRenderTreeNode[ node.ID ]) {
+        console.error(&quot;[Viewer20 -&gt; AddNode] ID already exists: &quot; + node.ID);
+        return;
+    }
+
+    this._idToWebvisNode[node.ID] = node;
+
+
+    //get or create parent node
+    var parentNode = this._idToRenderTreeNode[ node.Parent.ID ] || this.setupRoot( node );
+
+    //if subpart
+    if(node.GeoNodeID &amp;&amp; node.URL == null)
+    {
+        this._idToRenderTreeNode[node.ID] = this._idToRenderTreeNode[node.GeoNodeID];
+        return;
+    }
+
+
+    // add a new render tree node
+    this.setupRenderTreeNode( node, parentNode );
+
+    // trigger octree recompilation here
+     this._octree._compiled = false;
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.AddMeasure = function (params)
+{
+    //Check parameters
+    params = webvis.utils.CheckParameters(params, [
+        { key: &quot;id&quot;,    required: true,  default: null    },
+        { key: &quot;color&quot;, required: false, default: &quot;0 1 0&quot; },
+        { key: &quot;size&quot;,  required: false, default: 0.1     }
+    ]);
+
+    if (!params.valid)
+    {
+        console.error( &quot;[Viewer20 -&gt; AddMeasure] Invalid parameters&quot; );
+    }
+    else if (this._measurements[params.id])
+    {
+        console.error( &quot;[Viewer20 -&gt; AddMeasure] ID already exists&quot; );
+    }
+    else
+    {
+        //TODO: integrate color and size
+        this._currentMeasurement      = new MeasurementInfo(params.id);
+        this._measurements[params.id] = this._currentMeasurement;
+
+        this.addMeasurementLine(params.id);
+
+        //TODO: also adapt cursor style - both could be encapsulated in the same function:
+        this._interactionMode = webvis.InteractionMode.MEASURE;
+        //_x3domRuntime.getCanvas().setAttribute( &quot;style&quot;, &quot;cursor:crosshair;&quot; );
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.CalcCenterOfRotation = function ()
+{
+    var volume = this._sceneRoot.requestWorldVolume();
+    var cam = this._navController.getCamera();
+    var cor = cam.getMutableCenterOfRotation();
+    vec3.copy(cor, volume.getCenter());
+    cam.dirtyMutableCenterOfRotation();
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.RemoveMeasure = function (id)
+{
+    var measurement = this._measurements[id];
+
+    if (measurement)
+    {
+        this.removeMeasurementLine(id);
+    }
+    else
+    {
+        console.error( &quot;[Viewer20 -&gt; RemoveMeasure] ID does not exist&quot; );
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._axisToNormal = function (axis)
+{
+    var normal = [0, 0, 0];
+    var index = axis.charCodeAt(3) - 88;
+    normal[index] = axis.charCodeAt(0) == 112 ? 1 : -1;
+
+    return normal;
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._scaleWithVolume = function (relDist, axis)
+{
+    var volume = this._sceneRoot.requestWorldVolume();
+    return relDist * volume.getRadialVec()[axis] + volume.getCenter()[axis];
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._unscaleWithVolume = function (vec, axis)
+{
+    var volume = this._sceneRoot.requestWorldVolume();
+    return (vec[axis] - volume.getCenter()[axis]) / volume.getRadialVec()[axis];
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.AddClipPlane = function ( params )
+{
+    var volume = this._sceneRoot.requestWorldVolume();
+    params.dist = params.dist || __glVecToEngineerVec(volume.getCenter())[0];
+    params.stepSize = volume.getDiameter()/ 1000 * __scaleFactor;
+    var point = params.point || [params.dist, 0, 0];
+    this._clipPlaneNormals[params.id] = this._axisToNormal(params.axis);
+    this._clipPlanes[params.id] = this._preMainApplication.getContext().createClipPlane( __engineerVecToGLVec(this._clipPlaneNormals[params.id]), __engineerVecToGLVec(point));
+    this.DispatchEvent(new webvis.Event({type : webvis.EventType.CLIPPLANE_ADDED, target : params}));
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.RemoveClipPlane = function ( id )
+{
+    if(this._clipPlanes[id] != null)
+    {
+        this._preMainApplication.getContext().removeClipPlane(this._clipPlanes[id]);
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.ClipPlaneAxis = function ( params )
+{
+    this._clipPlaneNormals[params.id] = this._axisToNormal(params.axis);
+    this._preMainApplication.getContext().modifyClipPlane(this._clipPlanes[params.id],  __engineerVecToGLVec(this._clipPlaneNormals[params.id]));
+    this.ClipPlanePosition(params);
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.ClipPlanePosition = function ( params )
+{
+    var normal = this._clipPlaneNormals[params.id];
+    var point = [0, 0, 0];
+    var axis;
+    for(var i = 0; i &lt; 3; i++)
+    {
+        if(normal[i] != 0)
+        {
+            axis = i;
+            break;
+        }
+    }
+    point[axis] = params.position;
+    this._preMainApplication.getContext().modifyClipPlane(this._clipPlanes[params.id], null,__engineerVecToGLVec(point));
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Show = function (id)
+{
+    var node = this._idToRenderTreeNode[id];
+    if (!node)
+    {
+        if(id.indexOf(&quot;WebVIS_Root&quot;) == -1)
+        {
+            console.warn(&quot;[Viewer20 -&gt; Show] unknown id: &quot; + id);
+        }
+        return;
+    }
+
+    this._renderTreeEnabledNodes[node.getID()]++;
+
+    if(this._hasOwnRenderTreeNode[id] &amp;&amp; this._idToWebvisNode[id].Children.length &lt;= 0 )
+    {
+        this._setNodeEnabledState(node, true);
+    }
+
+    //TODO: this &quot;setVolumeDirty&quot; call should probably be part of the &quot;setEnabled&quot; function and not part of user code
+    node.setEnabled(true);
+    node.setVolumeDirty();
+
+    this._partControl.enablePart(id);
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._setNodeEnabledState = function (rtNode, state)
+{
+    var drawables = rtNode.getDrawables();
+    var i, j, n, o;
+    for( i = 0, n = drawables.length; i &lt; n; i++ )
+    {
+        var labels = drawables[i].getForm().getGeometryDescriptor().getLabels();
+        for ( j = 0, o = labels.length; j &lt; o; j++)
+        {
+            this._partControl.setDrawablePartEnabledState(drawables[i], j, state);
+        }
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._setNodeHighlightState = function (rtNode, state)
+{
+    var drawables = rtNode.getDrawables();
+    var i, j, n, o;
+    for( i = 0, n = drawables.length; i &lt; n; i++ )
+    {
+        var labels = drawables[i].getForm().getGeometryDescriptor().getLabels();
+        for ( j = 0, o = labels.length; j &lt; o; j++)
+        {
+            state?this._selectionController.addToSelection(labels[j], true) : this._selectionController.removeFromSelection(labels[j]);
+        }
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Hide = function (id)
+{
+    var node = this._idToRenderTreeNode[id];
+    if (!node)
+    {
+        if(id.indexOf(&quot;WebVIS_Root&quot;) == -1)
+        {
+            console.warn(&quot;[Viewer20 -&gt; Hide] unknown id: &quot; + id);
+        }
+        return;
+    }
+    if(this._hasOwnRenderTreeNode[id] &amp;&amp; this._idToWebvisNode[id].Children.length &lt;= 0 )
+    {
+        this._setNodeEnabledState(node, false);
+        node.setEnabled(false);
+    }
+    if(--this._renderTreeEnabledNodes[node.getID()] &lt;= 0)
+    {
+        node.setEnabled(false);
+    }
+    node.setVolumeDirty();
+
+    this._partControl.disablePart(id);
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+//TODO: this function is a good candidate to be generalized in a base class
+webvis.Viewer20.prototype.ShowAll = function ()
+{
+    var keys = Object.keys(this._idToRenderTreeNode);
+    for (var k = 0; k &lt; keys.length; k++)
+    {
+        this.Show( keys[ k ] );
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+//TODO: this function is a good candidate to be generalized in a base class
+webvis.Viewer20.prototype.HideAll = function ()
+{
+    var keys = Object.keys(this._idToRenderTreeNode);
+    for (var k = 0; k &lt; keys.length; k++)
+    {
+        this.Hide( keys[ k ] );
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Highlight = function (id)
+{
+    //TODO: this check is not very elegant, but a consequence of the current interface to WebVIS
+
+    //first, check if the id corresponds to a measurement
+    var measurement = this._measurementNameToRTNode[id];
+
+    if (measurement)
+    {
+        this.toggleMeasurementLineColor(id, MeasurementLineColorHighlighted);
+    }
+    else
+    {
+
+        if(this._hasOwnRenderTreeNode[id] &amp;&amp; this._idToWebvisNode[id].Children.length &lt;= 0 )
+        {
+            this._setNodeHighlightState(this._idToRenderTreeNode[id], true);
+        }
+        else
+        {
+            this._selectionController.addToSelection(id, true);
+        }
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Unhighlight = function(id)
+{
+    //TODO: this check is not very elegant, but a consequence of the current interface to WebVIS
+
+    //first, check if the id corresponds to a measurement
+    var measurement = this._measurementNameToRTNode[id];
+
+    if (measurement)
+    {
+        this.toggleMeasurementLineColor(id, MeasurementLineColor);
+    }
+    else
+    {
+
+        if(this._hasOwnRenderTreeNode[id] &amp;&amp; this._idToWebvisNode[id].Children.length &lt;= 0 )
+        {
+            this._setNodeHighlightState(this._idToRenderTreeNode[id], false);
+        }
+        else
+        {
+            this._selectionController.removeFromSelection(id);
+        }
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Fit = function()
+{
+    this._preMainApplication.fitView(this._octree.requestWorldVolume());
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.FitPart = function(id)
+{
+    var node = this._idToRenderTreeNode[id];
+    if (node)
+    {
+        var volume;
+
+        //TODO: here, something goes wrong - is this a bug in PRE, or just in our test data?
+        // TODO:EDF : remove if-clause
+        if(this._hasOwnRenderTreeNode[id])
+        {
+            volume = node.requestWorldVolume();
+        }
+        else
+        {
+            var localVolume = new pre.BoxVolume();
+            this._extendBySubTreeVolume(this._idToWebvisNode[id], localVolume);
+            if (localVolume)
+            {
+                volume = new pre.BoxVolume();
+                var toWorld = node.requestToWorldMatrix();
+                volume.transformFrom(toWorld, localVolume);
+            }
+            else
+            {
+                volume = node.requestWorldVolume();
+            }
+        }
+        this._preMainApplication.fitView(volume);
+    }
+    else
+    {
+        console.warn( &quot;[Viewer20 -&gt; FitPart] unknown id: &quot; + id);
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-FitMeasurement'>/**
+</span> * @method FitMeasurement
+ * Fits the view to a measurement's geometry
+ * @param {String} id - id of the measurement
+ */
+webvis.Viewer20.prototype.FitMeasurement = function (id)
+{
+    var measurementRTNode = this._measurementNameToRTNode[id];
+
+    if (typeof measurementRTNode == 'undefined')
+    {
+        console.error(&quot;A measurement line with the given ID &quot; + id + &quot; does not exist. Unable to fit view.&quot;);
+        return;
+    }
+
+    this._preMainApplication.fitView(measurementRTNode.requestWorldVolume());
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.CreateClipPlanes = function(id)
+{
+    var node = this._idToRenderTreeNode[id];
+    if (node)
+    {
+        var volume;
+
+        //TODO: here, something goes wrong - is this a bug in pre, or just in our test data?
+        // TODO:EDF : remove if-clause
+        if(this._hasOwnRenderTreeNode[id])
+        {
+            volume = node.requestWorldVolume();
+        }
+        else
+        {
+            var localVolume = new pre.BoxVolume();
+            this._extendBySubTreeVolume(this._idToWebvisNode[id], localVolume);
+            if (localVolume)
+            {
+                volume = new pre.BoxVolume();
+                var toWorld = node.requestToWorldMatrix();
+                volume.transformFrom(toWorld, localVolume);
+            }
+            else
+            {
+                volume = node.requestWorldVolume();
+            }
+        }
+
+        var max = __glVecToEngineerVec(volume.getMax());
+        var min = __glVecToEngineerVec(volume.getMin());
+
+        var vol = new pre.BoxVolume();
+        vol.includePoint(min);
+        vol.includePoint(max);
+
+        max = vol.getMax();
+        min = vol.getMin();
+
+        this.RemoveClipPlane(&quot;autoClipPlane0&quot;);
+        this.RemoveClipPlane(&quot;autoClipPlane1&quot;);
+        this.RemoveClipPlane(&quot;autoClipPlane2&quot;);
+        this.RemoveClipPlane(&quot;autoClipPlane3&quot;);
+        this.RemoveClipPlane(&quot;autoClipPlane4&quot;);
+        this.RemoveClipPlane(&quot;autoClipPlane5&quot;);
+        var params = {id : &quot;autoClipPlane0&quot;, axis : webvis.Axis.NEGATIVE_X, point : max, dist : max[0]};
+        this.AddClipPlane(params);
+        params = {id : &quot;autoClipPlane1&quot;, axis : webvis.Axis.POSITIVE_X, point: min, dist : min[0]};
+        this.AddClipPlane(params);
+        params = {id : &quot;autoClipPlane2&quot;, axis : webvis.Axis.NEGATIVE_Y, point: max, dist : max[1]};
+        this.AddClipPlane(params);
+        params = {id : &quot;autoClipPlane3&quot;, axis : webvis.Axis.POSITIVE_Y, point: min, dist : min[1]};
+        this.AddClipPlane(params);
+        params = {id : &quot;autoClipPlane4&quot;, axis : webvis.Axis.NEGATIVE_Z, point: max, dist : max[2]};
+        this.AddClipPlane(params);
+        params = {id : &quot;autoClipPlane5&quot;, axis : webvis.Axis.POSITIVE_Z, point: min, dist : min[2]};
+        this.AddClipPlane(params);
+    }
+    else
+    {
+        console.warn( &quot;[Viewer20 -&gt; FitPart] unknown id: &quot; + id);
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype._extendBySubTreeVolume = function(node, volume)
+{
+    var nodeVolume = this._partControl.getPartVolume(node.ID);
+
+    if(nodeVolume)
+    {
+        volume.extendByVolume(nodeVolume)
+    }
+    var i, n;
+    for(i = 0, n = node.Children.length; i &lt; n; i++)
+    {
+        this._extendBySubTreeVolume(node.Children[i], volume);
+    }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.FitAxis = function(axis)
+{
+    var view, up;
+
+    if( axis == &quot;posX&quot;)
+    {
+        view = vec3.fromValues(1, 0, 0);
+        up   = vec3.fromValues(0, 1, 0);
+    }
+    else if( axis == &quot;negX&quot;)
+    {
+        view = vec3.fromValues(-1, 0, 0);
+        up   = vec3.fromValues(0, 1, 0 );
+    }
+    else if( axis == &quot;posY&quot;)
+    {
+        view = vec3.fromValues(0, 1, 0);
+        up   = vec3.fromValues(0, 0, 1);
+    }
+    else if( axis == &quot;negY&quot;)
+    {
+        view = vec3.fromValues(0, -1, 0);
+        up   = vec3.fromValues(0, 0, -1);
+    }
+    else if( axis == &quot;posZ&quot;)
+    {
+        view = vec3.fromValues(0, 0, 1);
+        up   = vec3.fromValues(0, 1, 0);
+    }
+    else
+    {
+        if( axis != &quot;negZ&quot;)
+        {
+            console.warn( &quot;[Viewer20 -&gt; FitAxis] invalid axis label: \&quot;&quot; + axis + &quot;\&quot;. Using default negative Z instead.&quot;);
+        }
+        view = vec3.fromValues(0, 0, -1);
+        up   = vec3.fromValues(0, 1, 0 );
+    }
+
+    this._preMainApplication.fitViewAligned(this._octree.requestWorldVolume(), view, up);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Screenshot = function(callback)
+{
+    if (this._preMainApplication)
+    {
+        var canvas = this._preMainApplication.getCanvasViews()[0].getCanvasElement();
+
+        this._preMainApplication.getScreenShotUtility().takeScreenShot(function(url)
+        {
+            callback({
+                url: url,
+                width: canvas.width,
+                height: canvas.height
+            })
+        });
+    }
+    else
+    {
+        console.log(&quot;PRE VIEWER NOT INITIALIZED&quot;);
+    }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+webvis.Viewer20.prototype.Color = function(id, color)
+{
+    console.log(&quot;SET COLOR NOT IMPLEMENTED FOR PRE VIEWER&quot;);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-AddSnapshot'>/**
+</span> * @method AddSnapshot
+ * Add a viewer snapshot
+ * @param id
+ */
+webvis.Viewer20.prototype.AddSnapshot = function(id)
+{
+    if (this._snapshots[id])
+    {
+        console.warn( &quot;[Viewer20 -&gt; AddSnapshot] Snapshot with id &quot; + id + &quot; already exists, will be overwritten.&quot;);
+    }
+
+    var camera = this._navController.getCamera();
+
+    var viewMatrix = mat4.create();
+    mat4.copy(viewMatrix, camera.getMutableViewMatrix());
+
+    this._snapshots[id] = new SnapshotInfo(id,viewMatrix);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-ApplySnapshot'>/**
+</span> * @method ApplySnapshot
+ * Apply a snapshot with the given id.
+ * @param {String} id
+ */
+webvis.Viewer20.prototype.ApplySnapshot = function(id)
+{
+    var snapshotInfo = this._snapshots[id];
+
+    if (snapshotInfo)
+    {
+        var camera = this._navController.getCamera();
+
+        mat4.copy(camera.getMutableViewMatrix(), snapshotInfo.viewMatrix);
+
+        camera.dirtyMutableViewMatrix();
+    }
+    else
+    {
+        console.error( &quot;[Viewer20 -&gt; ApplySnapshot] unknown id: &quot; + id);
+    }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Viewer20-method-RemoveSnapshot'>/**
+</span> * @method RemoveSnapshot
+ * Remove a snapshot with the given id.
+ * @param {String} id
+ */
+webvis.Viewer20.prototype.RemoveSnapshot = function ( id ) {
+    delete this._snapshots[id];
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+</pre>
+</body>
+</html>

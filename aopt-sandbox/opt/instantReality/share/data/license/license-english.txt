@@ -1,0 +1,53 @@
+End User License Agreement
+
+Fraunhofer-Gesellschaft zur Förderung der angewandten Forschung e.V., München, (FhG)
+
+for its
+
+Fraunhofer-Institut für Graphische Datenverarbeitung, Darmstadt, (IGD)
+
+End User License Agreement for the computer program “Instant Player” in object code form.
+
+FhG is willing to grant to Licensee (User) a royalty-free license to use the computer program in object code form as defined below only under the condition that Licensee accepts all the terms of this End User License Agreement. The computer program is a software system supporting the real-time display of files conforming to the X3D specification. Thereby X3D is a standard format specified by the “Web 3D Consortium” (http://web3d.org/).
+
+The computer program that can be downloaded from the web site of IGD is the copyrighted work of FhG. The computer program contains a software part of a third author. FhG is entitled by the third author to grant to Licensee a license in the copyrights of the third author regarding the software part to use the software part according to the terms of this End User License Agreement. Use of the computer program is governed by the terms of this End User License Agreement. FhG/IGD does not provide to Licensee any support services regarding the computer program. Any uses of the computer program by Licensee not in accordance with the terms of this End User License Agreement are not allowed.
+
+Please read the terms of this End User License Agreement very carefully and please subsequently confirm that you have read and accepted the terms of the End User License Agreement. You will not be able to download the computer program before having confirmed that you have read and accepted the terms of the End User License Agreement.
+
+FhG grants to Licensee a non exclusive, non sub licensable, non transferable, non assignable and royalty-free license to use the computer program according to the following terms:
+
+Licensee is solely entitled to use the computer program on his/her/its private computer for visualization of files in X3D format for non commercial purposes.
+
+Licensee is not entitled to modify, to copy, to reproduce, to distribute, to sell or to use the computer program for any other commercial and/or non commercial purposes.
+
+
+FhG warrants that the computer program has been developed in observance of scientific care and accepted technological principles, particularly programming principles.
+
+No warranty or liability is provided by FhG that utilization of the computer program according to the terms of this End User License Agreement will not interfere with third party intellectual property rights or with any other third party rights or will not cause damage to third parties. This shall not apply in case that FhG at the point in time of the closure of this End User License Agreement is wilfully aware of any such third party rights or by gross negligence is not aware of any such third party rights. FhG/IGD is currently not aware of any such rights.
+
+Liability of FhG shall be limited to typical, foreseeable damage caused with intent and/or gross negligence.
+
+FhG warrants that it is not aware of any material defects of the computer program. In other respects any liability of FhG for any material defects of the computer program, no matter of the legal basis, is excluded. The computer program is a developing version. FhG particularly assumes no liability that the operation of the computer program will be uninterrupted and/or error free. FhG assumes no liability for technical usability of the computer program or the serviceability of the computer program for the purpose at hand or for any other purpose.
+
+FhG shall not be liable for any direct, indirect and/or consequential damages, including lost profits of Licensee resulting from the combination of the computer program with any software of Licensee or of any third party or resulting from the implementation of the computer program into any software or any systems or into any other products of Licensee or of any third party.
+
+FhG is not obliged to further develop, to update and or to provide any updates of the computer program to Licensee as well as to offer or to perform any support services concerning the computer program.
+
+This End User License Agreement shall be construed, governed, interpreted and applied in accordance with the laws of the Federal Republic of Germany. This End User License Agreement is drawn up in German and in English language.
+
+For the interpretation of the terms of this End User License Agreement exclusively the German version is decisive.
+
+In the event that you are interested in using the computer program for commercial purposes or in any use of the computer program which is not granted by this End User License Agreement, please contact
+
+Fraunhofer-Institut für Graphische Datenverarbeitung
+
+Fraunhoferstraße 5
+
+64283 Darmstadt
+
+Germany
+
+http://www.igd.fraunhofer.de/igd-a4/
+
+
+FhG/IGD will inform you then about the conditions of a respective grant of a license by FhG.

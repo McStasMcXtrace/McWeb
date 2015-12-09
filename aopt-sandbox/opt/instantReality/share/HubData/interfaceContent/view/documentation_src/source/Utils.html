@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='global-property-utils'>/**
+</span> * Created by Timo on 22.02.14.
+ */
+webvis.utils = {};
+
+<span id='global-method-Extend'>/**
+</span> * @method Extend
+ * @param {Object} object
+ * @param {Object} extendFrom
+ */
+webvis.utils.Extend = function(object, extendFrom)
+{
+    var propertyNames = Object.getOwnPropertyNames(extendFrom);
+
+    for (var i=0; i&lt;propertyNames.length; i++)
+    {
+        Object.defineProperty( object, propertyNames[i], Object.getOwnPropertyDescriptor(extendFrom, propertyNames[i]) );
+    }
+    object.__proto__ = extendFrom;
+};
+
+<span id='global-method-CheckParameters'>/**
+</span> * @method CheckParameters
+ * @param {Object} params
+ * @param {Object[]} defaults
+ * @param {String} defaults.key
+ * @param {Boolean} defaults.required
+ * @param {Mixed} defaults.default
+ */
+webvis.utils.CheckParameters = function ( params, defaults )
+{
+    params = params || {};
+
+    var i, key, required, defaultValue;
+
+    //Iterate description list
+    for ( i = 0; i &lt; defaults.length; i++ )
+    {
+        //Get key
+        key = defaults[ i ].key;
+
+        //Get required flag
+        required = defaults[ i ].required;
+
+        //Get deafult value
+        defaultValue = defaults[ i ].default;
+
+        //If param is required but not set return false
+        //Else set default value
+        if ( required &amp;&amp; params[ key ] == null)
+        {
+            params.valid = false;
+            return params;
+        }
+        else if ( !required &amp;&amp; params[ key ] == null)
+        {
+            params[ key ] = defaultValue;
+        }
+    }
+
+    //Parameters are valid
+    params.valid = true;
+
+    //Return modified parameters
+    return params;
+};
+
+<span id='global-static-method-CheckMimeType'>/**
+</span> * @method CheckMimeType
+ * @param {webvis.MimeType} mimeType
+ * @param {webvis.MimeType[]} supportedMimeTypes
+ * @return {Boolean}
+ * @static
+ */
+webvis.utils.CheckMimeType = function ( mimeType, supportedMimeTypes )
+{
+    if ( !mimeType || !supportedMimeTypes ) return false;
+
+    for ( var key in supportedMimeTypes )
+    {
+        if ( supportedMimeTypes[ key ] == mimeType )
+        {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+<span id='global-static-method-DetectMimeType'>/**
+</span> * @method DetectMimeType
+ * @param {String} url
+ * @return {webvis.MimeType}
+ * @static
+ */
+webvis.utils.DetectMimeType = function ( url )
+{
+    if ( !url ) {
+        return null;
+    }
+
+    //Get file extension from url
+    var fileExtension = url.substr( url.lastIndexOf(&quot;.&quot;) );
+
+    for ( var key in webvis.FileExtension )
+    {
+        if ( webvis.FileExtension[ key ] == fileExtension )
+        {
+            return webvis.MimeType[ key ];
+        }
+    }
+
+    return null;
+};
+
+<span id='global-static-method-GenerateUniqueId'>/**
+</span> * @method GenerateUniqueId
+ * @return {String}
+ * @static
+ */
+webvis.utils.GenerateUniqueId = function ()
+{
+    return Math.random().toString( 36 ).substr( 2, 9 );
+};
+
+<span id='global-static-method-loadJSON'>/**
+</span> * @method loadJSON
+ * @return {object}
+ * @static
+ */
+webvis.utils.LoadJSON = function ( url )
+{
+    var json = null;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open( &quot;GET&quot;, url, false );
+
+    xhr.onload = function ()
+    {
+        json = JSON.parse(this.responseText);
+    };
+
+    xhr.send(null);
+
+    return json;
+};
+
+
+<span id='global-static-method-needTranscoding'>/**
+</span> * @method needTranscoding
+ * Check if the active viewer can load the file natively
+ * @return {bool}
+ * @static
+ */
+webvis.utils.needTranscoding = function ( mimeType, supportedMimeTypes )
+{
+    return (mimeType) ? !webvis.utils.CheckMimeType( mimeType, supportedMimeTypes ) : false;
+};
+
+
+<span id='global-static-method-GetURLParamValue'>/**
+</span> * @method GetURLParamValue
+ * Returns the value of the given URL parameter, as a string.
+ * If the parameter is not found, null is returned.
+ * @return {string}
+ * @static
+ */
+webvis.utils.GetURLParamValue = function ( name )
+{
+    var paramValues = {};
+    var allParamsStr = location.search.substring(1);
+    var paramStrings = allParamsStr.split(&quot;&amp;&quot;);
+
+    var numArgs = paramStrings.length;
+    var pos;
+
+    var k, v;
+
+    for (var i=0; i &lt; numArgs; i++)
+    {
+        pos = paramStrings[i].indexOf('=');
+        if (pos != -1)
+        {
+            k = paramStrings[i].substring(0,  pos);
+            v = paramStrings[i].substring(pos + 1);
+            paramValues[k] = decodeURIComponent(v);
+        }
+    }
+
+    var value = paramValues[name];
+
+    return value ? value : null;
+};</pre>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<div class="jumbotron">
+  <div class="container" ng-controller="hubController as h">
+
+    <div class="row">
+      <div class="col-md-6">
+          <h2>System</h2>
+          <p><strong>Host Name: </strong>{{h.hub.currHub.hostName}}</p>
+          <p><strong>Machine Type: </strong>{{h.hub.currHub.machineType}}</p>
+          <p><strong>CPU Count: </strong>{{h.hub.currHub.cpus}}</p>
+          <p><strong>OS: </strong>{{h.hub.currHub.os}}</p>
+      </div>
+      <div class="col-md-6 chart">
+        <div ng-controller="JobStatisticController" class="jobStatisticDataDiv">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+          <h2>Services</h2>
+          <p>Registered instantService instances</p>
+          <p><div class="button button-default" ng-click="mc.setPhase('services')">View details »</div></p>
+      </div>
+      <div class="col-md-3">
+          <h2>Tools</h2>
+          <p>Reconfigure instantHub/instantService</p>
+          <p><div class="button button-default" ng-click="mc.setPhase('tools')">View details »</div></p>
+      </div>
+      <div class="col-md-3">
+          <h2>Apps</h2>
+          <p>Sample applications</p>
+          <p><div class="button button-default" ng-click="mc.setPhase('apps')">View details »</div></p>
+      </div>
+      <!-- <div class="col-md-3">
+          <h2>Documentation</h2>
+          <p>instantHub/instantService documentation</p>
+          <p><div class="button button-default" <ng-click="mc.setPhase('documentation')">View details »</div></p>
+      </div> -->
+  </div>
+  <!-- <div class="row">
+    <div class="col-md-3 col-md-offset-3">
+        <h2>View link</h2>
+        <p>Show details for job link</p>
+        <p><div class="button button-default">Paste link »</div></p>
+    </div>
+    <div class="col-md-3">
+        <h2>Upload data</h2>
+        <p>Fill the instantHub with data</p>
+        <p><div class="button button-highlight">Upload »</div></p>
+    </div>
+  </div> -->
+</div>

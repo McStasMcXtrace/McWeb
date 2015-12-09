@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-Transcoder-method-constructor'><span id='webvis-Transcoder'>/**
+</span></span> * @class webvis.Transcoder
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @constructor
+ * Creates a new Transcoder instance.
+ */
+webvis.Transcoder = function( params ) {
+
+//----------------------------------------------------------------------------------------------------------------------
+// Implements
+//----------------------------------------------------------------------------------------------------------------------
+
+    webvis.EventTarget.call(this, params);
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Transcoder-property-'>    /**
+</span>     * Holds the supported mime types
+     * @type {webvis.MimeType[]}
+     * @readonly
+     * @private
+     */
+    //TODO: add RVM here
+    this._supportedMimeTypes = [
+        webvis.MimeType.CATIA,
+        webvis.MimeType.COLLADA,
+        webvis.MimeType.JT,
+        webvis.MimeType.PLMXML,
+        webvis.MimeType.RVM
+    ];
+
+<span id='webvis-Transcoder-property-_host'>    /**
+</span>     * @property {string}
+     * The URL of the Host where the Trancoder is running.
+     * @private
+     */
+    this._host = params.host || &quot;http://localhost&quot;;
+
+<span id='webvis-Transcoder-property-_port'>    /**
+</span>     * @property {number}
+     * The port number the transcoder is listening.
+     * @private
+     */
+    this._port = params.port || 4711;
+
+    this._transcoderURL = this._host + &quot;:&quot; + this._port + &quot;/job/add&quot;;
+    this._transcoderCheckURL = this._host + &quot;:&quot; + this._port + &quot;/job/updateState&quot;;
+
+    this._batch = [];
+    this._batchJobs = [];
+    this._openJobs = [];
+};
+
+webvis.Transcoder.prototype = Object.create(webvis.EventTarget.prototype);
+
+//----------------------------------------------------------------------------------------------------------------------
+// Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Transcoder-property-Host'>/**
+</span> * @property Host
+ * Get or set the host.
+ * @type {String}
+ */
+Object.defineProperty( webvis.Transcoder.prototype, &quot;Host&quot;, {
+    get: function () {
+        return this._host;
+    },
+    set: function ( val ) {
+        this._host = val;
+    }
+});
+
+<span id='webvis-Transcoder-property-Port'>/**
+</span> * @property Port
+ * Get or set the port.
+ * @type {Number}
+ */
+Object.defineProperty( webvis.Transcoder.prototype, &quot;Port&quot;, {
+    get: function () {
+        return this._port;
+    },
+    set: function ( val ) {
+        this._port = val;
+    }
+});
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Transcoder-method-AddJob'>/**
+</span> * @method AddJob
+ * Add a new Job.
+ * @param job {webvis.transcoderJob}
+ */
+webvis.Transcoder.prototype.AddJob = function ( job )
+{
+    if(!job._url)
+    {
+        job._url = this._transcoderURL;
+    }
+    this._openJobs.push(job);
+};
+<span id='webvis-Transcoder-method-AddJob'>/**
+</span> * @method AddJob
+ * Add a new Job.
+ * @param job {webvis.transcoderJob}
+ */
+webvis.Transcoder.prototype.executeJob = function ( )
+{
+    for(var i = 0; i &lt; 40; i++)
+    {
+        if(this._openJobs.length &gt; 0) {
+            var job = this._openJobs.pop();
+            //Create new XMLHttpRequest.
+            var xhr = new XMLHttpRequest();
+
+            //Initialize the request.
+            xhr.open(job._protocol, job._url, true);
+
+            //Handle the onload-event.
+            xhr.onload = job._callback;
+
+            var that = this;
+
+            xhr.onerror = function(job){
+                if(job._url == that._transcoderURL)
+                {
+                    alert(&quot;Transcoder offline. Check: &quot; + that._host + &quot;:&quot; + that._port);
+                }
+            }.bind(xhr, job);
+
+            //Send request.
+            if(job._protocol == &quot;POST&quot;)
+            {
+                xhr.send(JSON.stringify(job.Request));
+            }
+            else
+            {
+                xhr.send(null);
+            }
+        }
+    }
+    requestAnimationFrame(this.executeJob.bind(this));
+
+};
+
+<span id='webvis-Transcoder-method-AddToBatch'>/**
+</span> * @method AddToBatch
+ * Add a new Job to the Batch.
+ * @param job {webvis.transcoderJob}
+ */
+webvis.Transcoder.prototype.AddToBatch = function ( job )
+{
+    this._batch.push(job.Request);
+    this._batchJobs.push(job);
+};
+
+<span id='webvis-Transcoder-method-AddToBatch'>/**
+</span> * @method AddToBatch
+ * Add a new Job to the Batch.
+ * @param job {webvis.transcoderJob}
+ */
+webvis.Transcoder.prototype.SendBatch = function (batch)
+{
+    var that = this;
+    if(!batch &amp;&amp; this._batch.length == 0)
+    {
+        return;
+    }
+    //Create new XMLHttpRequest.
+    var xhr = new XMLHttpRequest();
+
+    //Initialize the request.
+    xhr.open( &quot;POST&quot;, batch ? this._transcoderCheckURL : this._transcoderURL, true );
+
+    //Handle the onload-event.
+    xhr.onload = function()
+    {
+        //console.log(xhr.response);
+        var reply = JSON.parse(xhr.response);
+        var i, n;
+        var unfinished = 0;
+        for(i = 0, n = reply.length; i &lt; n; i++)
+        //reply.forEach(function(entry, i)
+        {
+            while(that._batchJobs[i]._replyLocation &amp;&amp; reply[i][1] != that._batchJobs[i]._replyLocation)
+            {
+                that._batchJobs.splice(i, 1);
+            }
+            var entry = reply[i];
+            var job = that._batchJobs[i];
+            job._replyLocation = entry[1];
+            var status = entry[0];
+            if( status == 404 ) {
+                job.State = webvis.TranscoderJobState.ERROR;
+            } else if ( status == 202) {
+                unfinished++;
+                job.State = webvis.TranscoderJobState.INPROGESS;
+            } else if ( status == 200 ) {
+                job.Reply = entry[1] + &quot;/&quot; + job._filename;
+                job.State = webvis.TranscoderJobState.CLOSED;
+            }
+            else
+            {
+                console.log(&quot;unknown batch state: &quot; + status)
+            }
+            //var entryObject = {status: entry[0], responseText: entry[1]};
+            //job._callback.call(entryObject);
+        }
+        if(unfinished)
+        {
+            var batchCheck = {&quot;ServiceClass&quot; : &quot;TranscoderService&quot;, &quot;Parameters&quot; : reply};
+            that.SendBatch(batchCheck);
+        }
+    };
+    xhr.onerror = function()
+    {
+        console.log(&quot;error sending batch request&quot;);
+    };
+
+    //Send request.
+    xhr.send( JSON.stringify( batch || this._batch ) );
+    this._batch = [];
+
+};
+
+
+<span id='webvis-Transcoder-method-DeleteJob'>/**
+</span> * @method DeleteJob
+ * Delete an existing job.
+ * @param {number} id The ID of the job that have to delete
+ */
+webvis.Transcoder.prototype.DeleteJob = function ( id )
+{
+    //Check if id is valid
+    if ( id &lt; 1 ) return;
+
+    //Create new XMLHttpRequest.
+    var xhr = new XMLHttpRequest();
+
+    //Initialize the request.
+    xhr.open( &quot;POST&quot;, this._host + &quot;:&quot; + this._port + &quot;/job/delete&quot;, false );
+
+    //Handle the onload-event.
+    xhr.onload = function() { console.log( this.responseText ); };
+
+    //Send request.
+    xhr.send( &quot;id=&quot; + id );
+};
+
+
+<span id='webvis-Transcoder-method-JobStatus'>/**
+</span> * @method JobStatus
+ * Return the job status for the given id.
+ * @param {number} id The ID of the job.
+ */
+webvis.Transcoder.prototype.JobStatus = function ( id )
+{
+    //Check if id is valid
+    if ( id &lt; 1 ) return;
+
+    //Create new XMLHttpRequest.
+    var xhr = new XMLHttpRequest();
+
+    //Initialize the request.
+    //TODO: check if this is the delivery service
+    xhr.open( &quot;POST&quot;,this. _host + &quot;:&quot; + this._port + &quot;/job/status/&quot; + id, false );
+
+    //Handle the onload-event.
+    xhr.onload = function() { console.log(this.responseText); };
+
+    //Send request.
+    xhr.send( null );
+};
+
+<span id='webvis-Transcoder-method-Version'>/**
+</span> * @method Version
+ * Returns the Transcoder version.
+ */
+webvis.Transcoder.prototype.Version = function ( )
+{
+    //Variable to hold transcoder version.
+    var version = 0;
+
+    //Create new XMLHttpRequest.
+    var xhr = new XMLHttpRequest();
+
+    //Initialize the request.
+    xhr.open( &quot;POST&quot;, this._host + &quot;:&quot; + this._port + &quot;/version&quot;, false );
+
+    //Handle the onload-event.
+    xhr.onload = function() { version = this.responseText; };
+
+    //Send request.
+    xhr.send( null );
+
+    //Return version
+    return version;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// Execute Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+</pre>
+</body>
+</html>

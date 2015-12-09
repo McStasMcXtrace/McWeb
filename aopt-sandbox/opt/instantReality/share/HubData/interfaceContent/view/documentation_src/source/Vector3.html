@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-Vector3-method-constructor'><span id='webvis-Vector3'>/**
+</span></span> * @class webvis.Vector3
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @param {Number} x The x-component of the vector
+ * @param {Number} y The y-component of the vector
+ * @param {Number} z The z-component of the vector
+ * @constructor
+ * Creates a new Vector3 instance.
+ */
+webvis.Vector3 = function( x, y, z ) {
+
+<span id='webvis-Vector3-property-_x'>    /**
+</span>     * Holds the x-component of the vector
+     * @type {Number}
+     * @private
+     */
+    this._x = x || 0;
+
+<span id='webvis-Vector3-property-_y'>    /**
+</span>     * Holds the y-component of the vector
+     * @type {Number}
+     * @private
+     */
+    this._y = y || 0;
+
+<span id='webvis-Vector3-property-_z'>    /**
+</span>     * Holds the z-component of the vector
+     * @type {Number}
+     * @private
+     */
+    this._z = z || 0;
+};
+//----------------------------------------------------------------------------------------------------------------------
+// Constructor
+//----------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Vector3-property-X'>/**
+</span> * @property X
+ * Get or set x-component of the vector.
+ * @type {Object}
+ */
+Object.defineProperty( webvis.Vector3.prototype, &quot;X&quot;, {
+    get: function () {
+        return this._x;
+    },
+    set: function ( val ) {
+        this._x = val;
+    }
+});
+
+<span id='webvis-Vector3-property-Y'>/**
+</span> * @property Y
+ * Get or set y-component of the vector.
+ * @type {Object}
+ */
+Object.defineProperty( webvis.Vector3.prototype, &quot;Y&quot;, {
+    get: function () {
+        return this._y;
+    },
+    set: function ( val ) {
+        this._y = val;
+    }
+});
+
+<span id='webvis-Vector3-property-Z'>/**
+</span> * @property Z
+ * Get or set z-component of the vector..
+ * @type {Object}
+ */
+Object.defineProperty( webvis.Vector3.prototype, &quot;Z&quot;, {
+    get: function () {
+        return this._z;
+    },
+    set: function ( val ) {
+        this._z = val;
+    }
+});
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-Vector3-method-Add'>/**
+</span> * @method Add
+ * Add an vector to this vector.
+ * @param {webvis.Vector3} that
+ * @return {webvis.Vector3}
+ */
+webvis.Vector3.prototype.Add = function ( that )
+{
+    return new webvis.Vector3( this._x - that.X, this._y - that.Y, this._z - that.Z );
+};
+
+<span id='webvis-Vector3-method-Sub'>/**
+</span> * @method Sub
+ * Subtract an vector to this vector.
+ * @param {webvis.Vector3} that
+ * @return {webvis.Vector3}
+ */
+webvis.Vector3.prototype.Sub = function ( that )
+{
+    return new webvis.Vector3( this._x + that.X, this._y + that.Y, this._z + that.Z );
+};
+
+<span id='webvis-Vector3-method-Scale'>/**
+</span> * @method Scale
+ * Scale the vector by the given factor.
+ * @param {Number} factor
+ * @return {webvis.Vector3}
+ */
+webvis.Vector3.prototype.Scale = function ( factor )
+{
+    return new webvis.Vector3( this._x * factor, this._y * factor, this._z * factor );
+};
+
+
+<span id='webvis-Vector3-method-asArray'>/**
+</span> * @method asArray
+ * Returns the vector's content as a JS array
+ * @return {Array}
+ */
+webvis.Vector3.prototype.asArray = function()
+{
+    return [this._x, this._y, this._z];
+};
+
+
+</pre>
+</body>
+</html>

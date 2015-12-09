@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-EventTarget-method-constructor'><span id='webvis-EventTarget'>/**
+</span></span> * @class webvis.EventTarget
+ * @constructor
+ */
+webvis.EventTarget = function() {
+<span id='webvis-EventTarget-property-_listeners'>    /**
+</span>     * Hold all the registered listeners
+     * @type {Object}
+     * @private
+     */
+    this._listeners = {};
+};
+<span id='webvis-EventTarget-method-AddEventListener'>/**
+</span> * @method AddEventListener
+ * @param type
+ * @param listener
+ */
+webvis.EventTarget.prototype.AddEventListener = function ( type, listener )
+{
+    if ( this._listeners[ type ] === undefined ) {
+        this._listeners[ type ] = [];
+    }
+
+    if ( this._listeners[ type ].indexOf( listener ) === - 1 ) {
+        this._listeners[ type ].push( listener );
+    }
+};
+
+
+<span id='webvis-EventTarget-method-RemoveEventListener'>/**
+</span> * @method RemoveEventListener
+ * @param type
+ * @param listener
+ */
+webvis.EventTarget.prototype.RemoveEventListener = function ( type, listener )
+{
+    var listenerArray = this._listeners[ type ];
+
+    if ( listenerArray !== undefined ) {
+
+        var index = listenerArray.indexOf( listener );
+
+        if ( index !== - 1 ) {
+
+            listenerArray.splice( index, 1 );
+
+        }
+    }
+};
+
+
+<span id='webvis-EventTarget-method-HasEventListener'>/**
+</span> * @method HasEventListener
+ * @param type
+ * @param listener
+ */
+webvis.EventTarget.prototype.HasEventListener = function ( type, listener )
+{
+    return ( this._listeners[ type ] !== undefined &amp;&amp; this._listeners[ type ].indexOf( listener ) !== - 1 )
+};
+
+
+<span id='webvis-EventTarget-method-DispatchEvent'>/**
+</span> * @method DispatchEvent
+ * @param event
+ */
+webvis.EventTarget.prototype.DispatchEvent = function ( event )
+{
+    //If event is type of string, create a real event
+    if ( typeof event == &quot;string&quot; )
+    {
+        event = new webvis.Event( {
+            type: event,
+            target: this
+        } );
+    }
+
+    var listenerArray = this._listeners[ event.Type ];
+
+    if ( listenerArray !== undefined ) {
+
+        for ( var i = 0; i &lt; listenerArray.length; i ++ ) {
+            listenerArray[ i ].call( this, event );
+        }
+    }
+
+    if ( event.Bubbles &amp;&amp; this.Parent )
+    {
+        this.Parent.DispatchEvent( event );
+    }
+};
+
+
+</pre>
+</body>
+</html>

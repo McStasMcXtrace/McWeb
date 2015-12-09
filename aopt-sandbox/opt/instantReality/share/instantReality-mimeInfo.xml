@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="model/x3d+xml">
+    <comment>X3D 3D World, XML encoding</comment>
+    <glob pattern="*.x3d"/>
+    <glob pattern="*.x3dz"/>
+    <glob pattern="*.x3z"/>
+  </mime-type>
+  <mime-type type="model/x3d+vrml">
+    <comment>X3D 3D World, classic encoding</comment>
+    <glob pattern="*.x3v"/>
+    <glob pattern="*.x3dv"/>
+    <glob pattern="*.x3dvz"/>
+  </mime-type>
+  <mime-type type="model/x3d+binary">
+    <comment>X3D 3D World, binary encoding</comment>
+    <glob pattern="*.x3b"/>
+    <glob pattern="*.x3db"/>
+    <glob pattern="*.x3dbz"/>
+  </mime-type>
+  <mime-type type="model/vrml">
+    <comment>VRML 3D World</comment>
+    <glob pattern="*.wrl"/>
+    <glob pattern="*.wrz"/>
+    <glob pattern="*.vrml"/>
+  </mime-type>
+  <mime-type type="application/x-avalon-engine+vrml">
+    <comment>Instant Player Engine, classic encoding</comment>
+    <glob pattern="*.edv"/>
+  </mime-type>
+  <mime-type type="application/x-avalon-engine+xml">
+    <comment>Instant Player Engine, XML encoding</comment>
+    <glob pattern="*.edx"/>
+  </mime-type>
+  <mime-type type="application/x-avalon-engine+binary">
+    <comment>Instant Player Engine, binary encoding</comment>
+    <glob pattern="*.edb"/>
+  </mime-type>
+  <mime-type type="application/x-irlicense">
+    <comment>Instant Player License</comment>
+    <glob pattern="*.irlicense"/>
+  </mime-type>
+  <mime-type type="application/x-opensg+ascii">
+    <comment>OpenSG Scene, ASCII encoding</comment>
+    <glob pattern="*.osg"/>
+  </mime-type>
+  <mime-type type="application/x-opensg+binary">
+    <comment>OpenSG Scene, binary encoding</comment>
+    <glob pattern="*.osb"/>
+  </mime-type>
+</mime-info>
+

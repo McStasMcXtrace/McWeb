@@ -1,0 +1,85 @@
+[
+    {
+        "id": "x3d-xml",
+        "label": "Extensible 3D, XML Encoding",
+        "class": [
+            "scene",
+            "shape"
+        ],
+        "description": "",
+        "mimetype": [
+            "model/x3d",
+            "model/x3d+xml"
+        ],
+        "spec": "ISO/IEC IS 19775-1:2013",
+        "home": "http://www.web3d.org",
+        "suffix": [
+            "x3d",
+            "x3z"
+        ]
+    },
+    {
+        "id": "vrml",
+        "label": "Virtual Reality Modeling Language, 2.0",
+        "class": [
+            "scene",
+            "shape"
+        ],
+        "mimetype": [
+            "model/vrml"
+        ],
+        "spec": "ISO/IEC 14772-1:1997",
+        "home": "http://www.web3d.org",
+        "suffix": [
+            "wrl",
+            "vrml"
+        ]
+    },
+    {
+        "id": "opensg",
+        "label": "Open Scene Graph",
+        "class": [
+            "scene",
+            "shape"
+        ],
+        "mimetype": [
+            "model/opensg"
+        ],
+        "home": "http://www.opensg.org",
+        "suffix": [
+            "osg",
+            "opensg"
+        ]
+    },
+    {
+        "id": "openjt",
+        "label": "Jupiter Tessellation",
+        "class": [
+            "shape",
+            "scene"
+        ],
+        "spec": "ISO 14306:2012",
+        "mimetype": [
+            "model/vnd.siemens.openjt"
+        ],
+        "home": "http://www.plm.automation.siemens.com/en_us/products/open/jtopen/",
+        "suffix": [
+            "jt",
+            "openjt"
+        ]
+    },
+    {
+        "id": "plmxml",
+        "class": [
+            "scene"
+        ],
+        "label": "Simens PLM Exchange",
+        "mimetype": [
+            "model/vnd.siemens.plmxml"
+        ],
+        "home": "http://www.plm.automation.siemens.com/de_de/products/open/plmxml/",
+        "suffix": [
+            "plmxml"
+        ]
+    }
+]

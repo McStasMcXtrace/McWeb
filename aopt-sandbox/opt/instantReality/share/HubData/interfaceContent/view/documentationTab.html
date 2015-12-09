@@ -1,0 +1,302 @@
+  <div class="" id="leftCol">
+      <div class='sidebar-nav'>
+
+        <div class="bs-docs-sidebar" ng-controller='AnchorListCtrl'>
+          <ul class='nav nav-pills nav-stacked' id='AnchorList'>
+            <li ng-class='{active: $index == 0}' id="li_instant-api" class="active sidebar_li">
+              <a ng-href='#instant-api' scroll-to='instant-api'>InstantHub REST API Description</a>
+            </li>
+            <li ng-class='{active: $index == 0}' id="li_transcoder-api" class="sidebar_li">
+              <a ng-href='#transcoder-api' scroll-to='transcoder-api'>Transcoder REST API Description</a>
+            </li>
+            <li ng-class='{active: $index == 0}' id="li_examples" class="sidebar_li">
+              <a ng-href='#examples' scroll-to='examples'>Examples</a>
+            </li>
+            <li ng-class='{active: $index == 0}' id="li_secure-command-batch" class="sidebar_li">
+              <a ng-href='#secure-command-batch' scroll-to='secure-command-batch'>Secure Command Batch</a>
+            </li>
+
+            <li ng-class='{active: $index == 0}' id="li_WebVIS" class="sidebar_li">
+              <a ng-href='#WebVIS' scroll-to='WebVIS'>WebVIS</a>
+              <ul class="nav">
+                <li><a ng-href='#WebVIS_Axis' scroll-to='Axis'>Axis</a></li>
+                <li><a ng-href='#WebVIS_Clipplane' scroll-to='ClipPlane'>ClipPlane</a></li>
+                <li><a ng-href='#WebVIS_ConversionMode' scroll-to='ConversionMode'>ConversionMode</a></li>
+                <li><a ng-href='#WebVIS_DeliveryFormat' scroll-to='DeliveryFormat'>DeliveryFormat</a></li>
+                <li><a ng-href='#WebVIS_Event' scroll-to='Event'>Event</a></li>
+                <li><a ng-href='#WebVIS_EventPhase' scroll-to='EventPhase'>EventPhase</a></li>
+                <li><a ng-href='#WebVIS_EventTarget' scroll-to='EventTarget'>EventTarget</a></li>
+                <li><a ng-href='#WebVIS_EventType' scroll-to='EventType'>EventType</a></li>
+                <li><a ng-href='#WebVIS_ExplorationMode' scroll-to='ExplorationMode'>ExplorationMode</a></li>
+                <li><a ng-href='#WebVIS_FileExtension' scroll-to='FileExtension'>FileExtension</a></li>
+                <li><a ng-href='#WebVIS_Hub' scroll-to=''>Hub</a></li>
+                <li><a ng-href='#WebVIS_InteractionMode' scroll-to=''>InteractionMode</a></li>
+                <li><a ng-href='#WebVIS_Measure' scroll-to=''>Measure</a></li>
+                <li><a ng-href='#WebVIS_MetaData' scroll-to=''>MetaData</a></li>
+                <li><a ng-href='#WebVIS_MimeType' scroll-to=''>MimeType</a></li>
+                <li><a ng-href='#WebVIS_MouseEvent' scroll-to=''>MouseEvent</a></li>
+                <li><a ng-href='#WebVIS_Node' scroll-to=''>Node</a></li>
+                <li><a ng-href='#WebVIS_NodeTree' scroll-to=''>NodeTree</a></li>
+                <li><a ng-href='#WebVIS_OptimizationMode' scroll-to=''>OptimizationMode</a></li>
+                <li><a ng-href='#WebVIS_RenderMode' scroll-to=''>RenderMode</a></li>
+                <li><a ng-href='#WebVIS_ReplyType' scroll-to=''>ReplyType</a></li>
+                <li><a ng-href='#WebVIS_Search' scroll-to=''>Search</a></li>
+                <li><a ng-href='#WebVIS_Transcoder' scroll-to=''>Transcoder</a></li>
+                <li><a ng-href='#WebVIS_TranscoderJob' scroll-to=''>TranscoderJob</a></li>
+                <li><a ng-href='#WebVIS_TranscoderJobState' scroll-to=''>TranscoderJobState</a></li>
+                <li><a ng-href='#WebVIS_TranscoderJobType' scroll-to=''>TranscoderJobType</a></li>
+                <li><a ng-href='#WebVIS_Unit' scroll-to=''>Unit</a></li>
+                <li><a ng-href='#WebVIS_Vector3' scroll-to=''>Vector3</a></li>
+                <li><a ng-href='#WebVIS_Viewer' scroll-to=''>Viewer</a></li>
+                <li><a ng-href='#WebVIS_Viewer16' scroll-to=''>Viewer16</a></li>
+                <li><a ng-href='#WebVIS_Viewer20' scroll-to=''>Viewer20</a></li>
+                <li><a ng-href='#WebVIS_ViewerPixi' scroll-to=''>ViewerPixi</a></li>
+                <li><a ng-href='#WebVIS_VisibleState' scroll-to=''>VisibleState</a></li>
+                <li><a ng-href='#WebVIS_Volume' scroll-to=''>Volume</a></li>
+                <li><a ng-href='#WebVIS_WebVIS' scroll-to=''>WebVIS</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+
+  <div id="documentation" class="container" data-target='#AnchorList' scroll-spy='documentation'>
+    <div class="row">
+
+          <div class="docu-wrapper col-md-10">
+
+                <div class="row">
+                    <div class="col-md-10">
+                      <div class="">
+                        <h3 id="instant-api" class="page-header ng-binding">InstantHub REST API Description</h3>
+                      </div>
+                      <ul>
+                        <li>/ - Frontpage</li>
+                        <li>/job/list - Job list</li>
+                        <li>/job/list/json - Job list, JSON encoded</li>
+                        <li>/job/[ID] - Job description</li>
+                        <li>/job/delete?id=[ID] - deletes Job</li>
+                        <li>/job - POST: add jobs, GET: list jobs
+                            <ul>
+                              <li>Jobs can be added through POST http requests.
+                                <ul>
+                                  <li>POST request - expects a JSON file describing the job service class and job parameters</li>
+                                  <li>The POST request JSON block follows the template below
+                                    <ul>
+                                      <li>
+  <!-- -------------------------------------------------------- -->  
+  <pre>
+    <code class="language-js" data-lang="js">
+      {
+        "ServiceClass" : "&lt;Requested ServiceClass&gt;"
+        "Parameters"   :
+        {
+          "&lt;parameter name 0&gt;" : "&lt;parameter value 0&gt;",
+          "&lt;parameter name 1&gt;" : "&lt;parameter value 1&gt;",
+          .
+          .
+          .
+          "&lt;parameter name N&gt;" : "&lt;parameter value N&gt;",
+        }
+      }
+    </code>
+   </pre>
+  <!-- -------------------------------------------------------- -->  
+                                      </li>
+                                    </ul>
+                                  </li>
+                                  <li>Return value:
+                                    <ul>
+                                      <li>Default: the URI of the result</li>
+                                      <li>The return value might be modified by the reply parameter (service class dependent)</li>
+                                    </ul>
+                                  </li>
+                                </ul>
+                              </li>
+                            </ul>
+                        </li>
+                      </ul>
+                   </div>
+                  </div>
+
+
+                  <div class="row">
+                    <div class="col-md-10">  
+                        <div class="">
+                          <h3 id="transcoder-api" class="page-header ng-binding">Transcoder REST API Description</h3>
+                        </div>
+                            <ul>
+                                <li><i>/</i> - Frontpage</li>
+                                <li><i>/job/list</i> - Job list</li>
+                                <li><i>/job/list/json</i> - Job list, JSON encoded</li>
+                                <li><i>/job/<id></id></i> - Job <id> description</id></li>
+                                <li><i>/job/delete?id=[ID]</i> - deletes Job <id></id></li>
+                                <li><i>/job</i> - POST: add jobs, GET: list jobs 
+                                  <ul><
+                                    <li>Jobs can be added through POST http requests.
+                                      <ul>
+                                        <li>POST request - expects a JSON file describing the job parameters
+                                          (see Examples below). The service class must be set to
+                                          TranscoderService <tt> "ServiceClass" : "TranscoderService"</tt>
+                                        </li> 
+                                        <li>Jobs can either utilise predefined operations 
+                                          <tt> "type" : "PreDefOps"</tt> or secure command batches 
+                                          <tt> "type" : "SecCmdBatch"</tt> 
+                                        </li><li>Return value:
+                                          <ul>
+                                            <li>default: returns ID of new job if successful (ie job doesn't already exist), if the job already exists its ID is returned, 0 in case of errors
+                                            </li> 
+                                            <li>if 'redirect' (see list of parameters below): it will return a 302 (redirect) HTTP code with an adress derived from the job (ID, output type) and the delivery_service command line parameter of transcoder
+                                            </li> 
+                                          </ul>
+                                        </li>
+                                      </ul>
+                                    </li>
+                                    <li>The following parameters are supported for <b>predefined operations</b>:
+                                      <ul>
+                                        <li><b>type</b> [<i>string</i>] - must be "PreDefOps"</li>
+                                        <li><b>resource</b> [<i>string</i>] - uri that gets pulled</li>
+                                        <li><b>ops</b> [<i>comma seperated list of strings</i>]
+                                          <ul>
+                                            <li><b>optimizations</b> (note that you should not attempt this operation <i>after</i> converting to e.g. binary or image geometry - <b>ops order does matter</b>!):
+                                              <ul> 
+                                                <li><i>collapse</i> - merge all objects ignoring materials - the result will look <i>different</i> (only one material)</li> 
+                                                <li><i>collapse+id</i> - like collapse, but will also generate an idmap</li> 
+                                                <li><i>restructure</i> - (1) merge <i>same materials</i> (2) split into nodes with max 64k vertices - the result will look <i>identical</i>, but is optimized for rendering </li> 
+                                                <li><i>restructure+id</i> - like restructure, but will also generate an idmap</li> 
+                                                <li><i>restructure_atlas</i> - (1) merge <i>same materials</i> (2) merge w/ texture atlas (3) split into
+                                                  nodes with max 64k vertices - the result will look <i>identical</i>, but is optimized for rendering</li> 
+                                                <li><i>restructure_atlas+id</i> - like restructure_atlas, but will also generate an idmap</li> 
+                                                <li><i>collapse_restructure</i> - (1) merge <i>all objects ignoring materials</i> (2) split into nodes with max 64k trianlges - the result will look <i>different</i> and is max optimized for rendering </li> 
+                                                <li><i>collapse_restructure+id</i> - like collapse_restructure, but will also generate an idmap</li>
+                                                <li><i>reuse</i> - attempts to identify subtrees that can be referenced</li> 
+                                              </ul>
+                                            </li>
+                                            <li><b>conversions</b>:
+                                              <ul>
+                                                <li><i>toBinGeo</i> - convert to Binary geometry</li>
+                                                <li><i>toPopGeo</i> - convert to POP geometry</li>
+                                                <li><i>toSRC</i> - convert to SRC geometry</li>
+                                                <li><i>toImageGeo</i> - convert to Image Geometry (not recommended anymore since feature is deprecated)</li> 
+                                              </ul>
+                                            </li>
+                                          </ul>
+                                        </li>
+                                        <li><b>format</b> [<i>string</i>] - the output format
+                                          <ul>
+                                            <li><b>x3d</b> - X3D</li>
+                                            <li><b>vrml</b> - VRML</li>
+                                            <li><b>html</b> - HTML5/X3DOM</li>
+                                            <li><b>json</b> - HSI</li>
+                                          </ul>
+                                        </li>
+                                        <li><b>reply</b> [<i>string</i>] - the reply format
+                                          <ul>
+                                            <li><b>redirect</b> - redirect to the transcoded result</li>
+                                            <li><b>result</b>   - URI of the transcoded result</li>
+                                            <li><b>path</b>     - URI of the result folder</li>
+                                            <li><b>id</b>       - job ID</li>
+                                          </ul>
+                                        </li>
+                                      </ul>
+                                    </li>
+                                    <li>The following parameters are supported for <b>secure command batches</b>:
+                                      <ul><br>
+                                        <li><b>type</b> [<i>string</i>] - must be "SecCmdBatch"</li>
+                                        <li><b>cmds</b> [<i>comma seperated list of strings</i>] - each string is executed as a single command</li>
+                                      </ul>
+                                    </li>
+                                    <li>The following parameters are supported for <b>both types</b>:
+                                      <ul><br>
+                                        <li><b>html-header-fields</b> [<i>array of json objects (no arrays)</i>], only
+                                          supported in POST/JSON  - allows to manually set HTTP header
+                                          fields that are used to download the resource (e.g. if
+                                          authentication required)
+                                        </li> 
+                                      </ul>
+                                    </li>
+                                  </ul>
+                                </li>
+                              </ul>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-10">
+                      <div class="">
+                        <h3 id="examples" class="page-header ng-binding">Examples</h3>
+                      </div>
+                        <h3> Predefined Operations </h3>
+                        <p>POST JSON: http://transcoder_server:4711/job</p>
+  <!-- -------------------------------------------------------- -->                        
+  <pre>
+    <code class="language-js" data-lang="js">
+      {
+          "ServiceClass" : "TranscoderService"
+          "Parameters"   :
+          {
+            "type"     : "PreDefOps"
+            "resource" : "http://wherever/some_data.dae",
+            "ops"      : "restructure,toBinGeo",
+            "format"   : "x3d",
+            "reply"    : "result",
+
+            "html-header-fields" : 
+            [
+              { "Cookie" : "SESSION=SOMECOOKIEDATADONTMINDME "}
+            ]
+          }
+      }
+    </code>
+  </pre>
+  <!-- -------------------------------------------------------- -->  
+
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-10">
+                        <div class="">
+                          <h3 id="secure-command-batch" class="page-header ng-binding">Secure Command Batch</h3>
+                        </div>
+                          <p>POST JSON: http://transcoder_server:4711/job</p>
+  <!-- -------------------------------------------------------- -->                          
+  <pre>
+    <code class="language-js" data-lang="js">  
+        {
+            "ServiceClass" : "TranscoderService"
+            "Parameters"   :
+            {
+              "type" : "SecCmdBatch"
+              "cmds" : [ "aopt -i http://wherever/some_data.dae -x index.x3d" ]
+              "html-header-fields" : 
+              [
+                { "Cookie" : "SESSION=SOMECOOKIEDATADONTMINDME "}
+              ]
+            }
+        }
+    </code>
+  </pre>
+  <!-- -------------------------------------------------------- -->                          
+                    </div>
+                  </div>
+
+
+                  <div class="row">
+                    <div class="col-md-10">
+                        <div class="">
+                          <h3 id="WebVIS" class="page-header ng-binding">WebVIS</h3>
+                        </div>
+                        <p>WebVIS Placeholder</p>
+                        <div ng-include="'interfaceContent/view/documentation_src/webvis.Axis.html'"></div>                                                 
+                    </div>
+                  </div>
+
+
+        </div>
+
+    </div>
+  </div> 

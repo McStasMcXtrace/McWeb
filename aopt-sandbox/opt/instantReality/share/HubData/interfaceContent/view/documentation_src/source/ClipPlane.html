@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='webvis-ClipPlane-method-constructor'><span id='webvis-ClipPlane'>/**
+</span></span> * @class webvis.ClipPlane
+ * @author Timo Sturm &lt;timo.sturm@igd.fraunhofer.de&gt;
+ * @param {Object} params
+ * @param {String} params.id
+ * @param {Number} [params.cappingStrength=0.0]
+ * @param {String} [params.cappingColor=&quot;1 1 1&quot;]
+ * @param {webvis.Axis} [params.axis=webvis.Axis.POSITIVE_X]
+ * @constructor
+ * Creates a new ClipPlane instance.
+ */
+webvis.ClipPlane = function ( params )
+{
+    var _axis = params.axis;
+
+    var _position = 0.5;
+
+    var _clipScope = params.clipScope;
+
+    var _clipPlane = null;
+
+    var _cappingStrength = params.cappingStrength;
+
+    var _cappingColor = params.cappingColor;
+
+    var _volume = null;
+
+    var _proxyTransform = null;
+
+    var _proxyCoordinates = null;
+
+    var _proxyParent = params.proxyParent;
+
+    var _x3domRuntime = params.runtime;
+
+    var initialize = function ()
+    {
+        updateVolume();
+        createProxy();
+        createClipPlane();
+    };
+
+//----------------------------------------------------------------------------------------------------------------------
+// Private Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+    var updateVolume = function ()
+    {
+        var bbox = _x3domRuntime.getBBox( _clipScope );
+        _volume = new x3dom.fields.BoxVolume( bbox.min, bbox.max );
+
+        if(false)
+        {
+            var temp = x3dom.fields.BoxVolume.copy(_volume);
+
+            _volume.min.y = temp.min.z;
+            _volume.max.y = temp.max.z;
+            _volume.min.z = temp.min.y;
+            _volume.max.z = temp.max.y;
+        }
+    };
+
+    var updateClipPlane = function ()
+    {
+        var d = 0;
+
+        if ( _axis == webvis.Axis.POSITIVE_X )
+        {
+            d = ( ( _volume.max.x - _volume.min.x ) * _position ) + _volume.min.x;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;1 0 0 &quot; + -d);
+        }
+        else if ( _axis == webvis.Axis.NEGATIVE_X )
+        {
+            d = ( ( _volume.max.x - _volume.min.x ) * _position ) + _volume.min.x;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;-1 0 0 &quot; + d);
+        }
+        if ( _axis == webvis.Axis.POSITIVE_Y )
+        {
+            d = ( ( _volume.max.y - _volume.min.y ) * _position ) + _volume.min.y;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;0 1 0 &quot; + -d);
+        }
+        else if ( _axis == webvis.Axis.NEGATIVE_Y )
+        {
+            d = ( ( _volume.max.y - _volume.min.y ) * _position ) + _volume.min.y;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;0 -1 0 &quot; + d);
+        }
+        else if ( _axis == webvis.Axis.POSITIVE_Z )
+        {
+            d = ( ( _volume.max.z - _volume.min.z ) * _position ) + _volume.min.z;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;0 0 1 &quot; + -d);
+        }
+        else if ( _axis == webvis.Axis.NEGATIVE_Z )
+        {
+            d = ( ( _volume.max.z - _volume.min.z ) * _position ) + _volume.min.z;
+            _clipPlane.setAttribute(&quot;plane&quot;, &quot;0 0 -1 &quot; + d);
+        }
+    };
+
+    var updateProxyCoordinates = function ()
+    {
+        var p0, p1, p2, p3, p4;
+
+        if ( _axis == webvis.Axis.POSITIVE_X || _axis == webvis.Axis.NEGATIVE_X )
+        {
+            p0 = &quot;0 &quot; + _volume.max.y + &quot; &quot; + _volume.min.z + &quot;, &quot;;
+            p1 = &quot;0 &quot; + _volume.min.y + &quot; &quot; + _volume.min.z + &quot;, &quot;;
+            p2 = &quot;0 &quot; + _volume.min.y + &quot; &quot; + _volume.max.z + &quot;, &quot;;
+            p3 = &quot;0 &quot; + _volume.max.y + &quot; &quot; + _volume.max.z + &quot;, &quot;;
+            p4 = &quot;0 &quot; + _volume.max.y + &quot; &quot; + _volume.min.z;
+
+            _proxyCoordinates.setAttribute(&quot;point&quot;, p0 + p1 + p2 + p3 + p4);
+        }
+        else if ( _axis == webvis.Axis.POSITIVE_Y || _axis == webvis.Axis.NEGATIVE_Y )
+        {
+            p0 = _volume.min.x + &quot; 0 &quot; + _volume.max.z + &quot;, &quot;;
+            p1 = _volume.min.x + &quot; 0 &quot; + _volume.min.z + &quot;, &quot;;
+            p2 = _volume.max.x + &quot; 0 &quot; + _volume.min.z + &quot;, &quot;;
+            p3 = _volume.max.x + &quot; 0 &quot; + _volume.max.z + &quot;, &quot;;
+            p4 = _volume.min.x + &quot; 0 &quot; + _volume.max.z;
+
+            _proxyCoordinates.setAttribute(&quot;point&quot;, p0 + p1 + p2 + p3 + p4);
+        }
+        else if ( _axis == webvis.Axis.POSITIVE_Z || _axis == webvis.Axis.NEGATIVE_Z )
+        {
+            p0 = _volume.min.x + &quot; &quot; + _volume.max.y + &quot; 0, &quot;;
+            p1 = _volume.min.x + &quot; &quot; + _volume.min.y + &quot; 0, &quot;;
+            p2 = _volume.max.x + &quot; &quot; + _volume.min.y + &quot; 0, &quot;;
+            p3 = _volume.max.x + &quot; &quot; + _volume.max.y + &quot; 0, &quot;;
+            p4 = _volume.min.x + &quot; &quot; + _volume.max.y + &quot; 0&quot;;
+
+            _proxyCoordinates.setAttribute(&quot;point&quot;, p0 + p1 + p2 + p3 + p4);
+        }
+    };
+
+    var createClipPlane = function()
+    {
+        _clipPlane = document.createElement(&quot;ClipPlane&quot;);
+        _clipPlane.setAttribute(&quot;plane&quot;, &quot;1 0 0 &quot; + -_volume.getCenter().x);
+        _clipPlane.setAttribute(&quot;cappingStrength&quot;, _cappingStrength);
+        _clipPlane.setAttribute(&quot;cappingColor&quot;, _cappingColor);
+
+        _clipScope.appendChild( _clipPlane );
+    };
+
+    var createProxy = function()
+    {
+        _proxyTransform = document.createElement(&quot;Transform&quot;);
+        _proxyTransform.setAttribute( &quot;translation&quot;, _volume.getCenter().x + &quot; 0 0&quot; );
+
+        var shape = document.createElement(&quot;Shape&quot;);
+
+        var app = document.createElement(&quot;Appearance&quot;);
+
+        var mat = document.createElement(&quot;Material&quot;);
+        mat.setAttribute(&quot;emissiveColor&quot;, _cappingColor);
+
+        var line = document.createElement(&quot;LineSet&quot;);
+        line.setAttribute(&quot;vertexCount&quot;, &quot;5&quot;);
+
+        _proxyCoordinates = document.createElement(&quot;Coordinate&quot;);
+
+        updateProxyCoordinates( _axis );
+
+        _proxyTransform.appendChild( shape );
+
+        shape.appendChild( app );
+
+        app.appendChild( mat );
+
+        shape.appendChild( line );
+
+        line.appendChild( _proxyCoordinates );
+
+        _proxyParent.appendChild( _proxyTransform );
+    };
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-ClipPlane-property-Axis'>    /**
+</span>     * @property Axis
+     * Get or Set the Clipping plane axis.
+     * @type {webvis.Axis}
+     * @readonly
+     */
+    Object.defineProperty( this, &quot;Axis&quot;, {
+        get: function () {
+            return _axis;
+        },
+        set: function ( val ) {
+            _axis = val;
+
+            updateClipPlane();
+            updateProxyCoordinates();
+
+            var d = 0;
+
+            if ( _axis == webvis.Axis.POSITIVE_X || _axis == webvis.Axis.NEGATIVE_X )
+            {
+                d = ( ( _volume.max.x - _volume.min.x ) * _position ) + _volume.min.x;
+                _proxyTransform.setAttribute(&quot;translation&quot;, d + &quot; 0 0&quot;);
+            }
+            else if ( _axis == webvis.Axis.POSITIVE_Y || _axis == webvis.Axis.NEGATIVE_Y )
+            {
+                d = ( ( _volume.max.y - _volume.min.y ) * _position ) + _volume.min.y;
+                _proxyTransform.setAttribute(&quot;translation&quot;, &quot;0 &quot; + d + &quot; 0&quot;);
+            }
+            else if ( _axis == webvis.Axis.POSITIVE_Z || _axis == webvis.Axis.NEGATIVE_Z )
+            {
+                d = ( ( _volume.max.z - _volume.min.z ) * _position ) + _volume.min.z;
+                _proxyTransform.setAttribute(&quot;translation&quot;, &quot;0 0 &quot; + d);
+            }
+        }
+    });
+
+<span id='webvis-ClipPlane-property-Position'>    /**
+</span>     * @property Position
+     * Get or Set the Clipping plane position.
+     * @type {webvis.Number}
+     * @readonly
+     */
+    Object.defineProperty( this, &quot;Position&quot;, {
+        get: function () {
+            return _position;
+        },
+        set: function ( val ) {
+            _position = val;
+
+            updateClipPlane();
+            updateProxyCoordinates();
+
+            var d = 0;
+
+            if ( _axis == webvis.Axis.POSITIVE_X )
+            {
+                d = ( ( _volume.max.x - _volume.min.x ) * _position ) + _volume.min.x;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;1 0 0 &quot; + -d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, d + &quot; 0 0&quot; );
+            }
+            else if ( _axis == webvis.Axis.NEGATIVE_X )
+            {
+                d = ( ( _volume.max.x - _volume.min.x) * _position ) + _volume.min.x;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;-1 0 0 &quot; + d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, d + &quot; 0 0&quot; );
+            }
+            if ( _axis == webvis.Axis.POSITIVE_Y )
+            {
+                d = ( ( _volume.max.y - _volume.min.y ) * _position ) + _volume.min.y;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;0 1 0 &quot; + -d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, &quot;0 &quot; + d + &quot; 0&quot; );
+            }
+            else if ( _axis == webvis.Axis.NEGATIVE_Y )
+            {
+                d = ( ( _volume.max.y - _volume.min.y ) * _position ) + _volume.min.y;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;0 -1 0 &quot; + d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, &quot;0 &quot; + d + &quot; 0&quot; );
+            }
+            if ( _axis == webvis.Axis.POSITIVE_Z )
+            {
+                d = ( ( _volume.max.z - _volume.min.z ) * _position ) + _volume.min.z;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;0 0 1 &quot; + -d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, &quot;0 0 &quot; + d );
+            }
+            else if ( _axis == webvis.Axis.NEGATIVE_Z )
+            {
+                d = ( ( _volume.max.z - _volume.min.z ) * _position ) + _volume.min.z;
+                _clipPlane.setAttribute( &quot;plane&quot;, &quot;0 0 -1 &quot; + d );
+                _proxyTransform.setAttribute( &quot;translation&quot;, &quot;0 0 &quot; + d );
+            }
+        }
+    });
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-ClipPlane-method-Remove'>    /**
+</span>     * @method Remove
+     * Remove the ClipPlane.
+     */
+    this.Remove = function ()
+    {
+        _clipScope.removeChild( _clipPlane );
+        _proxyParent.removeChild( _proxyTransform );
+    };
+
+    this.UpdateVolume = function ()
+    {
+        updateVolume();
+        updateProxyCoordinates();
+    };
+
+
+    initialize();
+};
+</pre>
+</body>
+</html>

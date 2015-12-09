@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">webvis = webvis || {};
+
+<span id='webvis-MouseEvent-method-constructor'><span id='webvis-MouseEvent'>/**
+</span></span> * @class webvis.MouseEvent
+ * @param {Object} params
+ * @param {String} params.type
+ * @param {webvis.EventTarget} [params.target=null]
+ * @param {webvis.EventTarget} [params.currentTarget=null]
+ * @param {Boolean} [params.bubbles=true]
+ * @param {Boolean} [params.cancelable=true]
+ * @constructor
+ */
+webvis.MouseEvent = function( params ) {
+
+    //Check Parameters
+    params = webvis.utils.CheckParameters( params, [
+        { key: &quot;button&quot;, required: false, default: 0 },
+        { key: &quot;mouseX&quot;, required: false, default: 0 },
+        { key: &quot;mouseY&quot;, required: false, default: 0 },
+        { key: &quot;worldX&quot;, required: false, default: 0 },
+        { key: &quot;worldY&quot;, required: false, default: 0 },
+        { key: &quot;worldZ&quot;, required: false, default: 0 },
+        { key: &quot;normalX&quot;, required: false, default: 0 },
+        { key: &quot;normalY&quot;, required: false, default: 0 },
+        { key: &quot;normalZ&quot;, required: false, default: 0 }
+    ]);
+
+    //Call super-constructor
+    webvis.Event.call( this, params );
+
+<span id='webvis-MouseEvent-property-_button'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._button = params.button || 0;
+
+<span id='webvis-MouseEvent-property-_mouseX'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._mouseX = params.mouseX || 0;
+
+<span id='webvis-MouseEvent-property-_mouseY'>    /**
+</span>     * .
+     * @type {Number}
+     * @private
+     */
+    this._mouseY = params.mouseY || 0;
+
+<span id='webvis-MouseEvent-property-_worldX'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._worldX = params.worldX || 0;
+
+<span id='webvis-MouseEvent-property-_worldY'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._worldY = params.worldY || 0;
+
+<span id='webvis-MouseEvent-property-_worldZ'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._worldZ = params.worldZ || 0;
+
+<span id='webvis-MouseEvent-property-_normalX'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._normalX = params.normalX || 0;
+
+<span id='webvis-MouseEvent-property-_normalY'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._normalY = params.normalY || 0;
+
+<span id='webvis-MouseEvent-property-_normalZ'>    /**
+</span>     *
+     * @type {Number}
+     * @private
+     */
+    this._normalZ = params.normalZ || 0;
+
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// Extends
+//----------------------------------------------------------------------------------------------------------------------
+webvis.MouseEvent.prototype = new webvis.Event();
+webvis.MouseEvent.prototype.constructor = webvis.MouseEvent;
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Properties
+//----------------------------------------------------------------------------------------------------------------------
+
+<span id='webvis-MouseEvent-property-MouseX'>    /**
+</span>     * @property MouseX
+     * The mouse x position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;Button&quot;, {
+        get: function () {
+            return this._button;
+        },
+        set: function ( val ) {
+            this._button = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-MouseX'>    /**
+</span>     * @property MouseX
+     * The mouse x position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;MouseX&quot;, {
+        get: function () {
+            return this._mouseX;
+        },
+        set: function ( val ) {
+            this._mouseX = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-MouseY'>    /**
+</span>     * @property MouseY
+     * The mouse y position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;MouseY&quot;, {
+        get: function () {
+            return this._mouseY;
+        },
+        set: function ( val ) {
+            this._mouseY = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-WorldX'>    /**
+</span>     * @property WorldX
+     * The world x position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;WorldX&quot;, {
+        get: function () {
+            return this._worldX;
+        },
+        set: function ( val ) {
+            this._worldX = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-WorldY'>    /**
+</span>     * @property WorldY
+     * The world y position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;WorldY&quot;, {
+        get: function () {
+            return this._worldY;
+        },
+        set: function ( val ) {
+            this._worldY = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-WorldZ'>    /**
+</span>     * @property WorldZ
+     * The world z position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;WorldZ&quot;, {
+        get: function () {
+            return this._worldZ;
+        },
+        set: function ( val ) {
+            this._worldZ = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-NormalX'>    /**
+</span>     * @property NormalX
+     * The world x position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;NormalX&quot;, {
+        get: function () {
+            return this._normalX;
+        },
+        set: function ( val ) {
+            this._normalX = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-NormalY'>    /**
+</span>     * @property NormalY
+     * The normal y position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;NormalY&quot;, {
+        get: function () {
+            return this._normalY;
+        },
+        set: function ( val ) {
+            this._normalY = val;
+        }
+    } );
+
+<span id='webvis-MouseEvent-property-NormalZ'>    /**
+</span>     * @property NormalZ
+     * The normal z position
+     * @type {Number}
+     */
+    Object.defineProperty( webvis.MouseEvent.prototype, &quot;NormalZ&quot;, {
+        get: function () {
+            return this._normalZ;
+        },
+        set: function ( val ) {
+            this._normalZ = val;
+        }
+    } );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Public Methods
+//----------------------------------------------------------------------------------------------------------------------
+
+
+</pre>
+</body>
+</html>

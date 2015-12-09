@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<licenses>
+ <license expiredate="01.01.2050" name="Avalon" version="2.00" zkey="kwADAgAUN6xDbe6RtV53we7rpAO20GfzZRkAFP+WSHMFSIXvPbGxgg9xcFjmp5Ob">
+  <comment>Created by JB</comment>
+  <user>
+   <organization>IGD</organization>
+   <street>Fraunhoferstr. 5</street>
+   <city>64283 Darmstadt</city>
+  </user>
+  <hosts>
+   <host id="ANY" logoText="IRF-2.0.0-beta0" name="IRF-2.0.0-beta0"/>
+  </hosts>
+  <contentKeys>
+   <contentKey key="kwAAAAGBAAAAAYL809OKDpaKg5UhQjKaR8Ve+i4WfmA9IQJzdPyDq4YyXdq6SBNCjR6HUtL9mnAMjYm3EhD4BuhcBWd06WQ4tkkYiPcb/qcP20dXPe+XIAAPKIUHVMtCLBU1QOzAfShsr0lnrON/d4nuAe+fI7Yf3SCTaod6xNjdgS2RA72gAn1fAwAAAAEAAQ=="/>
+  </contentKeys>
+  <features>
+   <feature name="ANY"/>
+  </features>
+ </license>
+ <license expiredate="01.01.2050" name="Vision" version="2.00" zkey="kwADAgAUN6xDbe6RtV53we7rpAO20GfzZRkAFHe8YUWBObM/RmCleH8fuA945/gi">
+  <comment>Created by JB</comment>
+  <user>
+   <organization>IGD</organization>
+   <street>Fraunhoferstr. 5</street>
+   <city>64283 Darmstadt</city>
+  </user>
+  <hosts>
+   <host id="ANY" logoText="IRF-2.0.0-beta0" name="IRF-2.0.0-beta0"/>
+  </hosts>
+  <features>
+   <feature name="ANY"/>
+  </features>
+ </license>
+</licenses>
