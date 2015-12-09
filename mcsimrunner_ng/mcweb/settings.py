@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 import os
 
+# --- START Deployment configuration ---
+
 # number of MPI processes pr worker process
 MPI_PR_WORKER=2
 
@@ -22,6 +24,12 @@ MPI_PR_WORKER=2
 #  For Perl + PGPLOT use
 MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
+
+# Use aopt from instantReality (http://www.instantreality.org)
+USE_AOPT = 0
+AOPT_CMD = "aopt.sh"
+
+# --- END Deployment configuration ---
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
