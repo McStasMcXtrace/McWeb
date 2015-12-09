@@ -9,7 +9,7 @@
     <h3>{{ instr_displayname }}</h3>
     <p>Started {{ date_time_created }}</p>
     <fieldset>
-        <legend>Simulation Status: {{ status }}</legend>
+        <legend>Simulation status: {{ status }}</legend>
         <p><strong>params:</strong> {% for p in params %}{{ p.0 }}={{ p.1 }}  {% endfor %}</p>
         <p><strong>neutron rays:</strong> {{ neutrons }}<p>
         <p><strong>random seed:</strong> {{ seed }}</p>
