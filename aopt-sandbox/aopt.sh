@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Wrapper script for aopt from VirtualPlayer (instantreality.org) to allow
+# Wrapper script for aopt from InstantPlayer (instantreality.org) to allow
 # the version for Ubuntu 14.04 LTS to run on other Linux systems.
 #
 

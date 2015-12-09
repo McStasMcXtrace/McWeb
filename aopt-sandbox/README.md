@@ -1,4 +1,4 @@
-This folder contains VirtualPlayer from instantreality.org plus needed libraries to run.
+This folder contains InstantPlayer from instantreality.org plus needed libraries to run.
 
 It has been generated via a Ubuntu 14.04 LTS debootstrap chroot.
 
