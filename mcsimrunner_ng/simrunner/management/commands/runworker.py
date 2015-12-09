@@ -212,7 +212,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
 
         if USE_AOPT==1:
             print "Spawning aopt command " + AOPT_CMD
-            process3 = subprocess.Popen(AOPT_CMD + " layout.wrl",
+            process3 = subprocess.Popen(AOPT_CMD + " -i layout.wrl -N layout.html",
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         shell=True, 
