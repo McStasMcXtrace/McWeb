@@ -1,31 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>A web-based Interface for McStas</title>
-  <link type="text/css" rel="stylesheet" href="/static/style.css"/>
+    <title>A web-based Interface for McStas</title>
+    <script type="text/javascript" src="/static/login.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
+    <div id="logout_container"></div>
     <form method="POST" action="/login">
     {% csrf_token %}
         <fieldset>
-            <legend>Login</legend>
-            <ul>
-                <li>
-                    <label>Username:
-                        <input type="text" name="username">
-                    </label>
-                </li>
-                <li>
-                    <label>Password:
-                        <input type="password" name="password">
-                    </label>
-                </li>
-            </ul>
-        </fieldset>
+            <h3 id="logintitle">Simrunner</h3>
+            <table id="logintable">
+                <tr>
+                    <td>Username:</td>
+                    <td><input type="text" name="username" id="username"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="password"></td>
+                </tr>
+            </table>
 
-        </fieldset>
-            <input type="submit" style="float:right" value="Login">
+            <div id="submit-wrapper">
+                <button type="submit">Login</button>
+            </div>
         </fieldset>
     </form>
+    <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
 </body>
 </html>

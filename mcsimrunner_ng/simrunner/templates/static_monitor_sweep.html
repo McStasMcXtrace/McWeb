@@ -1,9 +1,9 @@
 {% extends 'static_base.html' %}
 {% block content %}
 <legend>Data plots for {{ monitor_name }} (<a id="linlog" href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
-    <ul>
-        {% for monitor in html_png_dat %}
-        <li><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" width="400px"/></a></li>
-        {% endfor %}
-    </ul>
+<ul class="gallery">
+    {% for monitor in html_png_dat %}
+    <li class="thumb"><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" class="thumb"/></a></li>
+    {% endfor %}
+</ul>
 {% endblock %}

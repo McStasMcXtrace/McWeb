@@ -2,16 +2,17 @@
 <html>
 <head>
     <title>Instrument</title>
+    <script type="text/javascript" src="/static/instrument.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-    <fieldset>
-        <form method=post action="/logout">
+    <div id="logout_container">
+        <form method=post action="/logout" id="logout_wrapper">
         {% csrf_token %}
             <label>Logged in as {{ user }}</label>
-            <input type="submit" value="Logout"/>
+            <button type="submit">Logout</button>
         </form>
-    </fieldset>
+    </div>
 
     <form method=post action="/startsim" target="_blank">
     {% csrf_token %}
@@ -43,50 +44,56 @@
 
         <fieldset>
             <legend>
-                <a href="/static/doc/{{ group_name }}/{{ instr_displayname }}.html" target=_blank>
-                    {{ instr_displayname }} documentation
-                </a>
+                {{ instr_displayname }}
+                <a href="/static/doc/{{ group_name }}/{{ instr_displayname }}.html" target=_blank>(click for documentation)</a>
             </legend>
-            <a href="{{ instr_image }}" target=_blank><img src="{{ instr_image }}" width="480" ></a>
+            <div class="centerText"><a href="{{ instr_image }}" target=_blank><img src="{{ instr_image }}" width="480" ></a></div>
             {{ instr_infostring }}
         </fieldset>
 
         <fieldset>
-            <legend>{{ instr_displayname }}</legend>
-            <table>
+            <legend>Parameters for {{ instr_displayname }}</legend>
+            <table class="params">
+                <col class="paramscol"/>
+                <col />
+                <col />
                 {% for p in params %}
-                <tr><td>
-                    <label>
-                        {{ p.0 }} {{p.2}} :</td><td>
-                        <input type="text" name="{{ p.0 }}" value="{{ p.1 }}"></td><td>
-		                {{ p.3 }}</td></tr>
-                    </label>
+                <tr>
+                    <td><label>{{ p.0 }} {{p.2}} :</label></td>
+                    <td><input type="text" name="{{ p.0 }}" value="{{ p.1 }}" id="paramsinput"></td>
+                    <td>{{ p.3 }}</td>
+                </tr>
                 {% endfor %}
-		</table>
-            </ul>
+		    </table>
         </fieldset>
 
         <fieldset>
             <legend>Runtime configuration</legend>
-            <table>
+            <table class="params">
+                <col class="paramscol"/>
+                <col />
                 <tr>
-                    <td><label>neutron rays:</td><td>
-                        <input type="text" name="neutrons" value="{{ neutrons }}"/></td>
-                    </label></tr>
-                <tr><td><label>simulation steps:</td><td>
-                         <input type="text" name="scanpoints" value="{{ scanpoints }}"/></td>
-                    </label></tr>
-                <tr><td><label>random seed:</td><td>
-                        <input type="text" name="seed" value="{{ seed }}"/></td>
-                    </label></tr>
+                    <td><label>neutron rays:</label></td>
+                    <td><input type="text" name="neutrons" value="{{ neutrons }}" id="paramsinput"/></td>
+                </tr>
+                <tr>
+                    <td><label id="paramslabel">simulation steps:</label></td>
+                    <td><input type="text" name="scanpoints" value="{{ scanpoints }}" id="paramsinput"/></td>
+                </tr>
+                <tr>
+                    <td><label id="paramslabel">random seed:</label></td>
+                    <td><input type="text" name="seed" value="{{ seed }}" id="paramsinput"/></td>
+                </tr>
             </table>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="submit-container">
             <legend>Start simulation run</legend>
-            <input type="submit" value="Run"/>
+            <div id="submit-wrapper">
+                <button type="submit">Run</button>
+            </div>
         </fieldset>
     </form>
-    <p>A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
+    <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
 </body>
 </html>
