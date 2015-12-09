@@ -90,13 +90,13 @@ class SimRun(Model):
         
     def status(self):
         if self.complete:
-            return 'complete'
+            return 'Complete'
         elif self.failed:
-            return 'error'
+            return 'Error'
         elif self.started:
-            return 'running'
+            return 'Running'
         else:
-            return 'init'
+            return 'Init'
     
     def __str__(self):
         return "%s_%s_%s" % (self.owner_username, self.instr_displayname, str(self.created.strftime("%Y%m%d_%H%M%S")))
