@@ -26,7 +26,7 @@ MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
 
 # Use aopt from instantReality (http://www.instantreality.org)
-USE_AOPT = 0
+USE_AOPT = False
 AOPT_CMD = "aopt.sh"
 
 # --- END Deployment configuration ---

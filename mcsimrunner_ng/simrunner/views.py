@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from models import InstrGroup, Instrument, SimRun
+from mcweb.settings import USE_AOPT
 import json
 from generate_static import McStaticDataBrowserGenerator
 
@@ -89,6 +90,10 @@ def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id)
 
+    if USE_AOPT:
+        iframestyle = ""
+    else:
+        iframestyle = "display:none"
     if simrun.complete:
         # generate data browser
         lin_log_html = 'lin_log_url: impl.'
@@ -96,7 +101,7 @@ def simrun(req, sim_id, scale='lin'):
         gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': simrun.complete.strftime("%H:%M:%S, %d/%m-%Y"),
                               'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                               'lin_log_html': lin_log_html,
-                              'data_folder': simrun.data_folder})
+                              'data_folder': simrun.data_folder, 'iframestyle': iframestyle})
 
         # TODO: make sure static page generation only happens once
         if simrun.scanpoints == 1:
