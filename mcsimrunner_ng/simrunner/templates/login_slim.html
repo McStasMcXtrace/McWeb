@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>A web-based Interface for McStas</title>
+</head>
+<body>
+    <form method="POST" action="/loginslim-post">
+    {% csrf_token %}
+        Username
+        <input type="text" name="username" id="username">
+        Password
+        <input type="password" name="password">
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>

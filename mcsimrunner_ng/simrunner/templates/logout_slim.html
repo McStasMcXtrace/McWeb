@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>A web-based Interface for McStas</title>
+</head>
+<body>
+    <form method="POST" action="/logoutslim">
+    {% csrf_token %}
+        You are logged in as {{ user }}
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>

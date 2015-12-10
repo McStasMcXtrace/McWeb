@@ -16,9 +16,12 @@ urlpatterns = [
     
     url(r'^recent/?$', views.recent, name="recent"),
 
-    url(r'^login/?$', views.login_post, name='login_post'),
+    url(r'^login-post/?$', views.login_post, name='login_post'),
     url(r'^logout/?$', views.logout_user, name='logout_user'),
+    
     url(r'^loginstatus/?$', views.login_status, name='login_status'),
+    url(r'^loginslim-post/?$', views.login_slim_post, name='login_slim_post'),
+    url(r'^logoutslim/?$', views.logout_slim, name='logout_slim'),
     
     url(r'^', views.home, name="home" ),
 ]

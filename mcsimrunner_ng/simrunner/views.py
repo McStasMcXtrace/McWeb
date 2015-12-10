@@ -39,9 +39,32 @@ def logout_user(req):
 def login_status(req):
     ''' returns a tiny "you are loggged in as..." type text intended to be embedded in other web pages '''
     if not req.user.is_authenticated():
-        return HttpResponse('You are not logged in.')
+        #return HttpResponse('You are not logged in.')
+        return render(req, 'login_slim.html')
     else:
-        return HttpResponse('You are logged in as %s.' % req.user)
+        return render(req, 'logout_slim.html')
+        #return HttpResponse('You are logged in as %s.' % req.user)
+
+def login_slim_post(req):
+    ''' post a login request that should be redirected to the login_status page '''
+    
+    form = req.POST
+    username = form.get('username', '')
+    password = form.get('password', '')
+    
+    user = authenticate(username=username, password=password)
+    if user is None or not user.is_active:
+        return redirect(home)
+    
+    login(req, user)
+    
+    return redirect('/loginstatus/')
+
+def logout_slim(req):
+    ''' log out and redirect to login_status '''
+    logout(req)
+    
+    return redirect('/loginstatus/')
 
 @login_required
 def recent(req):
