@@ -9,7 +9,7 @@
     <div id="logout_container">
         <form method=post action="/logout" id="logout_wrapper">
         {% csrf_token %}
-            <label>Logged in as {{ user }} (<a href="/recent">see recent simruns</a>)</label>
+            <label>Logged in as {{ user }} (<a href="/recent" _target="blank">see recent simruns</a>)</label>
             <button type="submit">Logout</button>
         </form>
     </div>
