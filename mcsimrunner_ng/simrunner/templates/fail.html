@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>simrun failed</title>
+    <link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+    <div style="height:40px;"></div>
+    <fieldset>
+        <h1>fail<h1>
+        <h3>{{ instr_displayname }}</h3>
+        <p>{{ fail_str }}<p>
+        <a href="/{{ data_folder }}/stdout.txt">stdout</a>
+        <a href="/{{ data_folder }}/stderr.txt">stderr</a>
+    </fieldset>
+</body>
+</html>

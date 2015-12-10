@@ -89,13 +89,20 @@ def simrun_log(req, sim_id):
 def simrun(req, sim_id, scale='lin'):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id)
-
-    if USE_AOPT:
-        iframestyle = ""
-    else:
-        iframestyle = "display:none"
+    
+    if simrun.failed:
+        # TODO: make a static fail html page also named browse.html 
+        # TODO: ensure static page generation only happens once
+        return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
+    
     if simrun.complete:
-        # generate data browser
+        # apply config of 3d instrument layout browser
+        if USE_AOPT:
+            iframestyle = ""
+        else:
+            iframestyle = "display:none"
+        
+        # generate data browser (TODO: make sure static page generation only happens once)
         lin_log_html = 'lin_log_url: impl.'
         gen = McStaticDataBrowserGenerator()
         gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': simrun.complete.strftime("%H:%M:%S, %d/%m-%Y"),
@@ -103,14 +110,14 @@ def simrun(req, sim_id, scale='lin'):
                               'lin_log_html': lin_log_html,
                               'data_folder': simrun.data_folder, 'iframestyle': iframestyle})
 
-        # TODO: make sure static page generation only happens once
         if simrun.scanpoints == 1:
             gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
         else:
             gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
         # redirect to static
         return redirect('/%s/browse.html' % simrun.data_folder)
-
+    
+    # simrun live status 
     return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
                                        'status': simrun.status, 'date_time_created': simrun.created.strftime("%H:%M:%S")})
