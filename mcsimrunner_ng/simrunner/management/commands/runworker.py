@@ -307,11 +307,23 @@ def check_age(simrun, max_mins):
         raise Exception('Age of object has timed out for %s running %s at time %s).' % 
             (simrun.owner_username,simrun.instr_displayname ,simrun.created.strftime("%H:%M:%S_%Y-%m-%d")))
 
-def work():
-    ''' gets all non-started SimRun objects, updates statuses and calls sim, layout display and plot functions '''
+def get_and_start_new_simrun():
+    ''' gets an unstarted simrun from the db, sets its status to "running" and return it. Otherwise it returns None '''
+    simrun = None
     simrun_set = SimRun.objects.filter(started=None)
+    if len(simrun_set) > 0:
+        simrun = simrun_set[0]
+
+        simrun.started = timezone.now()
+        simrun.save()
+        
+    return simrun
+
+def work():
+    ''' iterates non-started SimRun objects, updates statuses, and calls sim, layout display and plot functions '''
     
-    for simrun in simrun_set:
+    simrun = get_and_start_new_simrun()
+    while simrun:
         # exceptions raised during the processing block are written to the simrun object as fail, but do not break the processing loop
         try:
             # mark object as processing initiated
@@ -319,9 +331,6 @@ def work():
                 print('processing simrun for %s...' % simrun.instr_displayname)
             else:
                 print('processing simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
-            
-            simrun.started = timezone.now()
-            simrun.save()
             
             # check simrun object age
             check_age(simrun, max_mins=30)
@@ -343,17 +352,21 @@ def work():
             
             print('done (%s secs).' % (simrun.complete - simrun.started).seconds)
             
+            # continue or cause a break iteration
+            simrun = get_and_start_new_simrun()
+            if not simrun:
+                print("idle...")
+        
         except Exception as e:
-            if e is ExitException:
-                exit()
-
             simrun.failed = timezone.now()
             simrun.fail_str = e.__str__()
             simrun.save()
+            
+            if e is ExitException:
+                raise e
+            
             print('fail: %s') % e.__str__()
-    
-    if len(simrun_set) > 0:
-        print("idle...")
+
 
 class Command(BaseCommand):
     ''' django simrun processing command "runworker" '''
@@ -392,3 +405,9 @@ class Command(BaseCommand):
         except KeyboardInterrupt:
             print ""
             print "shutdown requested, exiting..."
+        
+        # handle exit-exception (programmatic shutdown)
+        except ExitException as e:
+            print ""
+            print "exit exception raised, exiting (%s)" % e.__str__()
+            
