@@ -4,7 +4,7 @@ simrunner functional views
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.template import Template, Context
+from os.path import basename
 from models import InstrGroup, Instrument, SimRun
 from mcweb.settings import USE_AOPT
 import json
@@ -42,7 +42,18 @@ def login_status(req):
         return HttpResponse('You are not logged in.')
     else:
         return HttpResponse('You are logged in as %s.' % req.user)
+
+@login_required
+def recent(req):
+    ''' returns a link to recent simruns '''
+    all_simruns = SimRun.objects.filter(owner_username=req.user)
+    # create a list of template-friendly records from the simruns belonging to this user 
+    datafolder_simname = map(lambda s: [s.data_folder, basename(s.data_folder)], all_simruns)
+    # most recent simruns first 
+    datafolder_simname = reversed(datafolder_simname)
     
+    return render(req, 'recent.html', {'datafolder_simname': datafolder_simname})
+
 @login_required
 def instrument(req, group_name, instr_name=None):
     group = InstrGroup.objects.get(name=group_name)
@@ -90,12 +101,7 @@ def instrument_post(req):
     return redirect('simrun', sim_id=simrun.id)
 
 @login_required
-def simrun_log(req, sim_id):
-    ''' used for viewing lin scale images '''
-    return simrun(req, sim_id=sim_id, scale='log')
-
-@login_required
-def simrun(req, sim_id, scale='lin'):
+def simrun(req, sim_id):
     ''' "%Y-%m-%d_%H:%M:%S" '''
     simrun = SimRun.objects.get(id=sim_id)
     
