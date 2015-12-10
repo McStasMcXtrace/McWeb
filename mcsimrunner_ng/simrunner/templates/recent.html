@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instrument</title>
+    <link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+    <div id="logout_container">
+        <form method=post action="/logout" id="logout_wrapper">
+        {% csrf_token %}
+            <label>Logged in as {{ user }} (<a href="/recent">see recent simruns</a>)</label>
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+
+    <fieldset>
+        <legend>Recent Simruns</legend>
+        <ul>
+            {% for d in datafolder_simname %}
+            <li>
+                <a href="/{{ d.0 }}/browse.html">{{ d.1 }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+
+    <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
+</body>
+</html>
