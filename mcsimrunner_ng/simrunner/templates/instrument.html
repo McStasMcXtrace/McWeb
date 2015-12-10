@@ -7,7 +7,7 @@
 </head>
 <body>
     <div id="logout_container">
-        <form method=post action="/logout" id="logout_wrapper">
+        <form method=post action="/logout">
         {% csrf_token %}
             <label>Logged in as {{ user }} (<a href="/recent" _target="blank">see recent simruns</a>)</label>
             <button type="submit">Logout</button>
@@ -20,23 +20,23 @@
         <input type="hidden" name="instr_displayname" value="{{ instr_displayname }}">
         <input type="hidden" name="params_jsonified" value="{{ params_jsonified }}">
 
-        <fieldset>
+        <fieldset style="{{ grpinstr_style }}">
             <legend>Browse instrument groups</legend>
             <ul>
                 {% for g in group_names %}
                 <li>
-                    <a href="/instrument/{{ g }}">{{ g }}</a>
+                    <a href="/{{ instr_urlbit }}/{{ g }}">{{ g }}</a>
                 </li>
                 {% endfor %}
             </ul>
         </fieldset>
 
-        <fieldset>
+        <fieldset style="{{ grpinstr_style }}">
             <legend>Instruments in {{ group_name }}</legend>
             <ul>
                 {% for i in instr_displaynames %}
                 <li>
-                    <a href="/instrument/{{ group_name }}/{{ i }}">{{ i }}</a>
+                    <a href="/{{ instr_urlbit }}/{{ group_name }}/{{ i }}">{{ i }}</a>
                 </li>
                 {% endfor %}
             </ul>

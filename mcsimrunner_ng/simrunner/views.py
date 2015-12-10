@@ -55,14 +55,26 @@ def recent(req):
     return render(req, 'recent.html', {'datafolder_simname': datafolder_simname})
 
 @login_required
-def instrument(req, group_name, instr_name=None):
+def instrument_menu(req, group_name, instr_name=None):
+    ''' redirects to instrument, setting menu=True '''
+    return instrument(req, group_name=group_name, instr_name=instr_name, menu=True)
+
+@login_required
+def instrument(req, group_name, instr_name=None, menu=False):
+    ''' displays the instrument page, optionally with groups and instruments visible '''
     group = InstrGroup.objects.get(name=group_name)
     
     # TODO: move the case of instr_name=None to another view, due to the need to render instrument params
     if instr_name == None:
         instr_name = Instrument.objects.filter(group=group)[0].displayname
-        
+    
     instr = Instrument.objects.get(name=group_name + '_' + instr_name)
+    
+    grpinstr_style = "display:none;"
+    instr_urlbit = "instrument"
+    if menu:
+        grpinstr_style = ""
+        instr_urlbit = "instrument-menu"
     
     # collect properties
     group_names = map(lambda g: g.name, InstrGroup.objects.all())
@@ -74,7 +86,8 @@ def instrument(req, group_name, instr_name=None):
     
     return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
                                            'instr_image': instr.image,
-                                           'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params)})
+                                           'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
+                                           'grpinstr_style': grpinstr_style, 'instr_urlbit': instr_urlbit})
 
 @login_required    
 def instrument_post(req):

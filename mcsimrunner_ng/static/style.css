@@ -115,15 +115,9 @@ button {
 
 #logout_container {
 	height:40px;
-	position:relative;
+    text-align:right;
 }
-#logout_wrapper {
-	position:absolute;
-	display:block-inline;
-	left:635px;
-	top:5px;
-	text-align:right;
-}
+
 #submit-container {
 	height:60px;
 }

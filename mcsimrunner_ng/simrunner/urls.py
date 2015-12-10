@@ -7,6 +7,9 @@ from simrunner import views
 urlpatterns = [
     url(r'^instrument/(?P<group_name>\w+)/(?P<instr_name>\w+)/?$', views.instrument, name="instrument"),
     url(r'^instrument/(?P<group_name>\w+)/?$', views.instrument, name="instrument"),
+    url(r'^instrument-menu/(?P<group_name>\w+)/(?P<instr_name>\w+)/?$', views.instrument_menu, name="instrument_menu"),
+    url(r'^instrument-menu/(?P<group_name>\w+)/?$', views.instrument_menu, name="instrument_menu"),
+    
     url(r'^startsim/?$', views.instrument_post, name="instrument_post" ),
 
     url(r'^simrun/(?P<sim_id>\w+)/?$', views.simrun, name="simrun"),
