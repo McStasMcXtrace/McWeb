@@ -262,7 +262,7 @@ def mcrun(simrun, print_mcrun_output=False):
     e.close()
     
     if process.returncode != 0:
-        raise Exception('Instrument run failure (see stdout and stderr in data dir).')
+        raise Exception('Instrument run failure (see stdout and stderr).')
     
     print('data: %s' % simrun.data_folder)
 
@@ -296,8 +296,8 @@ def init_processing(simrun):
             ln = '%s/%s' % (simrun.data_folder, f)
             os.symlink(src, ln)
         
-    except Exception as e: 
-        raise Exception('init_processing failed: %s' % e.__str__())
+    except Exception as e:
+        raise Exception('init_processing: %s (%s)' % (type(e).__name__, e.__str__()))
 
 def check_age(simrun, max_mins):
     ''' checks simrun age: raises an exception if age is greater than max_mins. (Does not alter object simrun.) '''
@@ -353,9 +353,6 @@ def work():
             print('done (%s secs).' % (simrun.complete - simrun.started).seconds)
             
             # continue or cause a break iteration
-            simrun = get_and_start_new_simrun()
-            if not simrun:
-                print("idle...")
         
         except Exception as e:
             simrun.failed = timezone.now()
@@ -366,7 +363,11 @@ def work():
                 raise e
             
             print('fail: %s') % e.__str__()
-
+        
+        finally:
+            simrun = get_and_start_new_simrun()
+            if not simrun:
+                print("idle...")
 
 class Command(BaseCommand):
     ''' django simrun processing command "runworker" '''
