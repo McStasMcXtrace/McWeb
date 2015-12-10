@@ -30,13 +30,15 @@
 
     <fieldset>
         <legend>Download output files</legend>
-        <ul>
-        <li><a href="/{{ data_folder }}/simrun.tar.gz">simrun.tar.gz</a></li>
-        <li><a href="/{{ data_folder }}/{{ instr_displayname }}.instr">{{ instr_displayname }}.instr</a></li>
-        <li><a href="/{{ data_folder }}/stdout.txt" target=_blank>stdout</a></li>
-        <li><a href="/{{ data_folder }}/stderr.txt" target=_blank>stderr</a></li>
-	    <li><a href="/{{ data_folder }}/layout.wrl">VRML view the instrument</a></li>
-        </ul>
+        <div class="centerText">
+        <ol>
+            <li><a href="/{{ data_folder }}/simrun.tar.gz">simrun.tar.gz</a></li>
+            <li><a href="/{{ data_folder }}/{{ instr_displayname }}.instr">{{ instr_displayname }}.instr</a></li>
+            <li><a href="/{{ data_folder }}/stdout.txt" target=_blank>stdout</a></li>
+            <li><a href="/{{ data_folder }}/stderr.txt" target=_blank>stderr</a></li>
+    	    <li><a href="/{{ data_folder }}/layout.wrl">VRML</a></li>
+        </ol>
+        </div>
     </fieldset>
     <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
 </body>

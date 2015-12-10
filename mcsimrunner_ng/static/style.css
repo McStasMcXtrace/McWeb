@@ -13,8 +13,6 @@ body {
 li {
 	list-style-type: none;
 	margin-bottom: 10px;
-	//display: inline;
-	//margin-right: 15px;
 }
 
 .center {
@@ -41,6 +39,19 @@ img.thumb {
 ul.gallery {
     margin-left: auto;
     margin-right: auto;
+}
+
+/*	lists
+/*******************************************************************************/
+
+ol {
+    text-align:center;
+}
+ol li {
+    display:inline;
+    font-size:15px;
+    margin-left: 15px;
+    margin-right: 15px;
 }
 
 /*	h
@@ -145,7 +156,7 @@ a:hover { text-decoration:none; }
 
 a:link {
 	color: #000;
-	text-decoration:underline ;
+	text-decoration:underline;
 	}
 a:visited {
 	color: #000;
@@ -169,4 +180,12 @@ a.email {
 }
 a.email:hover {
 	background: url(../content/email.gif) 0 -17px no-repeat;
+}
+
+/*	hax
+/*******************************************************************************/
+
+/* NOTE: this needs to be below the a rules above otw it doesnt work, even with !important*/
+ol li a:link {
+    text-decoration: none;
 }
