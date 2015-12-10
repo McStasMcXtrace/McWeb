@@ -54,7 +54,7 @@ def login_slim_post(req):
     
     user = authenticate(username=username, password=password)
     if user is None or not user.is_active:
-        return redirect(home)
+        return redirect('/loginstatus/')
     
     login(req, user)
     
