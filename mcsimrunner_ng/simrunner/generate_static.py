@@ -55,13 +55,13 @@ class McStaticDataBrowserGenerator():
         for i in range(len(png_files)):
             png_dat = [png_base[i], dat_base[i]]
             
-            c = Context({'png_dat': png_dat})
+            c = Context({'png_dat': png_dat, 'twin_html': basename(splitext(html_paths[i])[0] + '_log.html'), 'lin_or_log': 'log'})
             write_html(html_paths[i], t.render(c))
             
             # log versions of monitor files
             png_dat_log = [splitext(png_base[i])[0] + '_log.png', dat_base[i]]
             
-            c = Context({'png_dat': png_dat_log})
+            c = Context({'png_dat': png_dat_log, 'twin_html': basename(html_paths[i]), 'lin_or_log': 'lin'})
             write_html(splitext(html_paths[i])[0] + '_log.html', t.render(c))
         
         # 2) write browse.html
@@ -92,12 +92,12 @@ class McStaticDataBrowserGenerator():
                 dat = dat_base[i].replace('/0/', '/%s/' % str(j))
                 
                 png_dat = [png, dat]
-                c = Context({'png_dat': png_dat})
+                c = Context({'png_dat': png_dat, 'twin_html': basename(splitext(html_paths[i].replace('/0/', '/%s/' % str(j)))[0] + '_log.html'), 'lin_or_log': 'log'})
                 write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), t.render(c))
                 
                 # write twin - log scale
                 png_dat = [splitext(png)[0] + '_log.png', dat]
-                c = Context({'png_dat': png_dat})
+                c = Context({'png_dat': png_dat, 'twin_html': basename(html_paths[i].replace('/0/', '/%s/' % str(j))), 'lin_or_log': 'lin'})
                 write_html(splitext(html_paths[i].replace('/0/', '/%s/' % str(j)))[0] + '_log.html', t.render(c))
                 
         # special case: mccode.dat : sweep overview
