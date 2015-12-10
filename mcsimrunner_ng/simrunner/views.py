@@ -4,10 +4,12 @@ simrunner functional views
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.template import Template, Context
 from models import InstrGroup, Instrument, SimRun
 from mcweb.settings import USE_AOPT
 import json
 from generate_static import McStaticDataBrowserGenerator
+from django.http.response import HttpResponse
 
 def home(req):
     return render(req, template_name='login.html')
@@ -33,6 +35,13 @@ def logout_user(req):
     logout(req)
     
     return redirect(home)
+
+def login_status(req):
+    ''' returns a tiny "you are loggged in as..." type text intended to be embedded in other web pages '''
+    if not req.user.is_authenticated():
+        return HttpResponse('You are not logged in.')
+    else:
+        return HttpResponse('You are logged in as %s.' % req.user)
     
 @login_required
 def instrument(req, group_name, instr_name=None):
