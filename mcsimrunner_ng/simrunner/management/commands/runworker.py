@@ -233,7 +233,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
-    # assemble the run command (NOTE: if we wanted e.g. "mpi=4"
+    # assemble the run command 
     runstr = 'mcrun --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     runstr = runstr + ' -N ' + str(simrun.scanpoints)
@@ -243,13 +243,11 @@ def mcrun(simrun, print_mcrun_output=False):
         runstr = runstr + ' ' + p[0] + '=' + p[1]
     
     print('simrun (%s)...' % runstr)
-    # TODO: , cwd=os.path.join('sim', instr_grp)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
                                cwd=simrun.data_folder)
-    
     # TODO: implement a timeout (max simulation time)
     (stdout, stderr) = process.communicate()
     
@@ -275,16 +273,19 @@ def init_processing(simrun):
         # copy instrument from sim folder to simrun data folder 
         instr_source = '%s/%s/%s.instr' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
         instr = '%s/%s.instr' % (simrun.data_folder, simrun.instr_displayname)
-        shutil.copyfile(instr_source, instr)
-        
+        p = subprocess.Popen(['cp','-p',instr_source, instr])
+        p.wait()
+
         # symlink the .c and the .out files
-        src_c = '%s/%s.c' % (os.path.join('..','..', '..', 'sim', simrun.group_name), simrun.instr_displayname)
-        src_out = '%s/%s.c' % (os.path.join('..', '..','..', 'sim', simrun.group_name), simrun.instr_displayname)
+        src_c = '%s/%s/%s.c' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
+        src_out = '%s/%s/%s.out' % (SIM_DIR, simrun.group_name, simrun.instr_displayname)
         ln_c = '%s/%s.c' % (simrun.data_folder, simrun.instr_displayname)
         ln_out = '%s/%s.out' % (simrun.data_folder, simrun.instr_displayname)
-        os.symlink(src_c, ln_c)
-        os.symlink(src_out, ln_out)
-        
+        p = subprocess.Popen(['cp','-p',src_c, ln_c])
+        p.wait()
+        p = subprocess.Popen(['cp','-p',src_out, ln_out])
+        p.wait()
+
         # symlink the contents of sim/datafiles/
         
         allfiles = [f for f in os.listdir('sim/datafiles/') if os.path.isfile(os.path.join('sim/datafiles/', f))]
