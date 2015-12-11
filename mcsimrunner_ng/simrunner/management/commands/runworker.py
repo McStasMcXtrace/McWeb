@@ -234,8 +234,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
     # assemble the run command (NOTE: if we wanted e.g. "mpi=4"
-    instr = os.path.join(simrun.data_folder, simrun.instr_displayname)
-    runstr = 'mcrun --mpi=' + str(MPI_PR_WORKER) + " " + instr + ' -d ' + os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
+    runstr = 'mcrun --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     runstr = runstr + ' -N ' + str(simrun.scanpoints)
     if simrun.seed > 0:
@@ -244,12 +243,12 @@ def mcrun(simrun, print_mcrun_output=False):
         runstr = runstr + ' ' + p[0] + '=' + p[1]
     
     print('simrun (%s)...' % runstr)
-    
     # TODO: , cwd=os.path.join('sim', instr_grp)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
-                               shell=True)
+                               shell=True,
+                               cwd=simrun.data_folder)
     
     # TODO: implement a timeout (max simulation time)
     (stdout, stderr) = process.communicate()
