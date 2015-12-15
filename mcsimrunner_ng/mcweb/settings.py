@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'simrunner',
+    'signupper',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -81,7 +82,7 @@ ROOT_URLCONF = 'mcweb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['simrunner/templates'],
+        'DIRS': ['simrunner/templates', 'signupper/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
