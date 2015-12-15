@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 This scripts adds LDAP users. Init the mcldap db before running this script.
+NOTE: sudo usage can not be avoided, because LDAP utils require it.
 '''
 import logging
 import argparse
@@ -9,7 +10,7 @@ import subprocess
 import os
 import csv
     
-def ldap_adduser(dn, admin_password, cn, sn, uid, pw='hest', uid_number=1001):
+def ldap_adduser(dn, admin_password, cn, sn, uid, pw, uid_number=1001):
     ''' 
     cn: firstname
     sn: lastname
@@ -63,13 +64,14 @@ def get_new_uid():
         return next
 
 def main(args):
+    ''' assumes a csv format of "firstname;lastname;username;email;password" (email is not supported, used elsewhere) '''
     logging.basicConfig(level=logging.INFO)
     
     dn = get_dn()
     
-    #debug = True
-    #if debug:
-    #    dn = 'dc=fysik,dc=dtu,dc=dk'
+    debug = True
+    if debug:
+        dn = 'dc=fysik,dc=dtu,dc=dk'
         
     with open(args.users_csv[0], 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
@@ -77,7 +79,7 @@ def main(args):
         for row in reader:
             if not firstline:
                 nextuid = get_new_uid()
-                ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], uid_number=nextuid)
+                ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], pw=row[4], uid_number=nextuid)
             firstline = False
 
 if __name__ == '__main__':
