@@ -1,9 +1,9 @@
-dn: cn=firstname UID,ou=users,DN
+dn: cn=UCN USN,ou=users,DN
 objectClass: top
 objectClass: inetOrgPerson
 objectClass: posixAccount
-cn: firstname UID
-sn: UID
+cn: UCN
+sn: USN
 uid: UID
 uidNumber: uID_NUM
 gidNumber: 500
