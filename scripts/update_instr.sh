@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /srv/mcweb/McWeb
+cd /srv/mcweb/McWeb/mcsimrunner_ng/
 
 OLD=$(cat checksum)
 
@@ -12,15 +12,11 @@ if [ "$OLD" == $NEW ]; then
 	echo
 	exit
 elif [ "$OLD" != $NEW ]; then
-	echo sim folder checksum has changed, running updatesimulations.sh ...
+	echo sim folder checksum has changed, running collectinstr ...
 	echo
-	scripts/__compile_instr.sh
-	echo updating django instrument db ...
-	echo
-	python manage.py populate_db
+	python manage.py collec_instr
 	echo creating new checksum file...
 	rm checksum
 	find sim/ -type f -exec md5sum {} \; | sort -k 34 | md5sum | cut -d' ' -f1 > checksum
 	cat checksum
 fi
-
