@@ -10,6 +10,8 @@ from mcweb.settings import USE_AOPT
 import json
 from generate_static import McStaticDataBrowserGenerator
 from django.http.response import HttpResponse
+from django.views.decorators.clickjacking import xframe_options_exempt
+@xframe_options_exempt
 
 def home(req):
     return render(req, template_name='login.html')

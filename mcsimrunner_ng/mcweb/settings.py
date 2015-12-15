@@ -15,7 +15,7 @@ import os
 # --- START Deployment configuration ---
 
 # number of MPI processes pr worker process
-MPI_PR_WORKER=2
+MPI_PR_WORKER=10
 
 # mcplot configuration
 #  For Python + Gnuplot use 
@@ -26,7 +26,7 @@ MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
 
 # Use aopt from instantReality (http://www.instantreality.org)
-USE_AOPT = False
+USE_AOPT = True
 AOPT_CMD = "aopt.sh"
 
 # --- END Deployment configuration ---
