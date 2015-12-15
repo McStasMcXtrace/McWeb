@@ -1,0 +1,5 @@
+dn: ou=users,DN
+objectClass: organizationalUnit
+objectClass: top
+ou: users
+
