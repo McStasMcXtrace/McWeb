@@ -1,5 +1,5 @@
 '''
-signupper views - NOTE: the get respons is intended to show up in a _blank window, which is why it redirects to 
+signupper views - NOTE: the get response is intended to show up in a _blank window, which is why it redirects to 
 the thank you page.
 '''
 from django.shortcuts import render, redirect
