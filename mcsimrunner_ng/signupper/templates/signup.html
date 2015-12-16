@@ -2,14 +2,14 @@
 <head><title></title></head>
 <body>
     <form action="/signup-get/" method="get" target="_blank">
-        <ul>
-            <li><label>First Name: </label><input type="text" name="firstname"></li>
-            <li><label>Last Name: </label><input type="text" name="lastname"></li>
-            <li><label>Email: </label><input type="text" name="email"></li>
-            <li><label>Requested username: </label><input type="text" name="username"></li>
+        <table>
+            <tr><td><label>First Name: </label></td><td><input type="text" name="firstname"></td></tr>
+            <tr><td><label>Last Name: </label></td><td><input type="text" name="lastname"></td></tr>
+            <tr><td><label>Email: </label></td><td><input type="text" name="email"></td></tr>
+            <tr><td><label>Requested username: </label></td><td><input type="text" name="username"></td></tr>
             {% for c in courses %}
-            <li><input type="checkbox" name="{{ c }}" value="{{ c }}"> {{ c }}</li>{% endfor %}
-            <li><input type="submit"></li>
+            <tr><td></td><td><input type="checkbox" name="{{ c }}" value="{{ c }}">{{ c }}</td></tr>{% endfor %}
+            <tr><td></td><td><input type="submit"></td></tr>
         </ul>
     </form>
 </body>
