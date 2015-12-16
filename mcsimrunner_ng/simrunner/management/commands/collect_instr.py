@@ -154,7 +154,7 @@ class Command(BaseCommand):
                     shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
                     print "Adding image for instrument %s" % i
                 else:
-                    instr.image = ''
+                    instr.image = '/static/noimage.png'
 
                 # update instr params
                 instr.params = get_instr_params(g, i)
