@@ -1,6 +1,0 @@
-dn: cn=usergroup,DN
-gidNumber: 500
-cn: usergroup
-objectClass: posixGroup
-objectClass: top
-
