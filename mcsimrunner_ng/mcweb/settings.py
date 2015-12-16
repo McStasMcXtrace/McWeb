@@ -29,6 +29,14 @@ MCPLOT_LOGCMD = "mcplot -png -log"
 USE_AOPT = True
 AOPT_CMD = "aopt.sh"
 
+# list of courses for signupper - each entry will appear as a checkbox when generating
+# the signup form using the command "python manage.py signupform"
+COURSES = [
+    'Salmon', 
+    'Broccolli',
+    'Kaviar', 
+    ]
+
 # --- END Deployment configuration ---
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -82,7 +90,10 @@ ROOT_URLCONF = 'mcweb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['simrunner/templates', 'signupper/templates'],
+        'DIRS': [
+            'simrunner/templates', 
+            'signupper/templates'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
