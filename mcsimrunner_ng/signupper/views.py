@@ -41,8 +41,7 @@ def signup_get(req):
     lastname = form.get('lastname')
     username = form.get('username')
     email = form.get('email')
-    password = 'hest'
-    #password = get_random_passwd()
+    password = get_random_passwd()
     cols = [firstname, lastname, username, email, password]
     
     # get dynamic fields from the form
