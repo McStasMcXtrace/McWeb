@@ -15,7 +15,7 @@ from django_auth_ldap.config import LDAPSearch
 
 # --- START Deployment configuration ---
 
-MCWEB_LDAP_DN = 'dc=fysik,dc=dtu,dc=dk'
+MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
 AUTH_LDAP_SERVER_URI = "ldap://localhost"
 AUTH_LDAP_BIND_DN = ""
@@ -97,7 +97,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
 
