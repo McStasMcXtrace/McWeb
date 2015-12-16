@@ -44,9 +44,13 @@ AOPT_CMD = "aopt.sh"
 # list of courses for signupper - each entry will appear as a checkbox when generating
 # the signup form using the command "python manage.py signupform"
 COURSES = [
-    'Salmon', 
-    'Broccolli',
-    'Kaviar', 
+    'intro-ns-selfstudy', 
+    'intro-ns',
+    'musr', 
+    ]
+# all users will be enrolled in these:
+COURSES_MANDATORY = [
+    'lib', 
     ]
 
 # --- END Deployment configuration ---

@@ -29,7 +29,7 @@ def cols_to_line(cols):
 
 def signup_get(req):
     ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
-
+    
     # introduce the file
     csv = 'new_signups.csv'
     
@@ -41,18 +41,23 @@ def signup_get(req):
     lastname = form.get('lastname')
     username = form.get('username')
     email = form.get('email')
-    password = get_random_passwd()
+    password = 'hest'
+    #password = get_random_passwd()
     cols = [firstname, lastname, username, email, password]
     
     # get dynamic fields from the form
     for c in settings.COURSES:
         cols.append(str(bool(form.get(c))))
+    for c in settings.COURSES_MANDATORY:
+        cols.append(str(True))
     
     # create the header line - an empty string if the file exists
     header_line = ""
     if not exists(csv):
         header_cols = ["firstname", "lastname", "username", "email", "password"]
         for c in settings.COURSES:
+                header_cols.append(c)
+        for c in settings.COURSES_MANDATORY:
                 header_cols.append(c)
         header_line = cols_to_line(header_cols)
     
