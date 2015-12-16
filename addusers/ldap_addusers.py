@@ -69,7 +69,7 @@ def main(args):
     
     dn = get_dn()
     
-    debug = True
+    debug = False
     if debug:
         dn = 'dc=fysik,dc=dtu,dc=dk'
         
