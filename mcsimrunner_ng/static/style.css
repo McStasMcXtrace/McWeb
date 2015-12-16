@@ -5,9 +5,20 @@ body {
 	font-weight: normal;
 	font-size: 12px;
 	color: #555;
-	width: 980px;
-	margin:0 auto;
-	padding:0;
+    margin: 0px;
+}
+
+#content {
+    width: 980px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+#topbar {
+    height: 25px;
+    margin-bottom: 8px;
+    background-color: #23b9ce;
+    border-bottom: 1px solid gray;
 }
 
 li {

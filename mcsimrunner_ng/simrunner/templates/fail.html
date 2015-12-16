@@ -5,7 +5,8 @@
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-    <div style="height:40px;"></div>
+<div id="topbar"></div>
+<div id="content">
     <fieldset>
         <h1>fail<h1>
         <h3>{{ instr_displayname }}</h3>
@@ -13,5 +14,6 @@
         <a href="/{{ data_folder }}/stdout.txt">stdout</a>
         <a href="/{{ data_folder }}/stderr.txt">stderr</a>
     </fieldset>
+</div>
 </body>
 </html>

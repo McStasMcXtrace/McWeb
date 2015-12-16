@@ -5,6 +5,8 @@
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
+<div id="topbar"></div>
+<div id="content">
     <div id="logout_container">
         <form method=post action="/logout">
         {% csrf_token %}
@@ -25,5 +27,6 @@
     </fieldset>
 
     <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
+</div>
 </body>
 </html>
