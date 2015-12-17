@@ -11,8 +11,9 @@ from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNA
 import subprocess
 import os
 import time
-import shutil
 import tarfile
+import threading
+import logging
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -86,11 +87,11 @@ def mcplot(simrun):
             d = os.path.join(MCRUN_OUTPUT_DIRNAME, d)
             data_files.append(d)
             
-            print('plot_linlog: %s' % p)
+            logging.info('plot_linlog: %s' % p)
             
             for i in range(simrun.scanpoints):
                 if i > 0:
-                    print('plot_linlog (scanpoint index %d)...' % i)
+                    logging.info('plot_linlog (scanpoint index %d)...' % i)
                 
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
                 
@@ -113,7 +114,7 @@ def mcplot(simrun):
                     d = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), d)
                     
                     if i == 0:
-                        print('plot_linlog: %s' % p)
+                        logging.info('plot_linlog: %s' % p)
                         plot_files.append(p)
                         plot_files_log.append(p_log)
                         data_files.append(d)
@@ -135,7 +136,7 @@ def mcplot(simrun):
                 p = os.path.splitext(p)[0] + '.png'
                 p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
                 
-                print('plot: %s' % p)
+                logging.info('plot: %s' % p)
                 plot_files.append(p)
             
             # NOTE: the following only works with mcplot-gnuplot-py
@@ -146,7 +147,7 @@ def mcplot(simrun):
                 l = os.path.splitext(l)[0] + '_log.png'
                 l = os.path.join(MCRUN_OUTPUT_DIRNAME, l)
                 
-                print('plot: %s' % l)
+                logging.info('plot: %s' % l)
                 plot_files_log.append(l)
             
             for f in datfiles:
@@ -211,7 +212,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         os.rename(oldwrlfilename, newwrlfilename)
 
         if USE_AOPT==1:
-            print "Spawning aopt command " + AOPT_CMD
+            logging.info("Spawning aopt command " + AOPT_CMD)
             process3 = subprocess.Popen(AOPT_CMD + " -i layout.wrl -N layout.html",
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
@@ -225,8 +226,8 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
                 print(stderrdata3) 
         
         
-        print 'layout: %s' % newfilename
-        print 'layout: %s' % newwrlfilename
+        logging.info('layout: %s' % newfilename)
+        logging.info('layout: %s' % newwrlfilename)
         
     except Exception as e:
         raise Exception('mcdisplay fail: %s \nwith stderr:      %s \n     stderr_wrml: %s' % e.__str__(), stderrdata, stderrdata2)
@@ -242,7 +243,7 @@ def mcrun(simrun, print_mcrun_output=False):
     for p in simrun.params:
         runstr = runstr + ' ' + p[0] + '=' + p[1]
     
-    print('simrun (%s)...' % runstr)
+    logging.info('simrun (%s)...' % runstr)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -259,9 +260,9 @@ def mcrun(simrun, print_mcrun_output=False):
     e.close()
     
     if process.returncode != 0:
-        raise Exception('Instrument run failure (see stdout and stderr).')
+        raise Exception('Instrument run failure - see %s.' % simrun.data_folder )
     
-    print('data: %s' % simrun.data_folder)
+    logging.info('data: %s' % simrun.data_folder)
 
 def init_processing(simrun):
     ''' creates data folder, copies instr files and updates simrun object '''
@@ -319,55 +320,71 @@ def get_and_start_new_simrun():
         
     return simrun
 
+def threadwork(simrun):
+    ''' thread method for simulation and plotting '''
+    try:
+        # check simrun object age
+        check_age(simrun, max_mins=3600)
+        
+        # init processing
+        init_processing(simrun)
+        
+        # process
+        mcrun(simrun)
+        mcdisplay(simrun)
+        mcplot(simrun)
+        
+        # post-processing
+        maketar(simrun)
+        
+        # finish
+        simrun.complete = timezone.now()
+        simrun.save()
+        
+        logging.info('done (%s secs).' % (simrun.complete - simrun.started).seconds)
+    
+    except Exception as e:
+        simrun.failed = timezone.now()
+        simrun.fail_str = e.__str__()
+        simrun.save()
+        
+        if e is ExitException:
+            raise e
+        
+        logging.error('fail: %s (%s)' % (e.__str__(), type(e).__name__))
+
 def work():
     ''' iterates non-started SimRun objects, updates statuses, and calls sim, layout display and plot functions '''
     
+    # avoid having two worker threads starting on the same job
     simrun = get_and_start_new_simrun()
+    
     while simrun:
         # exceptions raised during the processing block are written to the simrun object as fail, but do not break the processing loop
         try:
-            # mark object as processing initiated
+            
             if simrun.scanpoints == 1:
-                print('processing simrun for %s...' % simrun.instr_displayname)
+                logging.info('delegating simrun for %s...' % simrun.instr_displayname)
             else:
-                print('processing simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
+                logging.info('delegating simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
             
-            # check simrun object age
-            check_age(simrun, max_mins=30)
-            
-            # init processing
-            init_processing(simrun)
-            
-            # process
-            mcrun(simrun)
-            mcdisplay(simrun)
-            mcplot(simrun)
-            
-            # post-processing
-            maketar(simrun)
-            
-            # finish
-            simrun.complete = timezone.now()
-            simrun.save()
-            
-            print('done (%s secs).' % (simrun.complete - simrun.started).seconds)
+            t = threading.Thread(target=threadwork, args=(simrun,))
+            t.setDaemon(True)
+            t.setName('%s (%s)' % (t.getName().replace('Thread-','T'), simrun.instr_displayname))
+            t.start()
             
             # continue or cause a break iteration
         
         except Exception as e:
-            simrun.failed = timezone.now()
-            simrun.fail_str = e.__str__()
-            simrun.save()
-            
             if e is ExitException:
                 raise e
             
-            print('fail: %s') % e.__str__()
+            logging.error('fail: %s (%s)' % (e.__str__(), type(e).__name__))
         
         finally:
             simrun = get_and_start_new_simrun()
             if not simrun:
-                print("idle...")
+                logging.info("idle...")
 
 class Command(BaseCommand):
     ''' django simrun processing command "runworker" '''
@@ -379,6 +396,10 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         ''' implements main execution loop and debug run '''
+        # enable logging 
+        logging.basicConfig(level=logging.INFO,
+                    format='%(threadName)-22s: %(message)s',
+                    )
         
         # ensure data output dir exists: 
         try:
@@ -395,20 +416,23 @@ class Command(BaseCommand):
                 work()
                 exit()
             
-            print("looking for simruns...")
-            
-            # main runworker execution loop
+            # main threaded execution loop:
+            logging.info("looking for simruns...")
             while True:
                 work()
                 time.sleep(1)
-        
+            
         # ctr-c exits
         except KeyboardInterrupt:
-            print ""
-            print "shutdown requested, exiting..."
+            print("")
+            logging.info("shutdown requested, exiting...")
+            print("")
+            print("")
         
         # handle exit-exception (programmatic shutdown)
         except ExitException as e:
-            print ""
-            print "exit exception raised, exiting (%s)" % e.__str__()
-            
+            print("")
+            logging.warning("exit exception raised, exiting (%s)" % e.__str__())
+            print("")
+            print("")
+
