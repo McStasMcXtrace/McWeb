@@ -72,8 +72,13 @@ def logout_slim(req):
 def recent(req):
     ''' returns a link to recent simruns '''
     all_simruns = SimRun.objects.filter(owner_username=req.user)
+    
+    # make sure we only work on instances with valied data_folder atributes
+    all_simruns = filter(lambda s: s.data_folder is not None, all_simruns)
+    
     # create a list of template-friendly records from the simruns belonging to this user 
     datafolder_simname = map(lambda s: [s.data_folder, basename(s.data_folder)], all_simruns)
+    
     # most recent simruns first 
     datafolder_simname = reversed(datafolder_simname)
     
