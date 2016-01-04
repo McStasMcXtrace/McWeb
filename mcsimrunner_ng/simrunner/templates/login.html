@@ -8,7 +8,10 @@
 <body>
 <div id="topbar"></div>
 <div id="content">
-    <div id="logout_container"></div>
+    <div id="logout_container">
+        <a href="http://e-neutrons.org" target=_blank><img src="/static/eneutrons_63x50.png" style="width: 40px; height: 40px; position:relative; float:left; margin-right:8px;"/></a>
+        <a href="http://mcstas.org" target=_blank><img src="/static/mcstas_60x50.png" style="background: red; width: 40px; height: 40px; position:relative; float:left;"/></a>
+    </div>
     <form method="POST" action="/login-post">
     {% csrf_token %}
         <fieldset>
