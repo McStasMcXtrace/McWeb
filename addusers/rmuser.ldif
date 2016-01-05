@@ -1,0 +1,2 @@
+dn: uid=UID,ou=users,DN
+changetype: delete
