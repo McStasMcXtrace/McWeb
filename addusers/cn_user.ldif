@@ -4,6 +4,7 @@ objectClass: inetOrgPerson
 objectClass: posixAccount
 cn: UCN
 sn: USN
+mail: MAIL
 uid: UID
 uidNumber: uID_NUM
 gidNumber: 500

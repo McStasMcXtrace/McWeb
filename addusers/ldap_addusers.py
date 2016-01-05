@@ -17,7 +17,7 @@ class LDAPuserException(Exception):
     ''' signals a failed application of an add-user ldif '''
     pass
     
-def ldap_adduser(dn, admin_password, cn, sn, uid, pw, uid_number=1001):
+def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     ''' 
     cn: firstname
     sn: lastname
@@ -33,6 +33,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, pw, uid_number=1001):
     cn_user = cn_user.replace('DN', dn)
     cn_user = cn_user.replace('UCN', cn)
     cn_user = cn_user.replace('USN', sn)
+    cn_user = cn_user.replace('MAIL', mail)
     cn_user = cn_user.replace('UID', uid)
     cn_user = cn_user.replace('uID_NUM', str(uid_number))
     cn_user = cn_user.replace('PASSWORD', pw)    
@@ -118,7 +119,7 @@ def main(args):
             else:
                 try:
                     nextuid = get_new_uid()
-                    ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], pw=row[4], uid_number=nextuid)
+                    ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], mail=row[3], pw=row[4], uid_number=nextuid)
                     users_added.append(list_to_delimited_str(row))
                     print('uid "%s" added to archive' % row[2])
                 except LDAPuserException as e:
