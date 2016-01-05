@@ -8,6 +8,7 @@ import logging
 import argparse
 import subprocess
 import os
+import re
 from os.path import join, dirname, abspath, exists
 import csv
 from datetime import datetime
@@ -17,7 +18,7 @@ class LDAPuserException(Exception):
     ''' signals a failed application of an add-user ldif '''
     pass
     
-def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
+def ldap_rmuser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     ''' 
     cn: firstname
     sn: lastname
@@ -26,23 +27,23 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     
     uid_number: a unique number for this user in the LDAP db
     '''
-    with open ('cn_user.ldif', 'r') as ldif_template:
-        cn_user=ldif_template.read()
+    with open ('uid_user.ldif', 'r') as ldif_template:
+        uid_user=ldif_template.read()
         ldif_template.close()
     
-    cn_user = cn_user.replace('DN', dn)
-    cn_user = cn_user.replace('UCN', cn)
-    cn_user = cn_user.replace('USN', sn)
-    cn_user = cn_user.replace('MAIL', mail)
-    cn_user = cn_user.replace('UID', uid)
-    cn_user = cn_user.replace('uID_NUM', str(uid_number))
-    cn_user = cn_user.replace('PASSWORD', pw)    
+    uid_user = uid_user.replace('DN', dn)
+    uid_user = uid_user.replace('UCN', cn)
+    uid_user = uid_user.replace('USN', sn)
+    uid_user = uid_user.replace('MAIL', mail)
+    uid_user = uid_user.replace('UID', uid)
+    uid_user = uid_user.replace('uID_NUM', str(uid_number))
+    uid_user = uid_user.replace('PASSWORD', pw)    
     
-    ldif = open('_cn_user.ldif', 'w')
-    ldif.write(cn_user)
+    ldif = open('_uid_user.ldif', 'w')
+    ldif.write(uid_user)
     ldif.close()
     try:
-        cmd = ['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_user.ldif']
+        cmd = ['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,)
@@ -56,7 +57,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
                 print(stderr.rstrip('\n'))
             raise LDAPuserException(stderr.rstrip('\n'))
     finally:
-        os.remove('_cn_user.ldif')
+        os.remove('_uid_user.ldif')
 
 def get_dn():
     ''' get the LDAP dn silently via the command line '''
@@ -90,19 +91,20 @@ def main(args):
     ''' assumes a csv format of "firstname,lastname,username,email,password,auth,course1,course2,..." '''
     logging.basicConfig(level=logging.INFO)
     
+    input_filename = args.users_csv[0]
+    # sanity check for input csv
+    if re.match('added', input_filename):
+        print('WARNING: input csv must not start with "added"')
+        exit()
+    
     # get dn via command line (prompts the user for sudo password)
     dn = get_dn()
     basedir = abspath(dirname(__file__))
     
-    # debug mode (eclipse cannot prompt)
-    debug = False
-    if debug:
-        dn = 'dc=fysik,dc=dtu,dc=dk'
-    
     # house keeping     
     users_notadded = []
     users_added = []
-    input_filename = args.users_csv[0]
+    
     
     # read and process input rows
     with open(input_filename, 'r') as csvfile:
@@ -119,7 +121,7 @@ def main(args):
             else:
                 try:
                     nextuid = get_new_uid()
-                    ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], mail=row[3], pw=row[4], uid_number=nextuid)
+                    ldap_rmuser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], mail=row[3], pw=row[4], uid_number=nextuid)
                     users_added.append(list_to_delimited_str(row))
                     print('uid "%s" added to archive' % row[2])
                 except LDAPuserException as e:
