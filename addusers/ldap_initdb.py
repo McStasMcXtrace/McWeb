@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Add users in a csv file to mcldap db. The csv file must contain lines of the format "user, password" 
+Init the ldap db for usage by ldap_addusers
 '''
 import logging
 import argparse
 import subprocess
 import os
+from ldap_addusers import get_dn
     
 def ldap_initdb(dn, password):
     
@@ -45,12 +46,11 @@ def ldap_initdb(dn, password):
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    ldap_initdb(args.dn[0], args.password[0])
+    ldap_initdb(get_dn(), args.password[0])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('dn', nargs='+', help='run slapcat to identify (e.g. dc=fysik,dc=dtu,dc=dk)')
-    parser.add_argument('password', nargs='+', help='ldap admin password')
+    parser.add_argument('password', nargs=1, help='ldap admin password')
     args = parser.parse_args()
 
     main(args)

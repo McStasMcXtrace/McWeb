@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-This scripts adds LDAP users. Init the mcldap db before running this script.
-NOTE: sudo usage can not be avoided, because LDAP utils require it.
+This scripts adds users from a mcsimrunner_ng.signupper moodle-compatible csv to ldap. 
+NOTE: run ldap_initdb before adding users with this script.
 '''
 import logging
 import argparse
@@ -162,8 +162,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('password', nargs='+', help='ldap admin password')
-    parser.add_argument('users_csv', nargs='+', help='csv file containing user data')
+    parser.add_argument('password', nargs=1, help='ldap admin password')
+    parser.add_argument('users_csv', nargs=1, help='csv file containing user data')
     args = parser.parse_args()
 
     main(args)
