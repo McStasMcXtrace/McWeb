@@ -24,7 +24,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, pw, uid_number=1001):
     uid: username
     pw: password
     
-    uid_number: a unique number for this user in the LDAP db (must be kept track of)
+    uid_number: a unique number for this user in the LDAP db
     '''
     with open ('cn_user.ldif', 'r') as ldif_template:
         cn_user=ldif_template.read()
@@ -53,7 +53,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, pw, uid_number=1001):
             if debug:
                 print('"%s" returned an error:' % ps.strip())
                 print(stderr.rstrip('\n'))
-            raise LDAPuserException()
+            raise LDAPuserException(stderr.rstrip('\n'))
     finally:
         os.remove('_cn_user.ldif')
 
@@ -121,9 +121,9 @@ def main(args):
                     ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], pw=row[4], uid_number=nextuid)
                     users_added.append(list_to_delimited_str(row))
                     print('uid "%s" added to archive' % row[2])
-                except LDAPuserException:
+                except LDAPuserException as e:
                     users_notadded.append(list_to_delimited_str(row))
-                    print('uid "%s" not added' % row[2])
+                    print('uid "%s" not added (%s)' % (row[2], e.message))
 
     # write/update archive file
     if len(users_added) > 1:

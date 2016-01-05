@@ -1,4 +1,4 @@
-dn: cn=UCN USN,ou=users,DN
+dn: uid=UID,ou=users,DN
 objectClass: top
 objectClass: inetOrgPerson
 objectClass: posixAccount
