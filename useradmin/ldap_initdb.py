@@ -12,9 +12,10 @@ from ldap_addusers import get_dn
 def ldap_initdb(dn, password):
     
     # prepare ldif 1
-    with open ("cn_usergroup.ldif", "r") as ldif_template:
+    with open("ldifs/cn_usergroup.ldif", "r") as ldif_template:
         cn_usergroup=ldif_template.read()
         ldif_template.close()
+    
     cn_usergroup = cn_usergroup.replace('DN', dn)
     
     # apply ldif 1

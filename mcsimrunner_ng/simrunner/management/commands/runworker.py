@@ -52,7 +52,7 @@ def rename_mcstas_to_mccode(simrun):
             os.rename(wrong, right)
 
 def get_monitor_files(mccode_sim):
-    '''  '''
+    ''' implements "data files can have any name" '''
     monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(mccode_sim).readlines())
     monitor_files = map(lambda f: f.rstrip('\n').split(':')[1].strip(), monitor_files)
     return monitor_files

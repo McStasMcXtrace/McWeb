@@ -9,6 +9,7 @@ import logging
 import argparse
 import subprocess
 import os
+import sys
 import csv
 from ldap_addusers import get_dn
 
@@ -20,7 +21,7 @@ def ldap_rmuser(dn, admin_password, uid):
     ''' 
     uid: username
     '''
-    with open ('rmuser.ldif', 'r') as ldif_template:
+    with open('ldifs/rmuser.ldif', 'r') as ldif_template:
         rmuser=ldif_template.read()
         ldif_template.close()
     
@@ -54,29 +55,44 @@ def main(args):
     # get dn via command line (prompts the user for sudo password)
     dn = get_dn()
     
-    # house keeping
-    input_filename = args.rm_users_csv[0]
+    # parse csv file
+    if args.rm_users_csv:
+        input_filename = args.rm_users_csv
     
-    # read and process input rows
-    with open(input_filename, 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
+        # read and process input rows
+        with open(input_filename, 'r') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            
+            # iterate to add users
+            for row in reader:
+                # skip header line (keeping flexible)
+                if row[2] == 'username':
+                    continue
+                # remove user
+                try:
+                    ldap_rmuser(dn, args.password[0], uid=row[2])
+                    print('uid "%s" removed:' % row[2])
+                except LDAPuserException as e:
+                    print('uid "%s" not removed (%s):' % (row[2], e.message))
         
-        # iterate to add users
-        for row in reader:
-            # skip header line (keeping flexible)
-            if row[2] == 'username':
-                continue
-            # remove user
-            try:
-                ldap_rmuser(dn, args.password[0], uid=row[2])
-                print('uid "%s" removed:' % row[2])
-            except LDAPuserException as e:
-                print('uid "%s" not removed (%s):' % (row[2], e.message))
-                
+    # parse single uid input
+    if args.rm_user_uid:
+        try:
+            uid = args.rm_user_uid
+            ldap_rmuser(dn, args.password[0], uid=uid)
+            print('uid "%s" removed' % uid)
+        except LDAPuserException as e:
+            print('uid "%s" not removed (%s)' % (uid, e.message))
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('password', nargs=1, help='ldap admin password')
-    parser.add_argument('rm_users_csv', nargs=1, help='csv file containing users to be removed from dlap')
+    parser.add_argument('-f', action='store', dest='rm_users_csv', help='csv file containing users to be removed from dlap')
+    parser.add_argument('-u', action='store', dest='rm_user_uid', help='uid of single user to be removed from dlap')
     args = parser.parse_args()
-
+    
+    if not args.rm_user_uid and not args.rm_users_csv:
+        parser.print_help()
+        sys.exit(2)
+    
     main(args)
