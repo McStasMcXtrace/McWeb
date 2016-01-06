@@ -72,7 +72,7 @@ def get_instr_params(instr_grp, instr_file):
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
-        raise Exception('instrument compile error.')
+        raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
     
     cmd2 = 'mcdoc -t ./' + os.path.basename(instr_file)
     process2 = subprocess.Popen(cmd2, 
