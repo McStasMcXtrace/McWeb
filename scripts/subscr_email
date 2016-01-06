@@ -1,6 +1,16 @@
 Hello admin, please perform these tasks:
 
-0) Sanity-check the contents of the attached csv file
-1) Run ./ldap_addusers.py path_to/newusers_some_date...csv to add your new LDAP users
-2) Upload the attached csv file to Moodle (import users...)
+1) ssh to the mcweb server
+2) cd to /srv/mcweb/McWeb/useradmin/
+3) Sanity-check and edit the contents of [csvfile], which is the file written in the subject of this email.
+4) Run this command:
 
+sudo python ldap_addusers.py [ldap admin password] [csvfile]
+
+5) If a username already exists, the script will give an error for that user. Edit the third column and try again.
+6) When the scripts says "all users have been added" you are done. The [csvfile] has been replaced by a file named added_YEARDATE.csv.
+7) Use this "output" file to add users to moodle.
+8) cd to /srv/mcweb/McWeb/scripts
+9) Run this command to send an email containing username and password to all new users:
+
+./subscr_notify.sh
