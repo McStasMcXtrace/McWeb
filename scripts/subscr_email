@@ -1,0 +1,6 @@
+Hello admin, please perform these tasks:
+
+0) Sanity-check the contents of the attached csv file
+1) Run ./ldap_addusers.py path_to/newusers_some_date...csv to add your new LDAP users
+2) Upload the attached csv file to Moodle (import users...)
+
