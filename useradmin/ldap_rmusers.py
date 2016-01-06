@@ -56,7 +56,7 @@ def main(args):
     
     # house keeping
     if args.rm_users_csv:
-        input_filename = args.rm_users_csv[0]
+        input_filename = args.rm_users_csv
     
         # read and process input rows
         with open(input_filename, 'r') as csvfile:
@@ -76,10 +76,11 @@ def main(args):
         
     elif args.rm_user_uid:
         try:
-            ldap_rmuser(dn, args.password[0], uid=args.rm_user_uid[0])
-            print('uid "%s" removed:' % row[2])
+            uid = args.rm_user_uid
+            ldap_rmuser(dn, args.password[0], uid=uid)
+            print('uid "%s" removed' % uid)
         except LDAPuserException as e:
-            print('uid "%s" not removed (%s):' % (row[2], e.message))
+            print('uid "%s" not removed (%s)' % (uid, e.message))
             exit()
     else:
         print("Not enough args - either rm_users_csv or rm_user_uid must be specified.")
@@ -88,8 +89,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('password', nargs=1, help='ldap admin password')
-    parser.add_argument('rm_users_csv', nargs='?', help='csv file containing users to be removed from dlap')
-    parser.add_argument('rm_user_uid', nargs='?', help='uid of single user to be removed from dlap')
+    parser.add_argument('-f', action='store', dest='rm_users_csv', help='csv file containing users to be removed from dlap')
+    parser.add_argument('-u', action='store', dest='rm_user_uid', help='uid of single user to be removed from dlap')
     args = parser.parse_args()
 
     main(args)
