@@ -20,7 +20,7 @@ def ldap_rmuser(dn, admin_password, uid):
     ''' 
     uid: username
     '''
-    with open ('rmuser.ldif', 'r') as ldif_template:
+    with open('ldifs/rmuser.ldif', 'r') as ldif_template:
         rmuser=ldif_template.read()
         ldif_template.close()
     
@@ -55,28 +55,41 @@ def main(args):
     dn = get_dn()
     
     # house keeping
-    input_filename = args.rm_users_csv[0]
+    if args.rm_users_csv:
+        input_filename = args.rm_users_csv[0]
     
-    # read and process input rows
-    with open(input_filename, 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
+        # read and process input rows
+        with open(input_filename, 'r') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            
+            # iterate to add users
+            for row in reader:
+                # skip header line (keeping flexible)
+                if row[2] == 'username':
+                    continue
+                # remove user
+                try:
+                    ldap_rmuser(dn, args.password[0], uid=row[2])
+                    print('uid "%s" removed:' % row[2])
+                except LDAPuserException as e:
+                    print('uid "%s" not removed (%s):' % (row[2], e.message))
         
-        # iterate to add users
-        for row in reader:
-            # skip header line (keeping flexible)
-            if row[2] == 'username':
-                continue
-            # remove user
-            try:
-                ldap_rmuser(dn, args.password[0], uid=row[2])
-                print('uid "%s" removed:' % row[2])
-            except LDAPuserException as e:
-                print('uid "%s" not removed (%s):' % (row[2], e.message))
-                
+    elif args.rm_user_uid:
+        try:
+            ldap_rmuser(dn, args.password[0], uid=args.rm_user_uid[0])
+            print('uid "%s" removed:' % row[2])
+        except LDAPuserException as e:
+            print('uid "%s" not removed (%s):' % (row[2], e.message))
+            exit()
+    else:
+        print("Not enough args - either rm_users_csv or rm_user_uid must be specified.")
+        exit()
+            
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('password', nargs=1, help='ldap admin password')
-    parser.add_argument('rm_users_csv', nargs=1, help='csv file containing users to be removed from dlap')
+    parser.add_argument('rm_users_csv', nargs='?', help='csv file containing users to be removed from dlap')
+    parser.add_argument('rm_user_uid', nargs='?', help='uid of single user to be removed from dlap')
     args = parser.parse_args()
 
     main(args)

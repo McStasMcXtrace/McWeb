@@ -27,7 +27,7 @@ def ldap_rmuser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     
     uid_number: a unique number for this user in the LDAP db
     '''
-    with open ('uid_user.ldif', 'r') as ldif_template:
+    with open('ldifs/uid_user.ldif', 'r') as ldif_template:
         uid_user=ldif_template.read()
         ldif_template.close()
     
