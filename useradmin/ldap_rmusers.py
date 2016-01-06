@@ -9,6 +9,7 @@ import logging
 import argparse
 import subprocess
 import os
+import sys
 import csv
 from ldap_addusers import get_dn
 
@@ -54,7 +55,7 @@ def main(args):
     # get dn via command line (prompts the user for sudo password)
     dn = get_dn()
     
-    # house keeping
+    # parse csv file
     if args.rm_users_csv:
         input_filename = args.rm_users_csv
     
@@ -74,23 +75,24 @@ def main(args):
                 except LDAPuserException as e:
                     print('uid "%s" not removed (%s):' % (row[2], e.message))
         
-    elif args.rm_user_uid:
+    # parse single uid input
+    if args.rm_user_uid:
         try:
             uid = args.rm_user_uid
             ldap_rmuser(dn, args.password[0], uid=uid)
             print('uid "%s" removed' % uid)
         except LDAPuserException as e:
             print('uid "%s" not removed (%s)' % (uid, e.message))
-            exit()
-    else:
-        print("Not enough args - either rm_users_csv or rm_user_uid must be specified.")
-        exit()
-            
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('password', nargs=1, help='ldap admin password')
     parser.add_argument('-f', action='store', dest='rm_users_csv', help='csv file containing users to be removed from dlap')
     parser.add_argument('-u', action='store', dest='rm_user_uid', help='uid of single user to be removed from dlap')
     args = parser.parse_args()
-
+    
+    if not args.rm_user_uid and not args.rm_users_csv:
+        parser.print_help()
+        sys.exit(2)
+    
     main(args)
