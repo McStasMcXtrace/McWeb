@@ -24,19 +24,19 @@ def sendnotify(fullname, username, email, password):
     body = '''
 Dear %s
 
-You have been added to <a href="http://e-neutrons.org">e-neutrons.org</a>.
+You have been added to http://e-neutrons.org.
 
 username: %s
 password: %s
-    ''' % ('fullname', 'uname', 'passwd')
+    ''' % (fullname, username, password)
     
     try:
         f = open('_body', 'w') 
         f.write(body)
         f.close()
-        cmd = ['mailx', '-s', '"welcome to mcweb"', email, '<', '_body']
+        cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
         #print(cmd)
-        subprocess.call(cmd)
+        subprocess.call(cmd, shell=True)
     finally:
         os.remove('_body')
 
