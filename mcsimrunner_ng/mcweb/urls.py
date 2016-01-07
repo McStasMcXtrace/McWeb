@@ -17,9 +17,11 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from simrunner import urls as simrunner_urls
 from signupper import urls as signupper_urls
+from uploader import urls as uploader_urls
 
 urlpatterns = [
     url(r'^admin/?', include(admin.site.urls)),
     url(r'^', include(signupper_urls)),
+    url(r'^', include(uploader_urls)),
     url(r'^', include(simrunner_urls)), # NOTE: simrunner handles all fall-throughs 
 ]

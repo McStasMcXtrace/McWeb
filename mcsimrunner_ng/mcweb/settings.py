@@ -53,6 +53,9 @@ COURSES_MANDATORY = [
     'lib', 
     ]
 
+# used by uploader, NOTE: must not be empty (in which case the uploader will not work)
+FILE_UPLOAD_PW = 'upload123'
+
 # --- END Deployment configuration ---
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -108,7 +111,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             'simrunner/templates', 
-            'signupper/templates'
+            'signupper/templates',
+            'uploader/templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
