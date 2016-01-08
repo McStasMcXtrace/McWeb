@@ -2,6 +2,20 @@
 <html>
 <head>
     <title>A web-based Interface for McStas</title>
+    <script language="javascript">
+        function onSubmit(){
+            // enter moodle
+            document.Form.action = "http://e-neutrons.org/moodle/login/index.php";
+            document.Form.target = "ifMoodle";
+            document.Form.submit();
+
+            // enter simrunner
+            document.Form.action = "/loginslim-post";
+            document.Form.target = "";
+            document.Form.submit();
+            return true;
+        }
+    </script>
 </head>
 <body>
     <form method="POST" action="/loginslim-post">
@@ -10,7 +24,9 @@
         <input type="text" name="username" id="username">
         Password
         <input type="password" name="password">
-        <button type="submit">Login</button>
+        <button type="submit" name="btnSubmit" onclick="return onSubmit();">Login</button>
     </form>
+
+    <iframe type="hidden" name="ifMoodle" width="10" height="10" style="display:none;">
 </body>
 </html>
