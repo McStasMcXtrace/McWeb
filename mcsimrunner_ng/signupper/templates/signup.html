@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<head><title></title></head>
+<head><title></title><script src='https://www.google.com/recaptcha/api.js'></script></head>
 <body>
     <form action="/signup-get/" method="get" target="_blank">
         <table>
@@ -10,6 +10,7 @@
             {% for c in courses %}
             <tr><td></td><td><input type="checkbox" name="{{ c }}" value="{{ c }}">{{ c }}</td></tr>{% endfor %}
             <tr><td></td><td><input type="submit"></td></tr>
-        </ul>
-    </form>
+</ul>
+<div class="g-recaptcha" data-sitekey="6LchGBUTAAAAAIMqKpBHZ4qWEGBdKxPT9rFd5yZW"></div>
+    </Form>
 </body>
