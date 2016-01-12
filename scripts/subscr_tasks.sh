@@ -5,7 +5,7 @@ if [ -f /srv/mcweb/McWeb/mcsimrunner_ng/new_signups.csv ]; then
     echo "moving new_signups.csv to /srv/mcweb/McWeb/useradmin/new_${YEARDATE}.csv ..."
     mv /srv/mcweb/McWeb/mcsimrunner_ng/new_signups.csv /srv/mcweb/McWeb/useradmin/new_"${YEARDATE}".csv
     echo "sending email to admin with instructions ..."
-    mailx -s "mcweb subscriptions: new_${YEARDATE}.csv" jaga@fysik.dtu.dk < /srv/mcweb/McWeb/scripts/_adminemail
+    mailx -s "mcweb subscriptions: new_${YEARDATE}.csv" jaga@fysik.dtu.dk,pkwi@fysik.dtu.dk < /srv/mcweb/McWeb/scripts/_adminemail
 else
     echo "no new signups, exiting (file new_signups.csv does not exist)"
 fi

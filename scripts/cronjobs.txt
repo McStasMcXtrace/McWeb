@@ -1,4 +1,10 @@
 # min(0-59) hour(0-23) dom(1-31) month(1-12) dow(1-7)
-0 5 * * * /srv/mcweb/McWeb/scripts/update_instr.sh
-*/10 * * * * /srv/mcweb/McWeb/scripts/subscr_tasks.sh
-
+#
+# Look for new instruments / update DB:
+*/10 * * * * /srv/mcweb/McWeb/scripts/update_instr.sh
+#
+# Manage signups
+0 5 * * * /srv/mcweb/McWeb/scripts/subscr_tasks.sh
+#
+# Daily moodle cron job
+0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php 
