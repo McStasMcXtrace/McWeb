@@ -18,7 +18,7 @@ class LDAPuserException(Exception):
     ''' signals a failed application of an add-user ldif '''
     pass
     
-def ldap_rmuser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
+def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     ''' 
     cn: firstname
     sn: lastname
@@ -87,27 +87,13 @@ def list_to_delimited_str(row_lst, delimiter=','):
     ''' takes a list of str values and outputs a csv-row '''
     return reduce(lambda cell_a, cell_b: '%s%s%s' % (cell_a, delimiter, cell_b), row_lst)
 
-def main(args):
-    ''' assumes a csv format of "firstname,lastname,username,email,password,auth,course1,course2,..." '''
-    logging.basicConfig(level=logging.INFO)
-    
-    input_filename = args.users_csv[0]
-    # sanity check for input csv
-    if re.match('added', input_filename):
-        print('WARNING: input csv must not start with "added"')
-        exit()
-    
-    # get dn via command line (prompts the user for sudo password)
-    dn = get_dn()
-    basedir = abspath(dirname(__file__))
-    
-    # house keeping     
+def addusers(dn, newsignups_filename):
+    ''' add users given a dn and a moodle-compatible csv-file '''
     users_notadded = []
     users_added = []
     
-    
     # read and process input rows
-    with open(input_filename, 'r') as csvfile:
+    with open(newsignups_filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         firstline = True # header line housekeeping
         
@@ -121,17 +107,37 @@ def main(args):
             else:
                 try:
                     nextuid = get_new_uid()
-                    ldap_rmuser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], mail=row[3], pw=row[4], uid_number=nextuid)
+                    ldap_adduser(dn, args.password[0], cn=row[0], sn=row[1], uid=row[2], mail=row[3], pw=row[4], uid_number=nextuid)
                     users_added.append(list_to_delimited_str(row))
                     print('uid "%s" added to archive' % row[2])
                 except LDAPuserException as e:
                     users_notadded.append(list_to_delimited_str(row))
                     print('uid "%s" not added (%s)' % (row[2], e.message))
+    
+    return users_added, users_notadded
 
-    # added_DATESTR filename
-    added_name = join(basedir, datetime.now().strftime("added_%Y%m%d.csv"))
-
+def main(args):
+    ''' assumes a csv format of "firstname,lastname,username,email,password,auth,course1,course2,..." 
+        NOTE: handles the specifics of this script - general functionality (ldap access etc.) should be 
+        encapsulated in various functions.
+    '''
+    logging.basicConfig(level=logging.INFO)
+    
+    input_filename = args.users_csv[0]
+    # sanity check for input csv
+    if re.match('added', input_filename):
+        print('WARNING: input csv must not start with "added"')
+        exit()
+    
+    # get dn via command line (prompts the user for sudo password)
+    dn = get_dn()
+    
+    # add users to ldap
+    users_added, users_notadded = addusers(dn, input_filename)
+    
     # write/update archive file
+    basedir = abspath(dirname(__file__))
+    added_name = join(basedir, datetime.now().strftime("added_%Y%m%d.csv"))
     if len(users_added) > 1:
         
         # don't write the header if file exists (first index of users_added list)
@@ -158,7 +164,6 @@ def main(args):
                 csvfile.write(text)
             finally:
                 csvfile.close()
-    
     else:
         if len(users_added) > 1:
             print('all users were added')
