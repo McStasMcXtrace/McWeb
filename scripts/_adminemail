@@ -10,7 +10,6 @@ sudo python ldap_addusers.py [ldap admin password] [csvfile]
 5) If a username already exists, the script will give an error for that user. Edit the third column and try again.
 6) When the scripts says "all users have been added" you are done. The [csvfile] has been replaced by a file named added_YEARDATE.csv.
 7) Use this "output" file to add users to moodle.
-8) cd to /srv/mcweb/McWeb/scripts
-9) Run this command to send an email containing username and password to all new users:
+8) Run this command to send an email containing username and password to all new users:
 
 ./subscr_notify.sh
