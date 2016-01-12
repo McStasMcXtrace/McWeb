@@ -20,7 +20,7 @@ def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
     current_password: the current password of user identified with uid
     new_password: the new password will be set to this 
     '''
-    with open('ldifs/chpassword.ldif', 'r') as ldif_template:
+    with open(os.path.join(os.path.dirname(__file__), 'ldifs', 'chpassword.ldif'), 'r') as ldif_template:
         chpassword=ldif_template.read()
         ldif_template.close()
     
@@ -33,10 +33,10 @@ def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
     ldif.write(chpassword)
     ldif.close()
     try:
-        cmd = ['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chpassword.ldif']
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chpassword.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,)
+                                   stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         if stderr:
             ps = ''
@@ -59,7 +59,7 @@ def main(args):
         print('uid "%s" password changed success' % args.uid)
     except LDAPuserException as e:
         print('uid "%s" password change fail (%s)' % (args.uid, e.message))
-    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('password', nargs=1, help='ldap admin password')

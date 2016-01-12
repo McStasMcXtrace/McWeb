@@ -6,12 +6,17 @@ from django.shortcuts import render, redirect
 from os.path import exists
 from subprocess import Popen, PIPE
 from mcweb import settings
+from django.contrib.auth import authenticate
+from django.http import HttpResponse
+from useradmin import ldap_chpassword
+from mcweb.settings import MCWEB_LDAP_DN
 
 def signup(req):
     ''' displays the signup form '''
     return render(req, 'signup.html', {'courses': settings.COURSES})
 
 def get_random_passwd():
+    ''' get a random password from the shell using makepasswd '''
     try:
         process = Popen('makepasswd', stdout=PIPE, stderr=PIPE, shell=True)
         (stdoutdata, stderrdata) = process.communicate()
@@ -29,8 +34,6 @@ def cols_to_line(cols, delimiter = ','):
 
 def signup_get(req):
     ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
-    
-    # introduce the file
     csv = 'new_signups.csv'
     
     # and the form
@@ -76,3 +79,32 @@ def signup_get(req):
 def thanks(req):
     ''' displays a simple "thanks for signing up" page '''
     return render(req, 'thanks.html')
+
+def chpassword(req):
+    ''' simple password change form, rerendering and functionality '''
+    form = req.POST
+    username = form.get('username')
+    pw_current = form.get('pw_current')
+    pw_new = form.get('pw_new')
+    pw_newrep = form.get('pw_newrep')
+    
+    # authenticate
+    if username and pw_current:
+        user = authenticate(username=username, password=pw_current)
+        if user is None or not user.is_active:
+            return render(req, 'chpassword.html', {'message': 'incorrect username or password'})
+    else:
+        return render(req, 'chpassword.html')
+    
+    # new password consistency
+    if pw_new != pw_newrep:
+        return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 'password': pw_current})
+    
+    # apply password change or show an error message
+    try:
+        ldap_chpassword.ldap_chpassword(MCWEB_LDAP_DN, 'secretpassword', username, pw_current, pw_new, sudo=False)
+        return HttpResponse('Your password has been changed.')
+
+    except Exception as e:
+        print(e.message)
+        return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
