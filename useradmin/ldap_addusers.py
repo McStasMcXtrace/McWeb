@@ -128,16 +128,18 @@ def main(args):
                     users_notadded.append(list_to_delimited_str(row))
                     print('uid "%s" not added (%s)' % (row[2], e.message))
 
+    # added_DATESTR filename
+    added_name = join(basedir, datetime.now().strftime("added_%Y%m%d.csv"))
+
     # write/update archive file
     if len(users_added) > 1:
         
         # don't write the header if file exists (first index of users_added list)
-        name = join(basedir, datetime.now().strftime("added_%Y%m%d.csv"))
-        if exists(name):
+        if exists(added_name):
             users_added.remove(users_added[0])
         
         # open todays archive file in append mode
-        with open(name, 'a') as csvfile_archive:
+        with open(added_name, 'a') as csvfile_archive:
             try:
                 # write lines
                 text = list_to_delimited_str(users_added, delimiter='\n') + '\n'
@@ -161,6 +163,8 @@ def main(args):
         if len(users_added) > 1:
             print('all users were added')
         os.remove(input_filename)
+        print("removing org file and creating a copy of %s in moodledata ..." %added_name)
+        subprocess.call('./cptomoodledata.sh %s' % added_name, shell=True)
 
 
 if __name__ == '__main__':
