@@ -69,15 +69,15 @@ def get_dn():
     return stdout.rstrip('\n')
 
 def get_new_uid():
-    ''' opens uidindexfile, iterates, saves and returns '''
-    if not exists('uidindexfile'):
-        with open('uidindexfile', 'w') as uidif:
+    ''' opens _uidindexfile, iterates, saves and returns '''
+    if not exists('_uidindexfile'):
+        with open('_uidindexfile', 'w') as uidif:
             uidif.write('10001')
     
-    with open('uidindexfile', 'r') as uidif:
+    with open('_uidindexfile', 'r') as uidif:
         current = uidif.read().strip()
         uidif.close()
-    with open('uidindexfile', 'w') as uidif:
+    with open('_uidindexfile', 'w') as uidif:
         nextuid = int(current) + 1
         uidif.write(str(nextuid))
         uidif.close()
