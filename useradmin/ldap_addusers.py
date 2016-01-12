@@ -13,7 +13,6 @@ from os.path import join, dirname, abspath, exists
 import csv
 from datetime import datetime
 
-
 class LDAPuserException(Exception):
     ''' signals a failed application of an add-user ldif '''
     pass
@@ -43,7 +42,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, mail, pw, uid_number=1001):
     ldif.write(uid_user)
     ldif.close()
     try:
-        cmd = ['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,)
