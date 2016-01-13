@@ -19,6 +19,7 @@
 
             <tr><td><label>Select group dir:</label></td>
             <td><select name="groupdir">
+                <option value="select_a_group" selected>Select a group</option>
                 {% for d in groupdirs %}
                 <option value="{{ d }}">{{ d }}</option>
                 {% endfor %}
