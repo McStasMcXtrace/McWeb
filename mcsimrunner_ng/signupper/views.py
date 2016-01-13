@@ -45,8 +45,9 @@ def signup_get(req):
     username = form.get('username')
     email = form.get('email')
     password = get_random_passwd()
+    description = '0' # used for an email notification flag
     auth = 'ldap'
-    cols = [firstname, lastname, username, email, password, auth]
+    cols = [firstname, lastname, username, email, password, description, auth]
     
     # get dynamic fields from the form
     for c in settings.COURSES:
@@ -57,7 +58,7 @@ def signup_get(req):
     # create the header line - an empty string if the file exists
     header_line = ""
     if not exists(csv):
-        header_cols = ["firstname", "lastname", "username", "email", "password", 'auth']
+        header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
         i = 0
         for c in settings.COURSES:
             i += 1
