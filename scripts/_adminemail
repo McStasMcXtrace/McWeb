@@ -18,4 +18,6 @@ sudo python ldap_addusers.py [ldap admin password] [csvfile]
    * Adjust various settings if necessary and press "Upload users"
 8) Run this command to send an email containing username and password to all new users:
 
-./subscr_notify.sh
+./notify_users.py added_YEARDATE.csv
+
+
