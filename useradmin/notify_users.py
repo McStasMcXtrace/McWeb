@@ -24,10 +24,16 @@ def sendnotify(fullname, username, email, password):
     body = '''
 Dear %s
 
-You have been added to http://e-neutrons.org.
+You have been added to the http://e-neutrons.org e-Learning system.
 
 username: %s
 password: %s
+
+To change your password, please visit http://www.e-neutrons.org/ssp/
+
+Best,
+
+The e-neutrons.org admin team
     ''' % (fullname, username, password)
     
     try:
