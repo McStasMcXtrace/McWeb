@@ -65,9 +65,14 @@ def main(args):
             
             # iterate to add users
             for row in reader:
+                # handle empty/too short lines 
+                if len(row) < 3:
+                    continue;
+                
                 # skip header line (keeping flexible)
                 if row[2] == 'username':
                     continue
+                
                 # remove user
                 try:
                     ldap_rmuser(dn, args.password[0], uid=row[2])
