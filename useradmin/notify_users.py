@@ -44,7 +44,7 @@ The e-neutrons.org admin team
         cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
         #print(cmd)
         retcode = subprocess.call(cmd, shell=True)
-        if retcode != -1:
+        if retcode != 0:
             raise Exception('retcode: %s' % retcode) 
     finally:
         os.remove('_body')
