@@ -98,6 +98,10 @@ def addusers(dn, newsignups_filename):
         
         # iterate to add users
         for row in reader:
+            # handle empty/too short lines 
+            if len(row) < 5:
+                continue;
+            
             # copy header lines to output lists
             if firstline:
                 users_added.append(list_to_delimited_str(row))
