@@ -1,0 +1,40 @@
+<html>
+<head>
+    <title>VNT: Single Login Page</title>
+    <script language="javascript">
+      function OnButton1(){
+      document.Form1.action = "http://www.e-neutrons.org/moodle/login/index.php" ;    // First target
+      document.Form1.target = "iframe2" ;                    // Open in a iframe
+      document.Form1.submit() ;                              // Submit the page
+      document.Form1.action = "/loginslim-post" ;
+      document.Form1.target = "iframe1" ;                    // Open in a iframe
+      document.Form1.submit() ;                              // Submit the page
+      return true;
+        }
+    </script>
+    <script type="text/javascript" src="http://www.e-neutrons.org/moodle/lib/cookies.js"></script>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="login" class="expose" name=Form1 action="/loginslim-post" method=post>
+    <ol>
+      <li>
+        <label for=username>Username:</label>
+        <input type="text" name="username" id="username"><br>
+      </li>
+      <li>
+        <label for=username>Password :</label>
+        <input type="password" name="password"><br>
+      </li>
+    </ol>
+
+    <input type="submit" value="Send" name="button1" onclick="return OnButton1();"><br>
+  </form>
+
+  <iframe NAME="iframe1" WIDTH="800" HEIGHT="160" src=""></iframe><br>
+  <iframe NAME="iframe2" WIDTH="800" HEIGHT="160" src="http://www.e-neutrons.org/moodle/"></iframe>
+  <!--http://www.e-neutrons.org/moodle/login/index.php"></iframe> -->
+
+</body>
+<!-- See https://www.mediawiki.org/wiki/API:Login wrt. to possible -->
+<!-- mediawiki solution -->
