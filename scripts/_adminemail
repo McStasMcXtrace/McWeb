@@ -10,6 +10,9 @@ sudo python ldap_addusers.py [ldap admin password] [csvfile]
 5) If a username already exists, the script will give an error for that user. Edit the third column and try again.
 6) When the scripts says "all users have been added" you are done. The [csvfile] has been replaced by a file named added_YEARDATE.csv.
 7) Use this "output" file to add users to moodle via:
+
+   http://www.e-neutrons.org/moodle/admin/tool/uploaduser/index.php
+
    * Site administration -> Users -> Accounts -> Upload users
    * Choose a file...
    * Under the 'files' indication (lowest in the list on the left) locate the relevant csvfile
