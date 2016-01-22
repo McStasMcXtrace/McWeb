@@ -29,7 +29,7 @@ PIDFILE_WRK=/var/run/mcweb-worker
  
 do_start () {
     log_daemon_msg "Starting system $DAEMON_NAME daemon"
-    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $DAEMON -- mcweb_uwsgi.ini
+    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $DAEMON -- uwsgi_mcweb.ini
     for i in `seq 1 $NUMWORKERS`
     do
 	start-stop-daemon --start --background --pidfile $PIDFILE_WRK.$i --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $WRKDAEMON -- runworker
