@@ -3,16 +3,18 @@ signupper views - NOTE: the get response is intended to show up in a _blank wind
 the thank you page.
 '''
 from django.shortcuts import render, redirect
-from os.path import exists
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
-from useradmin import ldap_chpassword
+from os.path import exists
+import ast
 
 from mcweb import settings
 from mcweb.settings import MCWEB_LDAP_DN
-
+from useradmin import ldap_chpassword
 import utils
+from models import Signup
 
 def signup(req):
     ''' displays the signup form '''
@@ -107,14 +109,16 @@ def login_au(req):
     username = form.get('username', '')
     password = form.get('password', '')
     
+    
     if not username or not password:
-        return render(req, 'login_au.html', {'next': '/userlist_au'})
+        return render(req, 'login_au.html')
     
     user = authenticate(username=username, password=password)
     if user is None or not user.is_active or not user.is_superuser:
-        return render(req, 'login_au.html', {'next': '/userlist_au'})
+        return render(req, 'login_au.html')
     
     login(req, user)
+    req.session['ldap_password'] = form.get('ldap_password', '')
 
     return redirect('userlist_au')
 
@@ -144,37 +148,94 @@ def signup_au_get(req):
     # get a thank-you message to the user
     return redirect('/thanks/')
 
-
+@login_required
 def userlist_au(req):
     ''' list all new signups, added users or limbo-users '''
     class Ci:
-        ''' Cell info data object. Either cbx or lbl is true, the other is None '''
-        def __init__(self, data, cbx=False):
-            if cbx:
-                self.cbx = True
-            else:
+        ''' Cell info data object '''
+        def __init__(self, data, cbx=None, btn=None, lbl=None):
+            self.cbx = cbx
+            self.btn = btn
+            self.lbl = lbl
+            if cbx is None and btn is None:
                 self.lbl = True
             self.data = data
     
-    #
-    (headers, num_non_course) = utils.get_moodle_colheaders()
+    (headers, num_non_course) = utils.get_colheaders()
     colheaders = []
     i = 0
     for colheader in headers:
         i += 1
-        cbx = i > num_non_course
+        #cbx = i > num_non_course
+        cbx = None
         colheaders.append(Ci(colheader, cbx))
     
-    #colheaders = [Ci('header1'), Ci('header2'), Ci('header3'), Ci('cbx_label', cbx=True)]
-    rowcolstrings = [[Ci('r0c0'),Ci('r0c1'),Ci('r0c2'),Ci('r0c3')],
-                     [Ci('r1c0'),Ci('r1c1'),Ci('r1c2'),Ci('r1c3')],
-                     [Ci('r2c0'),Ci('r2c1'),Ci('r2c2'),Ci('r2c3')],
-                     [Ci('r3c0'),Ci('r3c1'),Ci('r3c2'),Ci('r3c3')],
-                     ]
+    rows_ids = []
+    ids = []
+    for s in utils.get_signups():
+        ids.append(s.id)
+        
+        row = [Ci(s.created.strftime("%Y%m%d")), Ci(s.firstname), Ci(s.lastname), Ci(s.email), Ci(s.username)]
+        for course in settings.COURSES + settings.COURSES_MANDATORY:
+            if course in s.courses:
+                row.append(Ci(course, cbx='checked'))
+            else:
+                row.append(Ci(course, cbx='unchecked'))
+        
+        row.append(Ci('edit', btn=True))
+        row.append(Ci('delete', btn=True))
+        
+        rows_ids.append([row, str(s.id)])
     
-    return render(req, 'userlist_au.html', {'rowcolstrings': rowcolstrings, 'colheaders': colheaders})
+    #rows_ids = [[Ci('r0c0'),Ci('r0c1'),Ci('r0c2'),Ci('r0c3')],
+    #                 [Ci('r1c0'),Ci('r1c1'),Ci('r1c2'),Ci('r1c3')],
+    #                 [Ci('r2c0'),Ci('r2c1'),Ci('r2c2'),Ci('r2c3')],
+    #                 [Ci('r3c0'),Ci('r3c1'),Ci('r3c2'),Ci('r3c3')],
+    #                 ]
+    #ldap_password = req.session['ldap_password']
+    
+    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 'message': ''})
 
+@login_required
+def userlist_au_post(req):
+    ''' handles list form submission '''
+    
+    # 1 - get all Signups before doing anything else
+    # 1a - filter those id'
+    # 2 - get course headers 
+    # 3 - search form to check "On" or "Off" states of checkboxes - these are the fields named "id_course" (NOTE: some id's may not exist due to new/limbo status)
+    # 4 - update Signup objects and save changes to db
+    # 5 - 
+    
+    # get filtered signups
+    form = req.POST
+    ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+    objs = Signup.objects.filter(id__in=ids)    
+    
+    
+    
+    # return to the list 
+    return redirect('/userlist_au/')
 
-def userdetail_au(req):
+@login_required
+def userlist_au_action(req, action, id):
+    ''' handles submitted action - delete or edit '''
+    if action == 'delete':
+        # TODO: if user has been added to ldap, etc., remove them don't just delete the signup request
+        # TODO: make it so that deleted signups are just moved somewhere else, so they may be revived using /admin
+        s = Signup.objects.filter(id=int(id))
+        s.delete()
+        return redirect(userlist_au)
+    
+    if action == 'edit':
+        return redirect('/userdetail_au/%s/' % id)
+    
+    return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, id))
+
+@login_required
+def userdetail_au(req, id):
     ''' change some values in a signup '''
-    return render(req, 'userdetail_au.html')
+    
+    return HttpResponse('id=%s' % (id))
+    #return render(req, 'userdetail_au.html')
+

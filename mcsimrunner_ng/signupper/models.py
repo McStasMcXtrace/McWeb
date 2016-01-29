@@ -23,10 +23,10 @@ class Signup(Model):
     courses_str = CharField(max_length=1000)
     @property
     def courses(self):
-        return json.loads(self.params_str)
+        return json.loads(self.courses_str)
     @courses.setter
-    def courses(self, p):
-        self.params_str = json.dumps(p)
+    def courses(self, c):
+        self.courses_str = json.dumps(c)
     
     def is_new(self):
         return (self.added_ldap is None) and (self.added_moodle is None) and (self.notified is None) and (self.fail_str is None)
