@@ -91,6 +91,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'simrunner',
     'signupper',
+    'uploader',
 )
 
 MIDDLEWARE_CLASSES = (
