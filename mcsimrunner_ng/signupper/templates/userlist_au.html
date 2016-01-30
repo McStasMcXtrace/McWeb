@@ -2,8 +2,12 @@
 <html>
 <head><title>mcweb: signups</title></head>
 <body>
-<h3>new signups</h3>
-<p>{{ message }}</p>
+<p>
+    <a href="/userlist_au/new" style="margin:10px;">new</a>
+    <a href="/userlist_au/limbo" style="margin:10px;">limbo</a>
+    <a href="/userlist_au/added" style="margin:10px;">added</a>
+</p>
+<h3>{{ message }}</h3>
 
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
@@ -38,7 +42,7 @@
             {% endfor %}
         </table>
     </fieldset>
-    <fieldset style="margin:5px;">
+    <fieldset style="margin:5px;display:{{ buttondisplay }}">
         <label>Click to add users to LDAP and moodle, and send email notifications: <input type="submit" value="Add users" style="margin-right:20px;"></label>
     </fieldset>
 </form>

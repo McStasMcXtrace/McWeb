@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^login_au/?$', views.login_au, name="login_au" ),
 
     url(r'^userlist_au/?$', views.userlist_au, name="userlist_au" ),
+    url(r'^userlist_au/(?P<listtype>[\w-]+)/?$', views.userlist_au, name="userlist_au" ),
     url(r'^userlist_au-post/?$', views.userlist_au_post, name="userlist_au_post" ),
     url(r'^userlist_au_action/(?P<action>[\w-]+)/(?P<id>[\w-]+)/?$', views.userlist_au_action, name="userlist_au_action" ),
 

@@ -154,7 +154,7 @@ def signup_au_get(req):
     return redirect('/thanks/')
 
 @login_required
-def userlist_au(req, action='new'):
+def userlist_au(req, listtype='new'):
     ''' list all new signups, added users or limbo-users '''
     
     class Ci:
@@ -178,22 +178,58 @@ def userlist_au(req, action='new'):
     
     rows_ids = []
     ids = []
-    for s in utils.get_signups():
+    
+    # filter signup object set (and ui state variables message and buttonstate) based on action parameter
+    buttondisplay = ''
+    if listtype == 'new':
+        signups = utils.get_signups()
+        message = 'New signups:'
+    elif listtype == 'added':
+        signups = utils.get_signups_added()
+        message = 'Added:'
+        buttondisplay = 'none'
+    elif listtype == 'limbo':
+        signups = utils.get_signups_limbo()
+        message = 'Limbo signups - edit to fix errors, then re-submit:'
+    else: 
+        raise Exception('signupper.views.userlist_au: undefined action')
+    
+    for s in signups:
         ids.append(s.id)
         
-        row = [Ci(s.created.strftime("%Y%m%d")), Ci(s.firstname), Ci(s.lastname), Ci(s.email), Ci(s.username)]
-        for course in settings.COURSES + settings.COURSES_MANDATORY:
-            if course in s.courses:
-                row.append(Ci(course, cbx='checked'))
-            else:
-                row.append(Ci(course, cbx='unchecked'))
+        row = []
         
-        row.append(Ci('edit', btn=True))
-        row.append(Ci('delete', btn=True))
+        row.append(Ci(s.created.strftime("%Y%m%d")))
+        row.append(Ci(s.firstname))
+        row.append(Ci(s.lastname))
+        row.append(Ci(s.email))
+        row.append(Ci(s.username))
+        
+        # courses columns - new/limbo or added signup state
+        for course in settings.COURSES + settings.COURSES_MANDATORY:
+            if not listtype == 'added' and not s.added_moodle:
+                if course in s.courses:
+                    row.append(Ci(course, cbx='checked'))
+                else:
+                    row.append(Ci(course, cbx='unchecked'))
+            else:
+                if course in s.courses:
+                    row.append(Ci('enrolled'))
+                else:
+                    row.append(Ci(''))
+        
+        # buttons
+        if not listtype == 'added':
+            row.append(Ci('edit', btn=True))
+            row.append(Ci('delete', btn=True))
+        
+        # fail string
+        if listtype == 'limbo':
+            row.append(Ci(s.fail_str))
         
         rows_ids.append([row, str(s.id)])
     
-    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 'message': ''})
+    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 'message': message, 'buttondisplay': buttondisplay})
 
 @login_required
 def userlist_au_post(req):
@@ -255,7 +291,12 @@ def userlist_au_post(req):
             s.save()
     
     # return to the list 
-    return redirect('/userlist_au/')
+    if len(utils.get_signups() > 0):
+        return redirect('/userlist_au/new')
+    elif len(utils.get_signups_limbo() > 0):
+        return redirect('/userlist_au/limbo')
+    else:
+        return redirect('/userlist_au/added')
 
 @login_required
 def userlist_au_action(req, action, id):
