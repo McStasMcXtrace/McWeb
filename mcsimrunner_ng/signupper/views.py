@@ -6,15 +6,18 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.utils import timezone
 
-from os.path import exists
 import ast
+import os
 
+import utils
 from mcweb import settings
 from mcweb.settings import MCWEB_LDAP_DN
 from useradmin import ldap_chpassword
-import utils
 from models import Signup
+from ldaputils import ldaputils
+
 
 def signup(req):
     ''' displays the signup form '''
@@ -45,7 +48,7 @@ def signup_get(req):
     
     # create the header line - an empty string if the file exists
     header_line = ""
-    if not exists(csv):
+    if not os.path.exists(csv):
         header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
         i = 0
         for c in settings.COURSES:
@@ -99,8 +102,10 @@ def chpassword(req):
         return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
 
 
-########################################
-# BELOW are the views used by the 3 user management pages - login_um.html, userlist_um.html and userdetail_um.html
+####################################################################################################################################
+# BELOW: implementations of the views used by the 3 user management pages - login_um.html, userlist_um.html and userdetail_um.html #
+####################################################################################################################################
+
 
 def login_au(req):
     ''' login and check for superuser status '''
@@ -149,8 +154,9 @@ def signup_au_get(req):
     return redirect('/thanks/')
 
 @login_required
-def userlist_au(req):
+def userlist_au(req, action='new'):
     ''' list all new signups, added users or limbo-users '''
+    
     class Ci:
         ''' Cell info data object '''
         def __init__(self, data, cbx=None, btn=None, lbl=None):
@@ -187,32 +193,66 @@ def userlist_au(req):
         
         rows_ids.append([row, str(s.id)])
     
-    #rows_ids = [[Ci('r0c0'),Ci('r0c1'),Ci('r0c2'),Ci('r0c3')],
-    #                 [Ci('r1c0'),Ci('r1c1'),Ci('r1c2'),Ci('r1c3')],
-    #                 [Ci('r2c0'),Ci('r2c1'),Ci('r2c2'),Ci('r2c3')],
-    #                 [Ci('r3c0'),Ci('r3c1'),Ci('r3c2'),Ci('r3c3')],
-    #                 ]
-    #ldap_password = req.session['ldap_password']
-    
     return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 'message': ''})
 
 @login_required
 def userlist_au_post(req):
     ''' handles list form submission '''
     
-    # 1 - get all Signups before doing anything else
-    # 1a - filter those id'
-    # 2 - get course headers 
-    # 3 - search form to check "On" or "Off" states of checkboxes - these are the fields named "id_course" (NOTE: some id's may not exist due to new/limbo status)
-    # 4 - update Signup objects and save changes to db
-    # 5 - 
-    
     # get filtered signups
     form = req.POST
     ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
-    objs = Signup.objects.filter(id__in=ids)    
+    objs = Signup.objects.filter(id__in=ids)
     
+    # get course headers 
+    headers, noncourses = utils.get_colheaders()
+    courseheaders = headers[noncourses:]
     
+    # save new course configuration for each signup
+    for s in objs:
+        courses = []
+        for course in courseheaders:
+            # NOTE: non-checked checkboxes do not become included in the form submission
+            cbx = form.get('%s_%s' % (str(s.id), course))
+            if cbx:
+                courses.append(course)
+        s.courses = courses
+        s.save()
+    
+    # perform the appropriate add-user actions for each signup
+    # NOTE: this algorithm is only fool-proof down to the db save() operation always succeeding
+    ldap_password = req.session['ldap_password']
+    for s in objs:
+        try:
+            # try add to ldap
+            if not s.added_ldap:
+                ldaputils.ldap_adduser()
+                s.added_ldap = timezone.now()
+                s.save()
+            
+            # try add to moodle
+            if not s.added_moodle:
+                utils.moodle_adduser()
+                s.added_moodle = timezone.now()
+                s.save()
+            
+            # try notify user
+            if not s.notified:
+                utils.notifyuser()
+                s.notified = timezone.now()
+                s.save()
+            
+            # all three tasks have been completed successfully at some point, mark and save
+            s.is_new = False
+            s.is_limbo = False
+            s.is_added = True
+            s.save()
+            
+        except Exception as e:
+            s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
+            s.is_limbo = True
+            s.is_new = False
+            s.save()
     
     # return to the list 
     return redirect('/userlist_au/')

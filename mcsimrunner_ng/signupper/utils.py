@@ -44,7 +44,15 @@ def get_colheaders():
 
 def get_signups():
     ''' return relevant signup objects '''
-    return Signup.objects.all()    
+    return Signup.objects.filter(is_new=True)
+
+def get_signups_added():
+    ''' return relevant signup objects '''
+    return Signup.objects.filter(is_added=True)
+
+def get_signups_limbo():
+    ''' return relevant signup objects '''
+    return Signup.objects.filter(is_limbo=True)
 
 def create_signup(firstname, lastname, email, username, courses_lst):
     ''' most simple way of creating a new signup instance '''
@@ -53,3 +61,9 @@ def create_signup(firstname, lastname, email, username, courses_lst):
     signup.courses = courses_lst
     signup.save()
     return
+
+def moodle_adduser():
+    pass
+
+def notifyuser():
+    pass
