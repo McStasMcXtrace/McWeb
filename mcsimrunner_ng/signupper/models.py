@@ -4,7 +4,7 @@ signupper models
 from django.db.models import Model, CharField, DateTimeField
 from django.utils import timezone
 import json
-from django.forms.fields import BooleanField
+from django.db.models import BooleanField
 
 class Signup(Model):
     ''' corresponds to a mcstas instrument contained in a certain folder '''
@@ -19,9 +19,9 @@ class Signup(Model):
     added_moodle = DateTimeField('Added to moodle', blank=True, null=True)
     notified = DateTimeField('Notified', blank=True, null=True)
     
-    is_new = BooleanField(initial=True)
-    is_added = BooleanField(initial=False)
-    is_limbo = BooleanField(initial=False)
+    is_new = BooleanField(default=True)
+    is_added = BooleanField(default=False)
+    is_limbo = BooleanField(default=False)
     
     fail_str = CharField(max_length=1000, blank=True, null=True)
     
@@ -32,23 +32,6 @@ class Signup(Model):
     @courses.setter
     def courses(self, c):
         self.courses_str = json.dumps(c)
-    
-    #def is_new(self):
-    #    return (self.added_ldap is None) and (self.added_moodle is None) and (self.notified is None) and (self.fail_str is None)
-    
-    #def is_added(self):
-    #    return self.added_ldap and self.added_moodle and self.notified
-    
-    #def is_limbo(self):
-    #    return not self.is_new() and self.is_added()
-    
-    #def status(self):
-    #    if self.is_new():
-    #        return 'New'
-    #    elif self.is_added():
-    #        return 'Added'
-    #    else:
-    #        return 'Limbo'
     
     def __str__(self):
         return "%s" % (self.username)
