@@ -50,7 +50,8 @@ COURSES = [
     ]
 # all users will be enrolled in these:
 COURSES_MANDATORY = [
-    'lib', 
+    'lib',
+    'quiz-taster',
     ]
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
