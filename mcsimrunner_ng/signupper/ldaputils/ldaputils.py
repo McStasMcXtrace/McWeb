@@ -57,8 +57,31 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
 def ldap_rmuser():
     pass
 
-def ldap_chpassword():
-    pass
+def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
+    ''' 
+    This is a change password function. Unfortunately, it only works with the admin password...
+    
+    uid: username
+    current_password: the current password of user identified with uid
+    new_password: the new password will be set to this 
+    '''
+    chpassword = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: userpassword\nuserpassword: %s\n-\nadd: userpassword\nuserpassword: %s' % (uid, dn, current_password, new_password)
+    
+    ldif = open('_chpassword.ldif', 'w')
+    ldif.write(chpassword)
+    ldif.close()
+    try:
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chpassword.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        (stdout, stderr) = process.communicate()
+        if stderr:
+            ps = ''
+            for c in cmd: ps = '%s %s' % (ps, c)
+            raise Exception(stderr.replace('\n', ''))
+    finally:
+        os.remove('_chpassword.ldif')
     
 def ldap_initdb(dn, admin_password):
     ''' inits  the ldap db for mcweb user addition '''

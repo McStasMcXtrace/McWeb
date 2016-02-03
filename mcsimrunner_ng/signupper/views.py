@@ -72,8 +72,9 @@ def thanks(req):
     ''' displays a simple "thanks for signing up" page '''
     return render(req, 'thanks.html')
 
+@login_required
 def chpassword(req):
-    ''' simple password change form, rerendering and functionality '''
+    ''' A simple password change form, but requires an "admin-tool" session with the ldap admin password. '''
     form = req.POST
     username = form.get('username')
     pw_current = form.get('pw_current')
@@ -92,20 +93,19 @@ def chpassword(req):
     if pw_new != pw_newrep:
         return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 'password': pw_current})
     
-    # apply password change or show an error message
+    # apply password change or show error
     try:
-        ldap_chpassword.ldap_chpassword(MCWEB_LDAP_DN, 'secretpassword', username, pw_current, pw_new, sudo=False)
+        ldap_admin_pw = req.session['ldap_password']
+        ldaputils.ldap_chpassword(MCWEB_LDAP_DN, ldap_admin_pw, username, pw_current, pw_new)
         return HttpResponse('Your password has been changed.')
 
     except Exception as e:
         print(e.message)
         return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
 
-
 ####################################################################################################################################
 # BELOW: implementations of the views used by the 3 user management pages - login_um.html, userlist_um.html and userdetail_um.html #
 ####################################################################################################################################
-
 
 def login_au(req):
     ''' login and check for superuser status '''
