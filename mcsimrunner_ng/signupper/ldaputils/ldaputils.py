@@ -53,9 +53,34 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
             raise Exception(stderr.rstrip('\n'))
     finally:
         os.remove('_uid_user.ldif')
-
-def ldap_rmuser():
-    pass
+    
+def ldap_rmuser(dn, admin_password, uid):
+    ''' 
+    Removes a user given by uid from the mcweb-configured LDAP database. 
+    
+    uid: username
+    '''
+    rmuser = 'dn: uid=%s,ou=users,%s\nchangetype: delete' % (uid, dn)
+    
+    ldif = open('_rmuser.ldif', 'w')
+    ldif.write(rmuser)
+    ldif.close()
+    try:
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_rmuser.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,)
+        (stdout, stderr) = process.communicate()
+        if stderr:
+            ps = ''
+            for c in cmd: ps = '%s %s' % (ps, c)
+            debug = False
+            if debug:
+                print('"%s" returned an error:' % ps.strip())
+                print(stderr.rstrip('\n'))
+            raise Exception(stderr.rstrip('\n'))
+    finally:
+        os.remove('_rmuser.ldif')
 
 def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
     ''' 
