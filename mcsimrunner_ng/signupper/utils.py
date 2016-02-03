@@ -2,8 +2,10 @@
 utils for signupper
 '''
 from mcweb import settings
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 from models import Signup
+from datetime import datetime
+import os
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -60,6 +62,35 @@ def create_signup(firstname, lastname, email, username, courses_lst):
     signup.courses = courses_lst
     signup.save()
 
-def notifyuser():
-    ''' notify users by email '''
-    pass
+def gettodaystr():
+    ''' this string is part of the filename of csv files '''
+    return datetime.now().strftime("%Y%m%d")
+
+def notifyuser(fullname, username, email, password):
+    ''' send an account creattion notification email to user '''
+    body = '''
+Dear %s
+
+You have been added to the http://e-neutrons.org e-Learning system.
+
+username: %s
+password: %s
+
+To change your password, please visit http://www.e-neutrons.org/ssp/
+
+Best,
+
+The e-neutrons.org admin team
+    ''' % (fullname, username, password)
+    
+    try:
+        f = open('_body', 'w') 
+        f.write(body)
+        f.close()
+        cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
+        retcode = call(cmd, shell=True)
+        print(cmd)
+        if retcode != 0:
+            raise Exception('retcode: %s' % retcode) 
+    finally:
+        os.remove('_body')

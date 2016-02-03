@@ -288,7 +288,7 @@ def userlist_au_post(req):
             
             # try notify user
             if not s.notified:
-                utils.notifyuser()
+                utils.notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
                 s.notified = timezone.now()
                 s.save()
             
