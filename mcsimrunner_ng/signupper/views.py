@@ -14,7 +14,6 @@ import os
 import utils
 from mcweb import settings
 from mcweb.settings import MCWEB_LDAP_DN
-from useradmin import ldap_chpassword
 from models import Signup
 from ldaputils import ldaputils
 from moodleutils import moodleutils
@@ -91,7 +90,8 @@ def chpassword(req):
     
     # new password consistency
     if pw_new != pw_newrep:
-        return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 'password': pw_current})
+        return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 
+                                               'password': pw_current})
     
     # apply password change or show error
     try:
@@ -167,12 +167,11 @@ def userlist_au(req, listtype='new'):
                 self.lbl = True
             self.data = data
     
-    (headers, num_non_course) = utils.get_colheaders()
+    headers, num_non_course = utils.get_colheaders()
     colheaders = []
     i = 0
     for colheader in headers:
         i += 1
-        #cbx = i > num_non_course
         cbx = None
         colheaders.append(Ci(colheader, cbx))
     
@@ -198,7 +197,6 @@ def userlist_au(req, listtype='new'):
         ids.append(s.id)
         
         row = []
-        
         row.append(Ci(s.created.strftime("%Y%m%d")))
         row.append(Ci(s.firstname))
         row.append(Ci(s.lastname))
@@ -229,7 +227,8 @@ def userlist_au(req, listtype='new'):
         
         rows_ids.append([row, str(s.id)])
     
-    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 'message': message, 'buttondisplay': buttondisplay})
+    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 
+                                            'message': message, 'buttondisplay': buttondisplay})
 
 @login_required
 def userlist_au_post(req):
@@ -256,7 +255,7 @@ def userlist_au_post(req):
         s.save()
     
     # perform the appropriate add-user actions for each signup
-    # NOTE: this algorithm is only fool-proof down to the db save() operation always succeeding
+    # NOTE: this algorithm is only fool-proof down to the db save() operation succeeding
     ldap_password = req.session['ldap_password']
     for s in objs:
         try:
@@ -268,7 +267,7 @@ def userlist_au_post(req):
             
             # try add to moodle
             if not s.added_moodle:
-                moodleutils.moodle_adduser()
+                moodleutils.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
                 s.added_moodle = timezone.now()
                 s.save()
             
@@ -299,19 +298,19 @@ def userlist_au_post(req):
         return redirect('/userlist_au/added')
 
 @login_required
-def userlist_au_action(req, action, id):
+def userlist_au_action(req, action, signup_id):
     ''' handles submitted action - delete or edit '''
     if action == 'delete':
         # TODO: if user has been added to ldap, etc., remove them don't just delete the signup request
         # TODO: make it so that deleted signups are just moved somewhere else, so they may be revived using /admin
-        s = Signup.objects.filter(id=int(id))
+        s = Signup.objects.filter(id=int(signup_id))
         s.delete()
         return redirect(userlist_au)
     
     if action == 'edit':
-        return redirect('/userdetail_au/%s/' % id)
+        return redirect('/userdetail_au/%s/' % signup_id)
     
-    return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, id))
+    return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, signup_id))
 
 @login_required
 def userdetail_au(req, id):
