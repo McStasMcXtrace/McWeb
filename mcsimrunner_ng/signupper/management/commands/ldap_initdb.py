@@ -11,8 +11,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         ''' pass the ldap admin password to this command '''
-        #parser.add_argument('password', nargs=1, action='store_true', help="ldap admin password")
-    
         parser.add_argument('password', nargs=1, type=str, help='ldap admin password')
         
     def handle(self, *args, **options):
