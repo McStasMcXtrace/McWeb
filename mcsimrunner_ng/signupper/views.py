@@ -159,13 +159,15 @@ def userlist_au(req, listtype='new'):
     
     class Ci:
         ''' Cell info data object '''
-        def __init__(self, data, cbx=None, btn=None, lbl=None):
+        def __init__(self, data, header=None, cbx=None, btn=None, txt=None, lbl=None):
             self.cbx = cbx
             self.btn = btn
+            self.txt = txt
             self.lbl = lbl
-            if cbx is None and btn is None:
+            if cbx is None and btn is None and txt is None:
                 self.lbl = True
             self.data = data
+            self.header = header
     
     headers, num_non_course = utils.get_colheaders()
     colheaders = []
@@ -197,11 +199,12 @@ def userlist_au(req, listtype='new'):
         ids.append(s.id)
         
         row = []
+        use_textbox = not s.added_ldap
         row.append(Ci(s.created.strftime("%Y%m%d")))
-        row.append(Ci(s.firstname))
-        row.append(Ci(s.lastname))
-        row.append(Ci(s.email))
-        row.append(Ci(s.username))
+        row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+        row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+        row.append(Ci(s.email, txt=use_textbox, header='email'))
+        row.append(Ci(s.username, txt=use_textbox, header='username'))
         
         # courses columns - new/limbo or added signup state
         for course in settings.COURSES + settings.COURSES_MANDATORY:
@@ -217,8 +220,8 @@ def userlist_au(req, listtype='new'):
                     row.append(Ci(''))
         
         # buttons
-        if not listtype == 'added':
-            row.append(Ci('edit', btn=True))
+        if listtype == 'new':
+            #row.append(Ci('edit', btn=True))
             row.append(Ci('delete', btn=True))
         
         # fail string
@@ -243,8 +246,9 @@ def userlist_au_post(req):
     headers, noncourses = utils.get_colheaders()
     courseheaders = headers[noncourses:]
     
-    # save new course configuration for each signup
+    # get and save new configuration for each signup
     for s in objs:
+        # get checked courses
         courses = []
         for course in courseheaders:
             # NOTE: non-checked checkboxes do not become included in the form submission
@@ -252,6 +256,13 @@ def userlist_au_post(req):
             if cbx:
                 courses.append(course)
         s.courses = courses
+        s.save()
+        
+        # get name, email and username fields
+        s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
+        s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
+        s.email = form.get('%s_%s' % (str(s.id), 'email'))
+        s.username = form.get('%s_%s' % (str(s.id), 'username'))
         s.save()
     
     # perform the appropriate add-user actions for each signup

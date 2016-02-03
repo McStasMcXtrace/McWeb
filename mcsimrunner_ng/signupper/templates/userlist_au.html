@@ -34,6 +34,8 @@
                     <td style="text-align:center;"><input type="checkbox" name="{{ id }}_{{ cell.data }}" checked/></td>
                     {% elif cell.btn %}
                     <td style="text-align:center;"><input type="button" name="{{ id }}_{{ cell.data }}" onclick="location.href='/userlist_au_action/{{ cell.data }}/{{ id }}';" value="{{ cell.data }}"/></td>
+                    {% elif cell.txt %}
+                    <td style="text-align:left;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.header }}" value="{{ cell.data }}"/></td>
                     {% else %}
                     <td style="text-align:left;"><label name="{{ id }}_{{ cell.data }}">{{ cell.data }}</label></td>
                     {% endif %}
