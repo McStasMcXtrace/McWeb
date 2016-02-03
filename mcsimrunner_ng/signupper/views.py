@@ -262,7 +262,7 @@ def userlist_au_post(req):
         try:
             # try add to ldap
             if not s.added_ldap:
-                ldaputils.ldap_adduser()
+                ldaputils.ldap_adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
                 s.added_ldap = timezone.now()
                 s.save()
             
@@ -291,9 +291,9 @@ def userlist_au_post(req):
             s.save()
     
     # return to the list 
-    if len(utils.get_signups() > 0):
+    if len(utils.get_signups()) > 0:
         return redirect('/userlist_au/new')
-    elif len(utils.get_signups_limbo() > 0):
+    elif len(utils.get_signups_limbo()) > 0:
         return redirect('/userlist_au/limbo')
     else:
         return redirect('/userlist_au/added')

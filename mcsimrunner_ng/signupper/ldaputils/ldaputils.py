@@ -4,9 +4,55 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess 
 
-
-def ldap_adduser():
-    pass
+def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
+    ''' 
+    Add a user to LDAP using the command-line tool ldapadd.
+    
+    cn: firstname
+    sn: lastname
+    uid: username
+    email: email
+    pw: password
+    '''
+    def get_new_uid():
+        ''' opens _ldap_uidindexfile, iterates, saves and returns '''
+        if not os.path.exists('_uidindexfile'):
+            with open('_ldap_uidindexfile', 'w') as uidif:
+                uidif.write('10001')
+                uidif.close()
+        
+        with open('_ldap_uidindexfile', 'r') as uidif:
+            current = uidif.read().strip()
+            uidif.close()
+        with open('_ldap_uidindexfile', 'w') as uidif:
+            nextuid = int(current) + 1
+            uidif.write(str(nextuid))
+            uidif.close()
+            return nextuid    
+    
+    uid_number = get_new_uid()    
+    
+    uid_user = 'dn: uid=%s,ou=users,%s\nobjectClass: top\nobjectClass: inetOrgPerson\nobjectClass: posixAccount\ncn: %s\nsn: %s\nmail: %s\nuid: %s\nuidNumber: %s\ngidNumber: 500\nhomeDirectory: /home/users/%s\nloginShell: /bin/sh\nuserPassword: %s' %  (uid, dn, cn, sn, email, uid, str(uid_number), uid, pw)
+    
+    ldif = open('_uid_user.ldif', 'w')
+    ldif.write(uid_user)
+    ldif.close()
+    try:
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,)
+        (stdout, stderr) = process.communicate()
+        if stderr:
+            ps = ''
+            for c in cmd: ps = '%s %s' % (ps, c)
+            debug = False
+            if debug:
+                print('"%s" returned an error:' % ps.strip())
+                print(stderr.rstrip('\n'))
+            raise Exception(stderr.rstrip('\n'))
+    finally:
+        os.remove('_uid_user.ldif')
 
 def ldap_rmuser():
     pass
@@ -14,7 +60,7 @@ def ldap_rmuser():
 def ldap_chpassword():
     pass
     
-def ldap_initdb(dn, password):
+def ldap_initdb(dn, admin_password):
     ''' inits  the ldap db for mcweb user addition '''
     # add cn_usergroup
     cn_usergroup = 'dn: cn=usergroup,%s\ngidNumber: 500\ncn: usergroup\nobjectClass: posixGroup\nobjectClass: top' % dn    
@@ -22,7 +68,7 @@ def ldap_initdb(dn, password):
     ldif.write(cn_usergroup)
     ldif.close()
     try:
-        process = subprocess.Popen(['ldapadd', '-x', '-w', password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif'])
+        process = subprocess.Popen(['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif'])
         process.communicate()
     finally:
         os.remove('_cn_usergroup.ldif')
@@ -33,7 +79,7 @@ def ldap_initdb(dn, password):
     ldif.write(ou_users)
     ldif.close()
     try:
-        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
+        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
         process.communicate()
     finally:
         os.remove('_ou_users.ldif')
