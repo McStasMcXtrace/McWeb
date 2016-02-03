@@ -56,14 +56,10 @@ def get_signups_limbo():
 
 def create_signup(firstname, lastname, email, username, courses_lst):
     ''' most simple way of creating a new signup instance '''
-    
     signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd())
     signup.courses = courses_lst
     signup.save()
-    return
-
-def moodle_adduser():
-    pass
 
 def notifyuser():
+    ''' notify users by email '''
     pass

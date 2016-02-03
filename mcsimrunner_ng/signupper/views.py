@@ -17,7 +17,7 @@ from mcweb.settings import MCWEB_LDAP_DN
 from useradmin import ldap_chpassword
 from models import Signup
 from ldaputils import ldaputils
-
+from moodleutils import moodleutils
 
 def signup(req):
     ''' displays the signup form '''
@@ -268,7 +268,7 @@ def userlist_au_post(req):
             
             # try add to moodle
             if not s.added_moodle:
-                utils.moodle_adduser()
+                moodleutils.moodle_adduser()
                 s.added_moodle = timezone.now()
                 s.save()
             
@@ -319,4 +319,3 @@ def userdetail_au(req, id):
     
     return HttpResponse('id=%s' % (id))
     #return render(req, 'userdetail_au.html')
-
