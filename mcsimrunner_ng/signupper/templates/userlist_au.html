@@ -48,5 +48,15 @@
         <label>Click to add users to LDAP and moodle, and send email notifications: <input type="submit" value="Add users" style="margin-right:20px;"></label>
     </fieldset>
 </form>
+
+<form enctype="multipart/form-data" method="POST" action="{{ uploadnext }}" style="display:{{ uploaddisplay }}">
+    {% csrf_token %}
+    <fieldset style="margin:5px;">
+        <table>
+            <tr><td colspan="2">To add signups from bulk, pload a csv-file with columns "firstname, lastname, email, username" and optionally, "password". The dilimeter must be the comma (,).</td></tr>
+                <tr><td><input type="file" name="up_file"></td></tr>
+            <tr><td><input type="submit" value="Upload" style="margin-right:20px;"></td></tr>
+        </table>
+    </fieldset>
 </body>
 </html>

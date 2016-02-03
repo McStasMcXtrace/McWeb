@@ -17,6 +17,7 @@ from mcweb.settings import MCWEB_LDAP_DN
 from models import Signup
 from ldaputils import ldaputils
 from moodleutils import moodleutils
+import csv
 
 def signup(req):
     ''' displays the signup form '''
@@ -182,6 +183,7 @@ def userlist_au(req, listtype='new'):
     
     # filter signup object set (and ui state variables message and buttonstate) based on action parameter
     buttondisplay = ''
+    uploaddisplay = ''
     if listtype == 'new':
         signups = utils.get_signups()
         message = 'New signups:'
@@ -189,9 +191,11 @@ def userlist_au(req, listtype='new'):
         signups = utils.get_signups_added()
         message = 'Added:'
         buttondisplay = 'none'
+        uploaddisplay = 'none'
     elif listtype == 'limbo':
         signups = utils.get_signups_limbo()
         message = 'Limbo signups - edit to fix errors, then re-submit:'
+        uploaddisplay = 'none'
     else: 
         raise Exception('signupper.views.userlist_au: undefined action')
     
@@ -230,8 +234,8 @@ def userlist_au(req, listtype='new'):
         
         rows_ids.append([row, str(s.id)])
     
-    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 
-                                            'message': message, 'buttondisplay': buttondisplay})
+    return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'uploadnext': '/upload_au_post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 
+                                            'message': message, 'buttondisplay': buttondisplay, 'uploaddisplay': uploaddisplay})
 
 @login_required
 def userlist_au_post(req):
@@ -322,6 +326,36 @@ def userlist_au_action(req, action, signup_id):
         return redirect('/userdetail_au/%s/' % signup_id)
     
     return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, signup_id))
+
+@login_required
+def upload_au_post(req):
+    ''' handles csv upload - NOTE: the csv-file is not saved to disk '''
+    if len(req.FILES) > 0:
+        try:
+            f = req.FILES['up_file']
+            r = csv.reader(f, delimiter=',')
+            firstname_idx = 0
+            lastname_idx = 1
+            email_idx = 2
+            username_idx = 3
+            
+            first_row = True
+            for row in r:
+                # header line
+                print(row)
+                if first_row:
+                    firstname_idx = row.index('firstname')
+                    lastname_idx = row.index('lastname')
+                    email_idx = row.index('email')
+                    username_idx = row.index('username')
+                    first_row = False
+                    continue
+                
+                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], [])
+        except Exception as e:
+            return HttpResponse('Invalid csv file: %s' % e.__str__())
+    
+    return redirect('/userlist_au/new')
 
 @login_required
 def userdetail_au(req, id):

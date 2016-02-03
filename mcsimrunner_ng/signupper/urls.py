@@ -23,5 +23,7 @@ urlpatterns = [
     url(r'^userlist_au-post/?$', views.userlist_au_post, name="userlist_au_post" ),
     url(r'^userlist_au_action/(?P<action>[\w-]+)/(?P<signup_id>[\w-]+)/?$', views.userlist_au_action, name="userlist_au_action" ),
 
+    url(r'^upload_au_post/?$', views.upload_au_post, name="upload_au_post" ),
+
     url(r'^userdetail_au/(?P<id>[\w-]+)/?$', views.userdetail_au, name="userdetail_au" ),
 ]
