@@ -15,7 +15,7 @@ class Command(BaseCommand):
         parser.add_argument('uid', nargs=1, type=str, help='uid (username) of user to be removed')
         
     def handle(self, *args, **options):
-        ''' Implements Django ldap init db command execution. '''
+        ''' Implements Django ldap rmuser command execution. '''
         uid = options['uid'][0]
         try:
             ldap_rmuser(MCWEB_LDAP_DN, options['password'][0], uid)
