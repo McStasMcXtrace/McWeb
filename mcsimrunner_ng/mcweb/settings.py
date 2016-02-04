@@ -17,6 +17,9 @@ from django_auth_ldap.config import LDAPSearch
 
 MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
+# email / email list used for admin notifications
+MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
+
 AUTH_LDAP_SERVER_URI = "ldap://localhost"
 AUTH_LDAP_BIND_DN = ""
 AUTH_LDAP_BIND_PASSWORD = ""
