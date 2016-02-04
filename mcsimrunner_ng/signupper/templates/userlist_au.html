@@ -53,7 +53,7 @@
     {% csrf_token %}
     <fieldset style="margin:5px;">
         <table>
-            <tr><td colspan="2">To add signups from bulk, pload a csv-file with columns "firstname, lastname, email, username" and optionally, "password". The dilimeter must be the comma (,).</td></tr>
+            <tr><td colspan="2">To add signups from bulk, pload a csv-file with columns firstname, lastname, email and username. Courses to auto-enroll must be named in each row. The dilimeter must be the comma (,).</td></tr>
                 <tr><td><input type="file" name="up_file"></td></tr>
             <tr><td><input type="submit" value="Upload" style="margin-right:20px;"></td></tr>
         </table>
