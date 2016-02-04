@@ -5,15 +5,13 @@ from django.conf.urls import url
 from signupper import views
 
 urlpatterns = [
-    url(r'^signup/?$', views.signup, name="signup" ),
-    url(r'^signup-get/?', views.signup_get, name="signup_get" ),
     url(r'^thanks/?$', views.thanks, name="thanks" ),
     
     url(r'^changepassword/?$', views.chpassword, name="chpassword" ),
 
     # second-generation signup process urls below
     
-    url(r'^signup_au/?$', views.signup_au, name="signup_au" ),
+    url(r'^signup/?$', views.signup_au, name="signup_au" ),
     url(r'^signup_au-get/?$', views.signup_au_get, name="signup_au_get" ),
     
     url(r'^login_au/?$', views.login_au, name="login_au" ),
@@ -26,4 +24,7 @@ urlpatterns = [
     url(r'^upload_au_post/?$', views.upload_au_post, name="upload_au_post" ),
 
     url(r'^userdetail_au/(?P<id>[\w-]+)/?$', views.userdetail_au, name="userdetail_au" ),
+    
+    #url(r'^signup_deprecated/?$', views.signup, name="signup" ),
+    #url(r'^signup-get_deprecated/?', views.signup_get, name="signup_get" ),
 ]
