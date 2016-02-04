@@ -54,6 +54,9 @@ COURSES_MANDATORY = [
     'quiz-taster',
     ]
 
+# moodle install dir for signupper
+MOODLE_DIR = '/srv/mcweb/moodle'
+
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
 FILE_UPLOAD_PW = 'upload123'
 
