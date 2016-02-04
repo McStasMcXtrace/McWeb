@@ -13,7 +13,7 @@ import os
 
 import utils
 from mcweb import settings
-from mcweb.settings import MCWEB_LDAP_DN
+from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
 from models import Signup
 from ldaputils import ldaputils
 from moodleutils import moodleutils
@@ -296,6 +296,7 @@ def userlist_au_post(req):
             s.is_new = False
             s.is_limbo = False
             s.is_added = True
+            s.fail_str = ''
             s.save()
             
         except Exception as e:
@@ -351,7 +352,14 @@ def upload_au_post(req):
                     first_row = False
                     continue
                 
-                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], [])
+                # match courses in row
+                courses = []
+                for known in COURSES:
+                    if known in row:
+                        courses.append(known)
+                courses = courses + COURSES_MANDATORY
+                
+                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
         except Exception as e:
             return HttpResponse('Invalid csv file: %s' % e.__str__())
     
