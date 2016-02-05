@@ -4,7 +4,8 @@ Send a command to the admin reminding of new signups.
 from django.core.management.base import BaseCommand
 import os
 import subprocess
-from signupper.utils import get_signups 
+from signupper.utils import get_signups
+from mcweb.settings import MCWEB_ADMIN_EMAIL
 
 class Command(BaseCommand):
     ''' remind admin comman '''
@@ -12,7 +13,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         ''' list arguments for this command '''
-        parser.add_argument('adminemail', nargs='+', type=str, help='emails to which the admin reminder is sent')
+        parser.add_argument('adminemail', nargs='*', type=str, help='extra email addresses to which the admin reminder is sent')
         
     def handle(self, *args, **options):
         ''' Command impl. '''
@@ -33,7 +34,7 @@ Please note the following:
         
         # parse email and addresses, and send admin email, catching errors and clearning up
         try:
-            email_addrses = ''
+            email_addrses = MCWEB_ADMIN_EMAIL
             for address in options['adminemail']:
                 email_addrses = '%s %s' % (email_addrses, address)
             cmd = 'mailx -s "mcweb admin: new signups" %s < _admin_email' % email_addrses

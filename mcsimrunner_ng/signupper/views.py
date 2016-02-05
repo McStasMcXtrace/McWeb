@@ -13,100 +13,13 @@ import os
 
 import utils
 from mcweb import settings
-from mcweb.settings import MCWEB_LDAP_DN
+from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
 from models import Signup
 from ldaputils import ldaputils
 from moodleutils import moodleutils
 import csv
+from aptdaemon.utils import deprecated
 
-def signup(req):
-    ''' displays the signup form '''
-    return render(req, 'signup.html', {'courses': settings.COURSES})
-
-def signup_get(req):
-    ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
-    csv = 'new_signups.csv'
-    
-    # and the form
-    form = req.GET
-    
-    # get static fields from the form
-    firstname = form.get('firstname')
-    lastname = form.get('lastname')
-    username = form.get('username')
-    email = form.get('email')
-    password = utils.get_random_passwd()
-    description = '0' # used for an email notification flag
-    auth = 'ldap'
-    cols = [firstname, lastname, username, email, password, description, auth]
-    
-    # get dynamic fields from the form
-    for c in settings.COURSES:
-        cols.append(form.get(c) or '')
-    for c in settings.COURSES_MANDATORY:
-        cols.append(c)
-    
-    # create the header line - an empty string if the file exists
-    header_line = ""
-    if not os.path.exists(csv):
-        header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
-        i = 0
-        for c in settings.COURSES:
-            i += 1
-            header_cols.append('course%s' % i)
-        for c in settings.COURSES_MANDATORY:
-            i += 1
-            header_cols.append('course%s' % i)
-        header_line = utils.cols_to_line(header_cols)
-    
-    # write to file
-    with open(csv, 'a') as f:
-        f.write(header_line)
-        f.write(utils.cols_to_line(cols))
-        f.close()
-    
-    # get a thank-you message to the user
-    return redirect('/thanks/')
-
-def thanks(req):
-    ''' displays a simple "thanks for signing up" page '''
-    return render(req, 'thanks.html')
-
-@login_required
-def chpassword(req):
-    ''' A simple password change form, but requires an "admin-tool" session with the ldap admin password. '''
-    form = req.POST
-    username = form.get('username')
-    pw_current = form.get('pw_current')
-    pw_new = form.get('pw_new')
-    pw_newrep = form.get('pw_newrep')
-    
-    # authenticate
-    if username and pw_current:
-        user = authenticate(username=username, password=pw_current)
-        if user is None or not user.is_active:
-            return render(req, 'chpassword.html', {'message': 'incorrect username or password'})
-    else:
-        return render(req, 'chpassword.html')
-    
-    # new password consistency
-    if pw_new != pw_newrep:
-        return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 
-                                               'password': pw_current})
-    
-    # apply password change or show error
-    try:
-        ldap_admin_pw = req.session['ldap_password']
-        ldaputils.ldap_chpassword(MCWEB_LDAP_DN, ldap_admin_pw, username, pw_current, pw_new)
-        return HttpResponse('Your password has been changed.')
-
-    except Exception as e:
-        print(e.message)
-        return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
-
-####################################################################################################################################
-# BELOW: implementations of the views used by the 3 user management pages - login_um.html, userlist_um.html and userdetail_um.html #
-####################################################################################################################################
 
 def login_au(req):
     ''' login and check for superuser status '''
@@ -129,8 +42,12 @@ def login_au(req):
     return redirect('userlist_au')
 
 def signup_au(req):
-    '''  '''
+    ''' signup form to be embedded '''
     return render(req, 'signup_au.html', {'courses': settings.COURSES})
+
+def thanks(req):
+    ''' displays a simple "thanks for signing up" page '''
+    return render(req, 'thanks.html')
 
 def signup_au_get(req):
     ''' handles signup form submission. Add a new signup instance to the db using utils.create_signup '''
@@ -296,6 +213,7 @@ def userlist_au_post(req):
             s.is_new = False
             s.is_limbo = False
             s.is_added = True
+            s.fail_str = ''
             s.save()
             
         except Exception as e:
@@ -351,7 +269,14 @@ def upload_au_post(req):
                     first_row = False
                     continue
                 
-                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], [])
+                # match courses in row
+                courses = []
+                for known in COURSES:
+                    if known in row:
+                        courses.append(known)
+                courses = courses + COURSES_MANDATORY
+                
+                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
         except Exception as e:
             return HttpResponse('Invalid csv file: %s' % e.__str__())
     
@@ -363,3 +288,90 @@ def userdetail_au(req, id):
     
     return HttpResponse('id=%s' % (id))
     #return render(req, 'userdetail_au.html')
+
+@login_required
+def chpassword(req):
+    ''' A simple password change form, but requires an "admin-tool" session with the ldap admin password. '''
+    form = req.POST
+    username = form.get('username')
+    pw_current = form.get('pw_current')
+    pw_new = form.get('pw_new')
+    pw_newrep = form.get('pw_newrep')
+    
+    # authenticate
+    if username and pw_current:
+        user = authenticate(username=username, password=pw_current)
+        if user is None or not user.is_active:
+            return render(req, 'chpassword.html', {'message': 'incorrect username or password'})
+    else:
+        return render(req, 'chpassword.html')
+    
+    # new password consistency
+    if pw_new != pw_newrep:
+        return render(req, 'chpassword.html', {'message': 'the new password must match its repetition', 'username': username, 
+                                               'password': pw_current})
+    
+    # apply password change or show error
+    try:
+        ldap_admin_pw = req.session['ldap_password']
+        ldaputils.ldap_chpassword(MCWEB_LDAP_DN, ldap_admin_pw, username, pw_current, pw_new)
+        return HttpResponse('Your password has been changed.')
+
+    except Exception as e:
+        print(e.message)
+        return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
+
+####################################################
+#                  Deprecated                      #
+####################################################
+
+@deprecated
+def signup(req):
+    ''' displays the signup form '''
+    return render(req, 'signup.html', {'courses': settings.COURSES})
+
+@deprecated
+def signup_get(req):
+    ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
+    csv = 'new_signups.csv'
+    
+    # and the form
+    form = req.GET
+    
+    # get static fields from the form
+    firstname = form.get('firstname')
+    lastname = form.get('lastname')
+    username = form.get('username')
+    email = form.get('email')
+    password = utils.get_random_passwd()
+    description = '0' # used for an email notification flag
+    auth = 'ldap'
+    cols = [firstname, lastname, username, email, password, description, auth]
+    
+    # get dynamic fields from the form
+    for c in settings.COURSES:
+        cols.append(form.get(c) or '')
+    for c in settings.COURSES_MANDATORY:
+        cols.append(c)
+    
+    # create the header line - an empty string if the file exists
+    header_line = ""
+    if not os.path.exists(csv):
+        header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
+        i = 0
+        for c in settings.COURSES:
+            i += 1
+            header_cols.append('course%s' % i)
+        for c in settings.COURSES_MANDATORY:
+            i += 1
+            header_cols.append('course%s' % i)
+        header_line = utils.cols_to_line(header_cols)
+    
+    # write to file
+    with open(csv, 'a') as f:
+        f.write(header_line)
+        f.write(utils.cols_to_line(cols))
+        f.close()
+    
+    # get a thank-you message to the user
+    return redirect('/thanks/')
