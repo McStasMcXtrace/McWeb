@@ -29,7 +29,7 @@ def ldap_initdb(dn, password):
         os.remove('_cn_usergroup.ldif')
     
     # prepare ldif 2
-    with open ("ou_users.ldif", "r") as ldif_template:
+    with open ("ldifs/ou_users.ldif", "r") as ldif_template:
         ou_users=ldif_template.read()
         ldif_template.close()
     ou_users = ou_users.replace('DN', dn)
