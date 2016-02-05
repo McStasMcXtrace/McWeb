@@ -18,7 +18,6 @@ from models import Signup
 from ldaputils import ldaputils
 from moodleutils import moodleutils
 import csv
-from aptdaemon.utils import deprecated
 
 
 def login_au(req):
@@ -325,12 +324,12 @@ def chpassword(req):
 #                  Deprecated                      #
 ####################################################
 
-@deprecated
+#@deprecated
 def signup(req):
     ''' displays the signup form '''
     return render(req, 'signup.html', {'courses': settings.COURSES})
 
-@deprecated
+#@deprecated
 def signup_get(req):
     ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
     csv = 'new_signups.csv'
