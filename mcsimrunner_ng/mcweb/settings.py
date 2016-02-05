@@ -86,7 +86,7 @@ SECRET_KEY = 'xne_dc*7f3#q(l*c1a97v@q!g$myz@4lcwt5ij&wx7t4)e+b5k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org']
+ALLOWED_HOSTS = ['mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
 
 # Application definition
 INSTALLED_APPS = (
