@@ -9,11 +9,11 @@ from mcweb.settings import MCWEB_ADMIN_EMAIL
 
 class Command(BaseCommand):
     ''' remind admin comman '''
-    help = 'Sends an email reminder to admin if there are new signups. '
+    help = 'Sends an email reminder to mcweb.settings.MCWEB_ADMIN_EMAIL if there are new signups. '
 
     def add_arguments(self, parser):
         ''' list arguments for this command '''
-        parser.add_argument('adminemail', nargs='*', type=str, help='extra email addresses to which the admin reminder is sent')
+        parser.add_argument('adminemail', nargs='*', type=str, help='extra email addresses to which the admin reminder is sent, in addition to the django setting MCWEB_ADMIN_EMAIL')
         
     def handle(self, *args, **options):
         ''' Command impl. '''
