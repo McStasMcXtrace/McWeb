@@ -17,6 +17,9 @@ from django_auth_ldap.config import LDAPSearch
 
 MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
+# email / email list used for admin notifications
+MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
+
 AUTH_LDAP_SERVER_URI = "ldap://localhost"
 AUTH_LDAP_BIND_DN = ""
 AUTH_LDAP_BIND_PASSWORD = ""
@@ -50,8 +53,12 @@ COURSES = [
     ]
 # all users will be enrolled in these:
 COURSES_MANDATORY = [
-    'lib', 
+    'lib',
+    'quiz-taster',
     ]
+
+# moodle install dir for signupper
+MOODLE_DIR = '/srv/mcweb/moodle'
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
 FILE_UPLOAD_PW = 'upload123'
@@ -91,6 +98,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'simrunner',
     'signupper',
+    'uploader',
 )
 
 MIDDLEWARE_CLASSES = (
