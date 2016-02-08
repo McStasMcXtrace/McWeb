@@ -125,6 +125,7 @@ def userlist_au(req, listtype='new'):
         row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
         row.append(Ci(s.email, txt=use_textbox, header='email'))
         row.append(Ci(s.username, txt=use_textbox, header='username'))
+        row.append(Ci(s.password, header='passwd'))
         
         # courses columns - new/limbo or added signup state
         for course in settings.COURSES + settings.COURSES_MANDATORY:

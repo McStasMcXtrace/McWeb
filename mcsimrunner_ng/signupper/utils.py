@@ -36,7 +36,7 @@ def get_colheaders_moodle():
 
 def get_colheaders():
     ''' returns a list of the standard signup column headers used for display on the web-based add users interface '''
-    header_cols = ['date', 'firstname', 'lastname', 'email', 'username']
+    header_cols = ['date', 'firstname', 'lastname', 'email', 'username', 'passwd']
     num_non_course = 5
     for c in settings.COURSES:
         header_cols.append(c)
