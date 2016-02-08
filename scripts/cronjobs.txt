@@ -4,7 +4,9 @@
 */10 * * * * /srv/mcweb/McWeb/scripts/update_instr.sh
 #
 # Manage signups
-0 5 * * * /srv/mcweb/McWeb/scripts/subscr_tasks.sh
+0 */6 * * * /srv/mcweb/McWeb/scripts/remind_admin.sh
 #
 # Daily moodle cron job
 0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php 
+# Hourly emptying of cache to attempt fixing image issues...
+3 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_cache.sh
