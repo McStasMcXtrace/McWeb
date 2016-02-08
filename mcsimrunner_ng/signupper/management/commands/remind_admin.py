@@ -20,12 +20,12 @@ class Command(BaseCommand):
         
         admin_email = '''Hello admin,
 
-There are new signups. Please visit <a href="http://sim.e-neutrons.org/login_au">sim.e-neutrons.org/login_au</a> to perform the listed admin tasks.
+There are new signups. Please visit http://sim.e-neutrons.org/login_au to perform the listed admin tasks.
 
 At the login screen, you must enter the credentials of a django super-user account, as well as the ldap password.
 
 Please note the following:
-1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at <a href="http://www.e-neutrons.org/moodle/.....">www.e-neutrons.org/moodle/...</a>.
+1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at http://www.e-neutrons.org/moodle/ .
 2) If you need to edit the signup instances, use the django admin tool.\n'''
         
         # only send admin email if there are "new" signups
