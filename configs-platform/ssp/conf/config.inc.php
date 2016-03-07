@@ -25,8 +25,8 @@
 # LDAP
 $ldap_url = "ldap://localhost";
 $ldap_starttls = false;
-$ldap_binddn = ""; #cn=manager,dc=example,dc=com";
-$ldap_bindpw = ""; #"secret";
+$ldap_binddn = "cn=admin,dc=risoe,dc=dk"; #cn=manager,dc=example,dc=com";
+$ldap_bindpw = "pw"; #"secret";
 $ldap_base = "dc=risoe,dc=dk";
 $ldap_login_attribute = "uid";
 $ldap_fullname_attribute = "cn";
@@ -105,7 +105,7 @@ $pwd_show_policy_pos = "above";
 # Also applicable for question/answer save
 # user: the user itself
 # manager: the above binddn
-$who_change_password = "user";
+$who_change_password = "manager";
 
 ## Questions/answers
 # Use questions/answers?
@@ -136,7 +136,7 @@ $token_lifetime = "3600";
 # LDAP mail attribute
 $mail_attribute = "mail";
 # Who the email should come from
-$mail_from = "admin@example.com";
+$mail_from = "admin@e-neutrons.org";
 # Notify users anytime their password is changed
 $notify_on_change = false;
 
@@ -197,7 +197,7 @@ $recaptcha_ssl = false;
 # change
 # sendtoken
 # sendsms
-$default_action = "change";
+$default_action = "sendtoken";
 
 ## Extra messages
 # They can also be defined in lang/ files
