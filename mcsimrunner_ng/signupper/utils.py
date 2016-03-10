@@ -101,7 +101,7 @@ def notify_contactentry(replyto, text):
     body = text    
     try:
         f = open('_contactbody', 'w') 
-        f.write(body)
+        f.write(body.encode('utf8'))
         f.close()
         cmd = 'mail.mailutils -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = call(cmd, shell=True)
