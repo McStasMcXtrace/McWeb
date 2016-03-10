@@ -100,10 +100,10 @@ def notify_contactentry(replyto, text):
     ''' send a new contact entry notification to mcweb admin '''
     body = text    
     try:
-        f = open('_body', 'w') 
+        f = open('_contactbody', 'w') 
         f.write(body)
         f.close()
-        cmd = 'mailx -s "mcweb: new contact entry by %s" %s < _body' % (replyto, settings.MCWEB_ADMIN_EMAIL)
+        cmd = 'mail.mailutils -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = call(cmd, shell=True)
         print(cmd)
         if retcode != 0:
@@ -113,5 +113,5 @@ def notify_contactentry(replyto, text):
         raise Exception('notify_contactentry: %s' % e.message)
     
     finally:
-        os.remove('_body')
+        os.remove('_contactbody')
 
