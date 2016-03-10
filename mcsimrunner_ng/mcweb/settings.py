@@ -15,7 +15,9 @@ from django_auth_ldap.config import LDAPSearch
 
 # --- START Deployment configuration ---
 
-MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
+MCWEB_LDAP_DN = 'dc=fysik,dc=dtu,dc=dk'
+
+MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
 
 # email / email list used for admin notifications
 MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
@@ -33,7 +35,7 @@ AUTHENTICATION_BACKENDS = (
 MPI_PR_WORKER=10
 
 # mcplot configuration
-#  For Python + Gnuplot use 
+#  For Python + Gnuplot use
 #MCPLOT_CMD = "mcplot-gnuplot-py -s"
 #MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
 #  For Perl + PGPLOT use
@@ -47,9 +49,9 @@ AOPT_CMD = "aopt.sh"
 # list of courses for signupper - each entry will appear as a checkbox when generating
 # the signup form using the command "python manage.py signupform"
 COURSES = [
-    'intro-ns-selfstudy', 
+    'intro-ns-selfstudy',
     'intro-ns',
-    'musr', 
+    'musr',
     ]
 # all users will be enrolled in these:
 COURSES_MANDATORY = [
@@ -84,7 +86,7 @@ MCRUN_OUTPUT_DIRNAME = 'mcstas'
 SECRET_KEY = 'xne_dc*7f3#q(l*c1a97v@q!g$myz@4lcwt5ij&wx7t4)e+b5k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
 
@@ -118,7 +120,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'simrunner/templates', 
+            'simrunner/templates',
             'signupper/templates',
             'uploader/templates',
         ],
@@ -166,4 +168,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static')

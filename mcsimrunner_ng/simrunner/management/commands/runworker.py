@@ -355,7 +355,7 @@ def threadwork(simrun):
         
         logging.error('fail: %s (%s)' % (e.__str__(), type(e).__name__))
 
-def work():
+def work(threaded=True):
     ''' iterates non-started SimRun objects, updates statuses, and calls sim, layout display and plot functions '''
     
     # avoid having two worker threads starting on the same job
@@ -370,10 +370,13 @@ def work():
             else:
                 logging.info('delegating simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
             
-            t = threading.Thread(target=threadwork, args=(simrun,))
-            t.setDaemon(True)
-            t.setName('%s (%s)' % (t.getName().replace('Thread-','T'), simrun.instr_displayname))
-            t.start()
+            if threaded:
+                t = threading.Thread(target=threadwork, args=(simrun,))
+                t.setDaemon(True)
+                t.setName('%s (%s)' % (t.getName().replace('Thread-','T'), simrun.instr_displayname))
+                t.start()
+            else:
+                threadwork(simrun)
             
             # continue or cause a break iteration
         
@@ -415,7 +418,7 @@ class Command(BaseCommand):
         try:
             # debug run
             if options['debug']:
-                work()
+                work(threaded=False)
                 exit()
             
             # main threaded execution loop:
