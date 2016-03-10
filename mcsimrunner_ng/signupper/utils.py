@@ -94,3 +94,24 @@ The e-neutrons.org admin team
             raise Exception('retcode: %s' % retcode) 
     finally:
         os.remove('_body')
+
+
+def notify_contactentry(replyto, text):
+    ''' send a new contact entry notification to mcweb admin '''
+    body = text    
+    try:
+        f = open('_body', 'w') 
+        f.write(body)
+        f.close()
+        cmd = 'mailx -s "mcweb: new contact entry" %s < _body' % settings.MCWEB_ADMIN_EMAIL
+        retcode = call(cmd, shell=True)
+        print(cmd)
+        if retcode != 0:
+            raise Exception('retcode: %s' % retcode)
+    
+    except Exception as e:
+        raise Exception('notify_contactentry: %s' % e.message)
+    
+    finally:
+        os.remove('_body')
+

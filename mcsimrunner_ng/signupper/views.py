@@ -7,17 +7,18 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.utils import timezone
+from django.core.validators import validate_email
 
 import ast
 import os
+import csv
 
 import utils
 from mcweb import settings
 from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
-from models import Signup
+from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils
-import csv
 
 
 def login_au(req):
@@ -320,6 +321,44 @@ def chpassword(req):
     except Exception as e:
         print(e.message)
         return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
+
+
+####################################################
+#                  Contact form                    #
+####################################################
+
+def contact(req):
+    ''' contact form rendering and submission '''
+    form = req.POST
+    replyto = form.get('replyto', '')
+    text = form.get('text', '')
+    
+    # render empty contact form
+    if replyto == '' and text == '':
+        return render(req, 'contact.html', {'message' : ''})
+
+    # handle contact entry    
+    entry = None
+    try: 
+        # validate
+        validate_email(replyto)
+        if text == '':
+            raise Exception()
+        
+        entry = ContactEntry(replyto=replyto, text=text)
+        try:
+            utils.notify_contactentry(entry.replyto, entry.text)
+            entry.delivered = timezone.now()
+        except Exception as e:
+            entry.fail_str = e.message
+            
+        entry.save()
+        
+        return render(req, 'contact.html', {'message' : 'Thank you for submitting your message.'})
+
+    except Exception as e:
+        return render(req, 'contact.html', {'message' : 'Fail: %s' % e.message})
+
 
 ####################################################
 #                  Deprecated                      #

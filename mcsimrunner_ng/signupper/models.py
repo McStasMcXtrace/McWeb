@@ -1,13 +1,13 @@
 '''
 signupper models
 '''
-from django.db.models import Model, CharField, DateTimeField
+from django.db.models import Model, CharField, DateTimeField, TextField
 from django.utils import timezone
 import json
 from django.db.models import BooleanField
 
 class Signup(Model):
-    ''' corresponds to a mcstas instrument contained in a certain folder '''
+    ''' meta-signup book keeping type '''
     username = CharField(max_length=200)
     firstname = CharField(max_length=200)
     lastname = CharField(max_length=200)
@@ -35,3 +35,13 @@ class Signup(Model):
     
     def __str__(self):
         return "%s" % (self.username)
+
+class ContactEntry(Model):
+    ''' contact entry and related context info '''
+    replyto = CharField(max_length=200)
+    text = TextField()
+    
+    created = DateTimeField('Submitted', default=timezone.now)
+    delivered = DateTimeField('Admin notified of this entry', blank=True, null=True)
+    
+    fail_str = CharField(max_length=1000, blank=True, null=True)
