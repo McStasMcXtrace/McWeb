@@ -135,7 +135,9 @@ def instrument_post(req):
     params_default = json.loads(form.get('params_jsonified'))
     params=[]
     for p in params_default: 
-        params.append([p[0], form.getlist(p[0])[0]])
+        val = form.getlist(p[0])[0]
+        val = val.replace(' ', '')
+        params.append([p[0], val])
     
     simrun = SimRun(group_name=group_name, instr_displayname=instr_displayname, 
                     owner_username=owner_username,
