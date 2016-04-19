@@ -15,7 +15,7 @@ from django_auth_ldap.config import LDAPSearch
 
 # --- START Deployment configuration ---
 
-MCWEB_LDAP_DN = 'dc=fysik,dc=dtu,dc=dk'
+MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
 MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
 
