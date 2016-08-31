@@ -5,6 +5,8 @@ moosh example commands:
     sudo -u www-data moosh user-create --auth=ldap --firstname=John --lastname=Doe --city=Lyngby --country=DK --email=john@doe.com --password=NONE johndoe
     sudo -u www-data moosh course-enrol -s lib johndoe
     sudo -u www-data moosh course-enrol -s musr johndoe
+    sudo -u www-data moosh course-enrol -r editingteacher -s intro-ns munivisit
+    sudo -u www-data moosh user-list "username='munivisit'"
 '''
 import subprocess
 from mcweb.settings import MOODLE_DIR

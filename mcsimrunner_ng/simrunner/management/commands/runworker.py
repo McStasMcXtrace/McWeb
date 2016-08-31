@@ -14,6 +14,7 @@ import time
 import tarfile
 import threading
 import logging
+import shutil
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -166,6 +167,32 @@ def mcplot(simrun):
     except Exception as e:
         raise Exception('mcplot fail: %s' % e.__str__())
 
+def mcdisplay_webgl(simrun, pout=False):
+    ''' apply mcdisplay-webgl output to subfolder 'mcdisplay', renaming index.html to mcdisplay.html '''
+    join = os.path.join
+    
+    dirname = 'mcdisplay'
+    instr = '%s.instr' % simrun.instr_displayname
+    cmd = 'mcdisplay-webgl --default --nobrowse --dirname=%s %s' % (dirname, instr)
+    # TODO: inplement --inspect, --first, --last
+    
+    # run mcdisplay
+    logging.info('mcdisplay: %s' % cmd)
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               shell=True,
+                               cwd = simrun.data_folder)
+    (stdoutdata, stderrdata) = process.communicate()
+    if pout:
+        print(stdoutdata)
+        if (stderrdata is not None) and (stderrdata != ''):
+            print(stderrdata)
+    
+    # copy files
+    logging.info('mcdisplay: renaming index.html')
+    os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
+
 def mcdisplay(simrun, print_mcdisplay_output=False):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
     try:
@@ -214,7 +241,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         os.rename(oldwrlfilename, newwrlfilename)
 
         if USE_AOPT==1:
-            logging.info("Spawning aopt command " + AOPT_CMD)
+            logging.info("spawning aopt command " + AOPT_CMD)
             process3 = subprocess.Popen(AOPT_CMD + " -i layout.wrl -N layout.html",
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
@@ -333,7 +360,7 @@ def threadwork(simrun):
         
         # process
         mcrun(simrun)
-        mcdisplay(simrun)
+        mcdisplay_webgl(simrun)
         mcplot(simrun)
         
         # post-processing
