@@ -173,7 +173,7 @@ def mcdisplay_webgl(simrun, pout=False):
     
     dirname = 'mcdisplay'
     instr = '%s.instr' % simrun.instr_displayname
-    cmd = 'mcdisplay-webgl --default --nobrowse --dirname=%s %s' % (dirname, instr)
+    cmd = '/srv/mcweb/McWeb/mcsimrunner_ng/mcdisplay-webgl --default --nobrowse --ncount=300 --dirname=%s %s' % (dirname, instr)
     # TODO: inplement --inspect, --first, --last
     
     # run mcdisplay
