@@ -77,23 +77,32 @@ def create_course_from_template(templatename, shortname, fullname):
 
 def _adduser(firstname, lastname, username, email):
     cmd_adduser = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
-    subprocess.call(cmd_adduser, cwd=MOODLE_DIR, shell=True)
+    subprocess.call(cmd_adduser,
+                    cwd=MOODLE_DIR, 
+                    shell=True)
 
 def _enroll(username, course_sn):
     cmd_addtocourse = 'moosh course-enrol -s %s %s' % (course_sn, username)
-    subprocess.call(cmd_addtocourse, cwd=MOODLE_DIR, shell=True)
+    subprocess.call(cmd_addtocourse, 
+                    cwd=MOODLE_DIR, 
+                    shell=True)
 
 def _course_list():
     '''
     returns: ["id","category","shortname","fullname","visible"]
     '''
-    proc = subprocess.Popen('moosh course-list')
-    text = proc.communicate()
+    proc = subprocess.Popen('moosh course-list', 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR, 
+                            shell=True)
+    com = proc.communicate()
     
     unit = '[/\-\w\s]+'
     spat = r'"(%s)","(%s)","(%s)","(%s)","(%s)"' % (unit, unit, unit, unit, unit)
     
     v_lst = []
+    text = com[0]
     m_lst = text.splitlines()
     for l in m_lst:
         try:
@@ -115,17 +124,29 @@ def _get_templates():
         return files
 
 def _course_backup(backupname, course_id):
-    proc = subprocess.Popen('moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)))
+    proc = subprocess.Popen('moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR,
+                            shell=True)
     text = proc.communicate()
     print text
 
 def _course_restore_e(backupname, course_id):
-    proc = subprocess.Popen('moosh course-restore -e %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)))
+    proc = subprocess.Popen('moosh course-restore -e %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)), 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR, 
+                            shell=True)
     text = proc.communicate()
     print text
 
 def _course_create(shortname, fullname, category_id):
-    proc = subprocess.Popen('moosh course-create %s --fullname=%s --category=%s --visible=y' % (shortname, fullname, str(category_id)))
+    proc = subprocess.Popen('moosh course-create %s --fullname=%s --category=%s --visible=y' % (shortname, fullname, str(category_id)),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR,
+                            shell=True)
     text = proc.communicate()
     print text
 
