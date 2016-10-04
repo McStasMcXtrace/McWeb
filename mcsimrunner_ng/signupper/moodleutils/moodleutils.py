@@ -107,13 +107,6 @@ def _course_list():
     for l in m_lst:
         try:
             a = re.search(spat, l)
-            print a.group(1)
-            print a.group(2)
-            print a.group(3)
-            print a.group(4)
-            print a.group(5)
-            print
-            
             v_lst.append([a.group(1),a.group(3),a.group(4)])
         except:
             break
