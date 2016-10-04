@@ -32,16 +32,15 @@ def create_template(shortname, templatename):
     courses = _course_list()
     course = None
     for c in courses:
-        if shortname == c[2]:
-            course = c[2]
+        if shortname == c[1]:
+            course = c   
     course_id = course[0]
-    category_id = course[1]
-    
+
     # check that template name is unique
     tmplts = _get_templates()
     if templatename in tmplts:
         raise Exception("create_template: Template names must be unique.")
-    
+
     # create the template
     _course_backup(backupname=templatename, course_id=course_id)
     
@@ -63,11 +62,13 @@ def create_course_from_template(templatename, shortname, fullname):
     # create empty course with the right shortname/fullname
     _course_create(shortname=shortname, fullname=fullname, category_id='1')
     
+    # TODO: check that the course exists, or exit with an error
+    
     # get the course id of the newly created course
     lst = _course_list()
     id = ''
     for c in lst:
-        if shortname == c[2]:
+        if shortname == c[1]:
             id = c[0]
     
     # restore to the newly created course 
@@ -110,7 +111,8 @@ def _course_list():
             v_lst.append([a.group(1),a.group(3),a.group(4)])
         except:
             break
-    return v_lst
+    
+    return v_lst[1:]
 
 def _get_templates():
     for (a, b, files) in os.walk(TEMPLATES_DIR):
@@ -135,7 +137,7 @@ def _course_restore_e(backupname, course_id):
     print text
 
 def _course_create(shortname, fullname, category_id):
-    proc = subprocess.Popen('moosh course-create %s --fullname=%s --category=%s --visible=y' % (shortname, fullname, str(category_id)),
+    proc = subprocess.Popen('moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname),
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             cwd=MOODLE_DIR,
