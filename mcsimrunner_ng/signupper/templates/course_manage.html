@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><title>mcweb: signups</title></head>
-<body style="margin-left:auto;margin-right:auto;width:430px;">
+<body>
 
 <script>
     Date.prototype.yyyymmdd = function() {
@@ -20,13 +20,17 @@
     }
 </script>
 
-<p>
-    <a href="{{ templates_url }}" style="margin:10px;">templates</a>
-    <a href="{{ courses_url }}" style="margin:10px;">new course</a>
-    <a href="{{ enroll_url }}" style="margin:10px;">bulk enroll</a>
-</p>
+<div style="margin-left:auto;margin-right:auto;width:500px;">
+    <div style="text-align:center">
+        <p>
+            <a href="{{ templates_url }}" style="margin:10px;">templates</a>
+            <a href="{{ courses_url }}" style="margin:10px;">new course</a>
+            <a href="{{ enroll_url }}" style="margin:10px;">bulk enroll</a>
+        </p>
+    </div>
+</div>
 
-<h3>{{ message }}</h3>
+<p style="text-align:center">{{ message }}</p>
 
 {% block content %}
 {% endblock %}

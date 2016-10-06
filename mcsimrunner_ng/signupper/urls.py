@@ -24,6 +24,7 @@ urlpatterns = [
     
     url(r'^coursemanage/templates?$', views.courseman_templates, name="courseman_templates" ),
     url(r'^coursemanage/courses?$', views.courseman_courses, name="courseman_courses" ),
+    url(r'^coursemanage/courses-post?$', views.courseman_courses_post, name="courseman_courses_post" ),
     url(r'^coursemanage/users?$', views.courseman_users, name="courseman_users" ),
     
     # contact form

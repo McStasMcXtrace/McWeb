@@ -28,7 +28,7 @@ from mcweb import settings
 from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
-from moodleutils import moodleutils
+from moodleutils import moodleutils as mu
 
 
 ####################################################################
@@ -215,7 +215,7 @@ def userlist_au_post(req):
             
             # try add to moodle
             if not s.added_moodle:
-                moodleutils.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
+                mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
                 s.added_moodle = timezone.now()
                 s.save()
             
@@ -376,28 +376,49 @@ def contact(req):
 
 
 ########################################################################################################
-#                  Production course manage views - unrelated to the demo addusers functions           #
+#              Production course manage views - unrelated to the demo addusers functions               #
 ########################################################################################################
 
 
-templates_url = '/coursemanage/templates'
-courses_url = '/coursemanage/courses'
-enroll_url = '/coursemanage/users'
+def _cmdict(next, message='', dict=None):
+    ''' used for course manage rendering '''
+    templates_url = '/coursemanage/templates'
+    courses_url = '/coursemanage/courses'
+    enroll_url = '/coursemanage/users'
+    d = {'next' : next, 'message' : message, 'templates_url' : templates_url, 'courses_url' : courses_url, 'enroll_url' : enroll_url}
+    if dict != None:
+        d.update(dict)
+    return d
 
 def courseman_templates(req):
-    message = 'Create templates from existing courses.'
-    
-    return render(req, 'course_template.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
+    return render(req, 'course_template.html', _cmdict(next=''))
 
 def courseman_courses(req):
-    message = 'Create courses from templates and assign a teacher.'
+    templates = mu._get_templates()
     
-    return render(req, 'course_create.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
+    return render(req, 'course_create.html', _cmdict(next='/coursemanage/courses-post', dict={'templates' : templates}))
+
+def courseman_courses_post(req):
+    form = req.POST
+    
+    tmpl = form['tmpl_selector']
+    site = form['tbx_site']
+    shortname = form['tbx_sn']
+    title = form['tbx_title']
+    
+    username = form['tbx_username']
+    firstname = form['tbx_firstname']
+    lastname = form['tbx_lastname']
+    email = form['tbx_email']
+    
+    # TODO: impl moodle actions
+    
+    return HttpResponse('%s, %s, %s, %s, %s, %s, %s, %s' % (tmpl, site, shortname, title, username, firstname, lastname, email))
 
 def courseman_users(req):
-    message = 'Bulk enroll users via csv to the new course.'
+    message = ''
     
-    return render(req, 'course_enroll.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
+    return render(req, 'course_enroll.html', _cmdict(next=''))
 
 ####################################################
 #                  Deprecated                      #
