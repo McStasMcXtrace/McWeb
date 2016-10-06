@@ -1,6 +1,16 @@
 '''
-signupper views - NOTE: the get response is intended to show up in a _blank window, which is why it redirects to 
-the thank you page.
+Signupper views:
+
+- demo site addusers interface
+    - add/enroll individual users
+    - signup form (NOTE: the get response is intended to show up in a _blank window.)
+    - contact form
+
+- production site course_manage interface:
+    - create moodle template from course
+    - create course from template, 
+    - bulk add/enroll users
+
 '''
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -19,6 +29,11 @@ from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils
+
+
+####################################################################
+#                  Demo site addusers section                      #
+####################################################################
 
 
 def login_au(req):
@@ -359,6 +374,30 @@ def contact(req):
     except Exception as e:
         return render(req, 'contact.html', {'message' : 'Fail: %s' % e.message})
 
+
+########################################################################################################
+#                  Production course manage views - unrelated to the demo addusers functions           #
+########################################################################################################
+
+
+templates_url = '/coursemanage/templates'
+courses_url = '/coursemanage/courses'
+enroll_url = '/coursemanage/users'
+
+def courseman_templates(req):
+    message = 'Create templates from existing courses.'
+    
+    return render(req, 'course_template.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
+
+def courseman_courses(req):
+    message = 'Create courses from templates and assign a teacher.'
+    
+    return render(req, 'course_create.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
+
+def courseman_users(req):
+    message = 'Bulk enroll users via csv to the new course.'
+    
+    return render(req, 'course_enroll.html', {'message' : message, 'templates_url' : templates_url, 'courses_url': courses_url, 'enroll_url' : enroll_url})
 
 ####################################################
 #                  Deprecated                      #
