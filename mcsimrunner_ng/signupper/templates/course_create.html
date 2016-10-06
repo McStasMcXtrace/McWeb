@@ -20,7 +20,7 @@
 
         var date = new Date();
 
-        document.getElementById('lbl_sn_gen').innerHTML = tbx_site.value + "_" + tbx_sn.value + "_" + date.yyyymmdd();
+        document.getElementById('lbl_sn_gen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
     }
 </script>
 
