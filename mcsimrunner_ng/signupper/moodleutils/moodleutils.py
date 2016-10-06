@@ -14,11 +14,12 @@ import os
 from mcweb.settings import MOODLE_DIR
 
 TEMPLATES_DIR = "/srv/mcweb/moodle-course-templates"
+#TEMPLATES_DIR = "/home/jaga/test/tmpldummies"
 DEFAULT_CATEGORY_ID = '1'
 
 def add_enroll_user(firstname, lastname, username, email, courses_sn_lst):
     '''
-    add user to moodle and _enroll in courses in courses_lst
+    add user to moodle and _enroll in coursecds in courses_lst
     '''
     _adduser(firstname, lastname, username, email)
     for course in courses_sn_lst:
@@ -37,7 +38,7 @@ def create_template(shortname, templatename):
     course_id = course[0]
 
     # check that template name is unique
-    tmplts = _get_templates()
+    tmplts = get_templates()
     if templatename in tmplts:
         raise Exception("create_template: Template names must be unique.")
 
@@ -114,7 +115,7 @@ def _course_list():
     
     return v_lst[1:]
 
-def _get_templates():
+def get_templates():
     for (a, b, files) in os.walk(TEMPLATES_DIR):
         return files
 
