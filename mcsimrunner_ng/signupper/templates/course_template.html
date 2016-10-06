@@ -3,79 +3,50 @@
 
 new course template
 
-<!--
+<div style="margin-left:auto;margin-right:auto;width:450px;">
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
+
     <fieldset style="margin:5px;">
-        <legend>Select course template</legend>
+        <legend>Select course to promote</legend>
         <table>
             <tr>
                 <td style="text-align:center;">
-                    <select>
-                        <option value="volvo">-- select from the list below --</option>
-                        <option value="volvo">Volvo</option>
-                        <option value="saab">Saab</option>
-                        <option value="opel">Opel</option>
-                        <option value="audi">Audi</option>
+                    <select name="tmpl_selector">
+                        <option>-- select from the list below --</option>
+                        {% for t in templates %}
+                        <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
+                        {% endfor %}
                     </select>
                 </td>
             </tr>
         </table>
     </fieldset>
+
     <fieldset style="margin:5px;">
-        <legend>Course info</legend>
+        <legend>Template info</legend>
         <table>
             <tr>
-                <td style="text-align:left; width: 200px;"><label>Site</label></td>
-                <td style="text-align:left;"><input type="text" id="tbx_site" name="tbx_site" onkeyup="update_sn();"/></td>
-            </tr>
-            <tr>
                 <td style="text-align:left;"><label>Shortname</label></td>
-                <td style="text-align:left;"><input type="text" id="tbx_sn" name="tbx_shortname" onkeyup="update_sn();"/></td>
+                <td style="text-align:left;"><input type="text" name="tbx_tmpl_sn" onkeyup="update_sn();"/></td>
             </tr>
             <tr>
                 <td style="text-align:left;"><label>-></label></td>
-                <td style="text-align:left;"><label id="lbl_sn_gen"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Title / fullname</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_course_title"/></td>
+                <td style="text-align:left;"><label name="lbl_sngen_tmpl"></label></td>
             </tr>
         </table>
+        <input type="hidden" id="field_shortname_tmpl" name="field_shortname"/>
     </fieldset>
 
     <fieldset style="margin:5px;">
-        <legend>Teacher account for this course</legend>
-        <table>
-            <tr>
-                <td style="text-align:left; width: 200px;"><label>Username*</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_username"/></td>
-            </tr>
-            <tr></tr>
-            <tr>
-                <td style="text-align:center;" colspan="2"><label>fill out if non-existing:</label></td>
-            </tr>
-
-            <tr>
-                <td style="text-align:left; width: 200px;"><label>First name</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_fn"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Last name</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_ln"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Email</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_email"/></td>
-            </tr>
-        </table>
+        <legend>Existing templates</legend>
     </fieldset>
 
-    <fieldset style="margin:5px;display:{{ buttondisplay }}">
-        <input type="submit" value="Create course" style="margin-right:20px;">
+    <fieldset style="margin:5px;">
+        <input type="submit" value="Create template" style="margin-right:20px;">
     </fieldset>
 </form>
--->
+</div>
 
 {% endblock %}

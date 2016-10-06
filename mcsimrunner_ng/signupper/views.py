@@ -403,7 +403,7 @@ def courseman_courses_post(req):
     
     tmpl = form['tmpl_selector']
     site = form['tbx_site']
-    shortname = form['tbx_sn']
+    shortname = form['field_shortname']
     title = form['tbx_title']
     
     username = form['tbx_username']

@@ -16,7 +16,16 @@
         tbx_site = document.getElementById('tbx_site');
         tbx_sn = document.getElementById('tbx_sn');
         var date = new Date();
-        document.getElementById('lbl_sn_gen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+    }
+
+    var update_sn_tmpl = function()
+    {
+        tbx = document.getElementById('tbx_tmpl_sn');
+        var date = new Date();
+        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        document.getElementById('field_shortname_tmpl').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
     }
 </script>
 
