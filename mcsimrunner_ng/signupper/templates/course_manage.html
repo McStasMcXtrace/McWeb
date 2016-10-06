@@ -11,6 +11,8 @@
         if (dd < 10) dd = "0" + dd;
         return [this.getFullYear(), mm, dd].join('');
     };
+
+    // TODO: string replace ' ' with '_'
     var update_sn = function()
     {
         tbx_site = document.getElementById('tbx_site');
@@ -19,13 +21,12 @@
         document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
         document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
     }
-
     var update_sn_tmpl = function()
     {
-        tbx = document.getElementById('tbx_tmpl_sn');
+        tbx = document.getElementById('tbx_sn_tmpl');
         var date = new Date();
-        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname_tmpl').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
+        document.getElementById('field_shortname_tmpl').value = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
     }
 </script>
 

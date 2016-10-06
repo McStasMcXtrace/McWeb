@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^userdetail_au/(?P<id>[\w-]+)/?$', views.userdetail_au, name="userdetail_au" ),
     
     url(r'^coursemanage/templates?$', views.courseman_templates, name="courseman_templates" ),
+    url(r'^coursemanage/templates-post?$', views.courseman_templates_post, name="courseman_templates_post" ),
     url(r'^coursemanage/courses?$', views.courseman_courses, name="courseman_courses" ),
     url(r'^coursemanage/courses-post?$', views.courseman_courses_post, name="courseman_courses_post" ),
     url(r'^coursemanage/users?$', views.courseman_users, name="courseman_users" ),

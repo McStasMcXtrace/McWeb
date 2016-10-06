@@ -391,10 +391,26 @@ def _cmdict(next, message='', dict=None):
     return d
 
 def courseman_templates(req):
-    return render(req, 'course_template.html', _cmdict(next=''))
+    courses = mu.get_courses()
+    #courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
+    templates = mu.get_templates()
+    
+    # TODO: impl moodle actions
+    
+    return render(req, 'course_template.html', _cmdict(next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
+
+def courseman_templates_post(req):
+    form = req.POST
+    
+    tmpl = form['course_selector']
+    name = form['field_shortname_tmpl']
+    
+    # TODO: impl moodle actions
+    
+    return HttpResponse('%s, %s' % (tmpl, name))
 
 def courseman_courses(req):
-    templates = mu._get_templates()
+    templates = mu.get_templates()
     
     return render(req, 'course_create.html', _cmdict(next='/coursemanage/courses-post', dict={'templates' : templates}))
 

@@ -1,49 +1,49 @@
 {% extends 'course_manage.html' %}
 {% block content %}
 
-new course template
+<div style="margin-left:auto;margin-right:auto;width:500px;">
 
-<div style="margin-left:auto;margin-right:auto;width:450px;">
+
+<fieldset style="margin:5px;">
+    <legend>Templates</legend>
+    {% for t in templates %}
+    <ul>
+        <li><label>{{ t }}</label></li>
+    </ul>
+    {% endfor %}
+</fieldset>
+
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
 
     <fieldset style="margin:5px;">
-        <legend>Select course to promote</legend>
         <table>
+            <legend>New template</legend>
             <tr>
-                <td style="text-align:center;">
-                    <select name="tmpl_selector">
-                        <option>-- select from the list below --</option>
-                        {% for t in templates %}
+                <td style="text-align:left; width:500px;"><label>Create from course</label></td>
+                <td style="text-align:left;">
+                    <select style="min-width:200px;" name="course_selector">
+                        <option>-- select --</option>
+                        {% for t in courses %}
                         <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
                         {% endfor %}
                     </select>
                 </td>
             </tr>
-        </table>
-    </fieldset>
-
-    <fieldset style="margin:5px;">
-        <legend>Template info</legend>
-        <table>
             <tr>
-                <td style="text-align:left;"><label>Shortname</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_tmpl_sn" onkeyup="update_sn();"/></td>
+                <td><label>Name</label></td>
+                <td style="text-align:left;"><input type="text" id="tbx_sn_tmpl" name="tbx_sn_tmpl" onkeyup="update_sn_tmpl();"/></td>
             </tr>
             <tr>
                 <td style="text-align:left;"><label>-></label></td>
-                <td style="text-align:left;"><label name="lbl_sngen_tmpl"></label></td>
+                <td style="text-align:left;"><label id="lbl_sngen_tmpl" name="lbl_sngen_tmpl"></label></td>
             </tr>
         </table>
-        <input type="hidden" id="field_shortname_tmpl" name="field_shortname"/>
+        <input type="hidden" id="field_shortname_tmpl" name="field_shortname_tmpl"/>
     </fieldset>
 
-    <fieldset style="margin:5px;">
-        <legend>Existing templates</legend>
-    </fieldset>
-
-    <fieldset style="margin:5px;">
+    <fieldset style="margin:5px; text-align:right;">
         <input type="submit" value="Create template" style="margin-right:20px;">
     </fieldset>
 </form>

@@ -6,12 +6,12 @@
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
-        <legend>Select course template</legend>
+        <legend>Select template</legend>
         <table>
             <tr>
                 <td style="text-align:center;">
                     <select name="tmpl_selector">
-                        <option>-- select from the list below --</option>
+                        <option>-- select --</option>
                         {% for t in templates %}
                         <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
                         {% endfor %}
