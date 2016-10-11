@@ -267,32 +267,9 @@ def upload_au_post(req):
     if len(req.FILES) > 0:
         try:
             f = req.FILES['up_file']
-            r = csv.reader(f, delimiter=',')
-            firstname_idx = 0
-            lastname_idx = 1
-            email_idx = 2
-            username_idx = 3
             
-            first_row = True
-            for row in r:
-                # header line
-                print(row)
-                if first_row:
-                    firstname_idx = row.index('firstname')
-                    lastname_idx = row.index('lastname')
-                    email_idx = row.index('email')
-                    username_idx = row.index('username')
-                    first_row = False
-                    continue
-                
-                # match courses in row
-                courses = []
-                for known in COURSES:
-                    if known in row:
-                        courses.append(known)
-                courses = courses + COURSES_MANDATORY
-                
-                utils.create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
+            utils.pull_signups_todb(f, COURSES, COURSES_MANDATORY)
+            
         except Exception as e:
             return HttpResponse('Invalid csv file: %s' % e.__str__())
     
@@ -390,6 +367,7 @@ def _cmdict(next, message='', dict=None):
         d.update(dict)
     return d
 
+@login_required
 def courseman_templates(req):
     #courses = mu.get_courses()
     courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
@@ -399,6 +377,7 @@ def courseman_templates(req):
     
     return render(req, 'course_template.html', _cmdict(next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
 
+@login_required
 def courseman_templates_post(req):
     form = req.POST
     
@@ -409,11 +388,13 @@ def courseman_templates_post(req):
     
     return HttpResponse('%s, %s' % (tmpl, name))
 
+@login_required
 def courseman_courses(req):
     templates = mu.get_templates()
     
     return render(req, 'course_create.html', _cmdict(next='/coursemanage/courses-post', dict={'templates' : templates}))
 
+@login_required
 def courseman_courses_post(req):
     form = req.POST
     
@@ -431,45 +412,70 @@ def courseman_courses_post(req):
     
     return HttpResponse('%s, %s, %s, %s, %s, %s, %s, %s' % (tmpl, site, shortname, title, username, firstname, lastname, email))
 
+@login_required
+def courseman_users_delete(req, id):
+    ''' deletes the requested signup object '''
+    s = Signup.objects.filter(id=int(id))
+    s.delete()
+    
+    return redirect('/coursemanage/users')
+
+@login_required
 def courseman_users(req):
     message = ''
     
     colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
-    
     rows_ids = []
-    for idx in range(10):
-        #rows_ids.append([Ci('r%s1' % str(idx)), Ci('r%s2' % str(idx)), Ci('r%s3' % str(idx)), Ci('r%s4' % str(idx))])
         
-        s = Signup()
-        s.created='created_str'
-        s.firstname='firstname_str'
-        s.lastname='lastname_str'
-        s.email='email_str'
-        s.username='username_str'
-        s.password='password_str'
-        
-        row = []
-        use_textbox = True
-        #row.append(Ci(s.created.strftime("%Y%m%d")))
-        row.append(Ci(s.created))
-        row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
-        row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
-        row.append(Ci(s.email, txt=use_textbox, header='email'))
-        row.append(Ci(s.username, txt=use_textbox, header='username'))
-        row.append(Ci(s.password, header='passwd'))
-        
-        rows_ids.append([row, 'id_str'])
-        
-        next = '(next)'
-        uploadnext = '(uploadnext)'
+    next = '/coursemanage/users-post'
+    uploadnext = '/coursemanage/uploadcsv-post'
     
-    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'next' : next, 'uploadnext' : uploadnext}))
+    displaysignups = 'none'
+    signups = Signup.objects.filter(is_added=False)
+    
+    if signups != None:
+        displaysignups = ''
+        for s in signups:
+            row = []
+            use_textbox = True
+            
+            row.append(Ci(s.created.strftime("%Y%m%d")))
+            row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+            row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+            row.append(Ci(s.email, txt=use_textbox, header='email'))
+            row.append(Ci(s.username, txt=use_textbox, header='username'))
+            row.append(Ci(s.password, header='passwd'))
+            row.append(Ci('delete', btn=True))
+            rows_ids.append([row, str(s.id)])
+    
+    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups}))
 
 @login_required
 def courseman_users_uploadcsv_post(req):
-    '''  '''
-    # TODO: implement by refactoring
-    pass
+    ''' handles csv upload - NOTE: the csv-file is not saved to disk '''
+    if len(req.FILES) > 0:
+        try:
+            f = req.FILES['up_file']
+            
+            # pull csv object to db signup objects 
+            utils.pull_signups_todb(f, courses_only=['hest'])
+            
+        except Exception as e:
+            return HttpResponse('Invalid csv file: %s' % e.__str__())
+    
+    return redirect('/coursemanage/users')
+
+@login_required
+def courseman_users_post(req):
+    form = req.POST
+    
+    # TODO: impl moodle actions
+    
+    # attempt to add each one using the demo-site signup function
+    # get all non-added signups 
+    # override using form data
+    
+    return HttpResponse('(adding users to LDAP and moodle)')
 
 
 ####################################################

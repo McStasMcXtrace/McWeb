@@ -27,7 +27,9 @@ urlpatterns = [
     url(r'^coursemanage/courses?$', views.courseman_courses, name="courseman_courses" ),
     url(r'^coursemanage/courses-post?$', views.courseman_courses_post, name="courseman_courses_post" ),
     url(r'^coursemanage/users?$', views.courseman_users, name="courseman_users" ),
+    url(r'^coursemanage/users/delete/(?P<id>[\w-]+)/?$', views.courseman_users_delete, name="courseman_users_delete" ),
     url(r'^coursemanage/uploadcsv-post?$', views.courseman_users_uploadcsv_post, name="courseman_users_uploadcsv_post" ),
+    url(r'^coursemanage/users-post?$', views.courseman_users_post, name="courseman_users_post" ),
     
     # contact form
     url(r'^contact/?$', views.contact, name="contact"),

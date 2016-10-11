@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE, call
 from models import Signup
 from datetime import datetime
 import os
+import csv
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -114,4 +115,39 @@ def notify_contactentry(replyto, text):
     
     finally:
         os.remove('_contactbody')
+
+def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_only=None):
+    ''' creates unsaved signup instances from a csv file '''
+    
+    r = csv.reader(file, delimiter=',')
+    firstname_idx = 0
+    lastname_idx = 1
+    email_idx = 2
+    username_idx = 3
+        
+    first_row = True
+    for row in r:
+        # header line
+        print(row)
+        if first_row:
+            firstname_idx = row.index('firstname')
+            lastname_idx = row.index('lastname')
+            email_idx = row.index('email')
+            username_idx = row.index('username')
+            first_row = False
+            continue
+        
+        courses = []
+        if not courses_only:
+            # match courses in row
+            for known in courses_all:
+                if known in row:
+                    courses.append(known)
+            if courses_mandatory:
+                courses = courses + courses_mandatory
+        else:
+            # hard-assign to courses_only
+            courses = courses_only
+        
+        signup = create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
 
