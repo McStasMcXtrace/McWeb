@@ -1,15 +1,15 @@
 {% extends 'course_manage.html' %}
 {% block content %}
 
-<div style="margin-left:auto;margin-right:auto;width:450px;">
+<div style="margin-left:auto;margin-right:auto;width:600px;">
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
-        <legend>Select template</legend>
+        <legend>Select course template</legend>
         <table>
             <tr>
-                <td style="text-align:center;">
+                <td style="text-align:center;" colspan="2">
                     <select name="tmpl_selector">
                         <option>-- select --</option>
                         {% for t in templates %}
@@ -21,10 +21,10 @@
         </table>
     </fieldset>
     <fieldset style="margin:5px;">
-        <legend>Course info</legend>
+        <legend>Enter course info</legend>
         <table>
             <tr>
-                <td style="text-align:left; width: 200px;"><label>Site</label></td>
+                <td style="text-align:left; width: 500px;"><label>Site</label></td>
                 <td style="text-align:left;"><input type="text" id="tbx_site" name="tbx_site" onkeyup="update_sn();"/></td>
             </tr>
             <tr>
@@ -44,10 +44,10 @@
     </fieldset>
 
     <fieldset style="margin:5px;">
-        <legend>Teacher assigned to this course</legend>
+        <legend>Assign teacher</legend>
         <table>
             <tr>
-                <td style="text-align:left; width: 200px;"><label>Username*</label></td>
+                <td style="text-align:left; width: 500px;"><label>Username*</label></td>
                 <td style="text-align:left;"><input type="text" name="tbx_username"/></td>
             </tr>
             <tr></tr>
@@ -70,7 +70,7 @@
         </table>
     </fieldset>
 
-    <fieldset style="margin:5px;">
+    <fieldset style="margin:5px; text-align:right;">
         <input type="submit" value="Create course" style="margin-right:20px;">
     </fieldset>
 </form>

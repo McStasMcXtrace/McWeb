@@ -1,13 +1,13 @@
 {% extends 'course_manage.html' %}
 {% block content %}
 
-<div style="margin-left:auto;margin-right:auto;width:500px;">
+<div style="margin-left:auto; margin-right:auto; width:600px;">
 
 
 <fieldset style="margin:5px;">
-    <legend>Templates</legend>
+    <legend>Existing templates</legend>
     {% for t in templates %}
-    <ul>
+    <ul style="list-style-type: none; padding: 3px; margin: 0px; margin-top: 5px;">
         <li><label>{{ t }}</label></li>
     </ul>
     {% endfor %}
@@ -19,9 +19,9 @@
 
     <fieldset style="margin:5px;">
         <table>
-            <legend>New template</legend>
+            <legend>Create new template</legend>
             <tr>
-                <td style="text-align:left; width:500px;"><label>Create from course</label></td>
+                <td style="width:500px;"><label>Create from course</label></td>
                 <td style="text-align:left;">
                     <select style="min-width:200px;" name="course_selector">
                         <option>-- select --</option>

@@ -1,81 +1,57 @@
 {% extends 'course_manage.html' %}
 {% block content %}
 
-course create
+<div style="margin-left:auto; margin-right:auto; width:600px;">
 
-<!--
+<form enctype="multipart/form-data" method="POST" action="{{ uploadnext }}">
+    {% csrf_token %}
+    <fieldset style="margin:5px;">
+    <legend>Bulk add users</legend>
+            <p>Upload a csv-file with the format shown below, with a header and one student pr. line.</p>
+            <p>Then click the "Add users" button at the bottom of the page.</p>
+            <p>--- example:</p>
+        <table>
+            <tr><td colspan="2">firstname,lastname,email,username,course</td></tr>
+            <tr><td colspan="2">John,Doe,johndoe@e-neutrons.org,johndoe,ku_intro-ns_20160101</td></tr>
+            <tr><td colspan="2">Jane Else,Hansen,jlh@e-neutrons.org,jlh,ku_intro-ns_20160101</td></tr>
+        </table>
+        <table>
+            <tr><td><input type="file" name="up_file"></td></tr>
+            <tr><td><input type="submit" value="Upload" style="margin-right:20px;"></td></tr>
+        </table>
+    </fieldset>
+</form>
+
+</div>
+
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
-        <legend>Select course template</legend>
         <table>
+            <!-- create headers -->
             <tr>
-                <td style="text-align:center;">
-                    <select>
-                        <option value="volvo">-- select from the list below --</option>
-                        <option value="volvo">Volvo</option>
-                        <option value="saab">Saab</option>
-                        <option value="opel">Opel</option>
-                        <option value="audi">Audi</option>
-                    </select>
-                </td>
+            {% for header in colheaders %}
+                <th  style="min-width:70px;"><label>{{ header.data }}</label></td>
+            {% endfor %}
             </tr>
+            <!-- create rows -->
+            {% for row, id in rows_ids %}
+                <tr>
+                {% for cell in row %}
+                    {% if cell.btn %}
+                    <td style="text-align:center;"><input type="button" name="{{ id }}_{{ cell.data }}" onclick="location.href='/userlist_au_action/{{ cell.data }}/{{ id }}';" value="{{ cell.data }}"/></td>
+                    {% elif cell.txt %}
+                    <td style="text-align:left;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.header }}" value="{{ cell.data }}"/></td>
+                    {% else %}
+                    <td style="text-align:left;"><label name="{{ id }}_{{ cell.data }}">{{ cell.data }}</label></td>
+                    {% endif %}
+                {% endfor %}
+                </tr>
+            {% endfor %}
         </table>
-    </fieldset>
-    <fieldset style="margin:5px;">
-        <legend>Course info</legend>
-        <table>
-            <tr>
-                <td style="text-align:left; width: 200px;"><label>Site</label></td>
-                <td style="text-align:left;"><input type="text" id="tbx_site" name="tbx_site" onkeyup="update_sn();"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Shortname</label></td>
-                <td style="text-align:left;"><input type="text" id="tbx_sn" name="tbx_shortname" onkeyup="update_sn();"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>-></label></td>
-                <td style="text-align:left;"><label id="lbl_sn_gen"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Title / fullname</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_course_title"/></td>
-            </tr>
-        </table>
-    </fieldset>
-
-    <fieldset style="margin:5px;">
-        <legend>Teacher account for this course</legend>
-        <table>
-            <tr>
-                <td style="text-align:left; width: 200px;"><label>Username*</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_username"/></td>
-            </tr>
-            <tr></tr>
-            <tr>
-                <td style="text-align:center;" colspan="2"><label>fill out if non-existing:</label></td>
-            </tr>
-
-            <tr>
-                <td style="text-align:left; width: 200px;"><label>First name</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_fn"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Last name</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_ln"/></td>
-            </tr>
-            <tr>
-                <td style="text-align:left;"><label>Email</label></td>
-                <td style="text-align:left;"><input type="text" name="tbx_email"/></td>
-            </tr>
-        </table>
-    </fieldset>
-
-    <fieldset style="margin:5px;display:{{ buttondisplay }}">
-        <input type="submit" value="Create course" style="margin-right:20px;">
+        <div style="text-align:right;"><input type="submit" value="Add users" style="margin-right:20px;"></div>
     </fieldset>
 </form>
--->
 
 {% endblock %}

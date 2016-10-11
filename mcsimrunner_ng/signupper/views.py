@@ -86,21 +86,21 @@ def signup_au_get(req):
     # get a thank-you message to the user
     return redirect('/thanks/')
 
+class Ci:
+    ''' Cell info data object '''
+    def __init__(self, data, header=None, cbx=None, btn=None, txt=None, lbl=None):
+        self.cbx = cbx
+        self.btn = btn
+        self.txt = txt
+        self.lbl = lbl
+        if cbx is None and btn is None and txt is None:
+            self.lbl = True
+        self.data = data
+        self.header = header
+
 @login_required
 def userlist_au(req, listtype='new'):
     ''' list all new signups, added users or limbo-users '''
-    
-    class Ci:
-        ''' Cell info data object '''
-        def __init__(self, data, header=None, cbx=None, btn=None, txt=None, lbl=None):
-            self.cbx = cbx
-            self.btn = btn
-            self.txt = txt
-            self.lbl = lbl
-            if cbx is None and btn is None and txt is None:
-                self.lbl = True
-            self.data = data
-            self.header = header
     
     headers, num_non_course = utils.get_colheaders()
     colheaders = []
@@ -391,8 +391,8 @@ def _cmdict(next, message='', dict=None):
     return d
 
 def courseman_templates(req):
-    courses = mu.get_courses()
-    #courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
+    #courses = mu.get_courses()
+    courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
     templates = mu.get_templates()
     
     # TODO: impl moodle actions
@@ -434,7 +434,43 @@ def courseman_courses_post(req):
 def courseman_users(req):
     message = ''
     
-    return render(req, 'course_enroll.html', _cmdict(next=''))
+    colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
+    
+    rows_ids = []
+    for idx in range(10):
+        #rows_ids.append([Ci('r%s1' % str(idx)), Ci('r%s2' % str(idx)), Ci('r%s3' % str(idx)), Ci('r%s4' % str(idx))])
+        
+        s = Signup()
+        s.created='created_str'
+        s.firstname='firstname_str'
+        s.lastname='lastname_str'
+        s.email='email_str'
+        s.username='username_str'
+        s.password='password_str'
+        
+        row = []
+        use_textbox = True
+        #row.append(Ci(s.created.strftime("%Y%m%d")))
+        row.append(Ci(s.created))
+        row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+        row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+        row.append(Ci(s.email, txt=use_textbox, header='email'))
+        row.append(Ci(s.username, txt=use_textbox, header='username'))
+        row.append(Ci(s.password, header='passwd'))
+        
+        rows_ids.append([row, 'id_str'])
+        
+        next = '(next)'
+        uploadnext = '(uploadnext)'
+    
+    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'next' : next, 'uploadnext' : uploadnext}))
+
+@login_required
+def courseman_users_uploadcsv_post(req):
+    '''  '''
+    # TODO: implement by refactoring
+    pass
+
 
 ####################################################
 #                  Deprecated                      #
