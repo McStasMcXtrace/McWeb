@@ -451,8 +451,7 @@ def courseman_users_post(req):
     
     # perform the appropriate add-user actions for each signup
     for s in signups:
-        #utils.adduser(signup, ldap_password=req.session['ldap_password'])
-        utils.adduser(s, ldap_password='pw', accept_ldap_exists=True)
+        utils.adduser(signup, ldap_password=req.session['ldap_password'])
     
     return redirect('/coursemanage/users')
 
