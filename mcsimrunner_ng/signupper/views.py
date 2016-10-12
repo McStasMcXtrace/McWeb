@@ -334,6 +334,8 @@ def _cmdict(next, message='', dict=None):
 
 @login_required
 def courseman_templates(req):
+    ''' display template creation form, including existing templates and courses '''
+    
     courses = mu.get_courses()
     templates = mu.get_templates()
     
@@ -341,14 +343,15 @@ def courseman_templates(req):
 
 @login_required
 def courseman_templates_post(req):
+    ''' handle new template from course request '''
     form = req.POST
     
-    tmpl = form['course_selector']
-    name = form['field_shortname_tmpl']
+    tmplname =  form['field_shortname_tmpl']
+    shortname = form['course_selector']
     
-    mu.create_template(name, tmpl)
+    mu.create_template(shortname, tmplname)
     
-    return HttpResponse('%s, %s' % (tmpl, name))
+    return redirect('/coursemanage/templates')
 
 @login_required
 def courseman_courses(req):
@@ -358,7 +361,7 @@ def courseman_courses(req):
 
 @login_required
 def courseman_courses_post(req):
-    '''  '''
+    ''' create a new course from a template, enroll a user as teacher (and possibly create the user) '''
     form = req.POST
     
     tmpl = form['tmpl_selector']
@@ -373,11 +376,11 @@ def courseman_courses_post(req):
     lastname = form['tbx_lastname']
     email = form['tbx_email']
     
-    mu.adduser(firstname=firstname, lastname=lastname, username=username, email=email)
-
+    if firstname != '' and lastname != '' and email != '':
+        mu.adduser(firstname=firstname, lastname=lastname, username=username, email=email)
     mu.enroll_user(username=username, course_sn=shortname, teacher=True)
     
-    return HttpResponse('%s, %s, %s, %s, %s, %s, %s, %s' % (tmpl, site, shortname, title, username, firstname, lastname, email))
+    return redirect('/coursemanage/users')
 
 @login_required
 def courseman_users_delete(req, id):
@@ -450,7 +453,7 @@ def courseman_users_post(req):
     utils.assign_courses(signups, [form['course_selector']] + COURSES_MANDATORY)
     
     # perform the appropriate add-user actions for each signup
-    for s in signups:
+    for signup in signups:
         utils.adduser(signup, ldap_password=req.session['ldap_password'])
     
     return redirect('/coursemanage/users')

@@ -46,11 +46,11 @@ def create_template(shortname, templatename):
     
 def get_courses():
     '''
-    returns a list of course shortnames for high-level use
+    returns a list of course names for high-level use
     '''
     lst = []
     for c in _course_list():
-        lst.append(c[2])
+        lst.append(c[1])
     return lst
 
 def create_course_from_template(templatename, shortname, fullname):
@@ -94,7 +94,7 @@ def enroll_user(username, course_sn, teacher=False):
 
 def _course_list():
     '''
-    returns: ["id","category","shortname","fullname","visible"]
+    returns: ["category","shortname","fullname"]
     '''
     proc = subprocess.Popen('moosh course-list', 
                             stdout=subprocess.PIPE,
