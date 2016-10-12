@@ -5,7 +5,6 @@ from django.conf.urls import url
 from signupper import views
 
 urlpatterns = [
-    
     url(r'^changepassword/?$', views.chpassword, name="chpassword" ),
 
     # signup form
@@ -22,6 +21,7 @@ urlpatterns = [
     url(r'^upload_au_post/?$', views.upload_au_post, name="upload_au_post" ),
     url(r'^userdetail_au/(?P<id>[\w-]+)/?$', views.userdetail_au, name="userdetail_au" ),
     
+    url(r'^coursemanage/?$', views.courseman_login, name="courseman_login" ),
     url(r'^coursemanage/templates?$', views.courseman_templates, name="courseman_templates" ),
     url(r'^coursemanage/templates-post?$', views.courseman_templates_post, name="courseman_templates_post" ),
     url(r'^coursemanage/courses?$', views.courseman_courses, name="courseman_courses" ),

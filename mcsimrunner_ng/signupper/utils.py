@@ -124,7 +124,6 @@ def notify_contactentry(replyto, text):
 
 def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_only=None):
     ''' creates unsaved signup instances from a csv file '''
-    
     r = csv.reader(file, delimiter=',')
     firstname_idx = 0
     lastname_idx = 1
@@ -158,14 +157,14 @@ def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_on
         signup = create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
 
 
-def update_signups(objs, form):
-    ''' updates signup objects from objs, according to form, and saves '''
+def update_signups(signups, form):
+    ''' updates signup objects from signups, according to form, and saves '''
     # get course headers 
     headers, noncourses = get_colheaders()
     courseheaders = headers[noncourses:]
     
     # get and save new configuration for each signup
-    for s in objs:
+    for s in signups:
         # get checked courses
         courses = []
         for course in courseheaders:
@@ -182,6 +181,11 @@ def update_signups(objs, form):
         s.email = form.get('%s_%s' % (str(s.id), 'email'))
         s.username = form.get('%s_%s' % (str(s.id), 'username'))
         s.save()
+
+def assign_courses(signups, courses):
+    ''' adds strings in courses (a list) to each signup in signups (a list) '''
+    for s in signups:
+        s.courses = s.courses + courses
 
 def adduser(signup, ldap_password, accept_ldap_exists=False):
     ''' 
@@ -200,8 +204,7 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
             except Exception as e:
                 if not accept_ldap_exists:
                     raise e
-                m = re.search('Already exists', e.__str__())
-                print m
+                m = re.search(r'Already exists', e.__str__())
                 if not m:
                     raise e
         

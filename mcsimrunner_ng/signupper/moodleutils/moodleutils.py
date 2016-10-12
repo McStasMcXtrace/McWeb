@@ -14,16 +14,15 @@ import os
 from mcweb.settings import MOODLE_DIR
 
 TEMPLATES_DIR = "/srv/mcweb/moodle-course-templates"
-#TEMPLATES_DIR = "/home/jaga/test/tmpldummies"
 DEFAULT_CATEGORY_ID = '1'
 
 def add_enroll_user(firstname, lastname, username, email, courses_sn_lst):
     '''
-    add user to moodle and _enroll in coursecds in courses_lst
+    add user to moodle and enroll_user in coursecds in courses_lst
     '''
-    _adduser(firstname, lastname, username, email)
+    adduser(firstname, lastname, username, email)
     for course in courses_sn_lst:
-        _enroll(username, course)
+        enroll_user(username, course)
 
 def create_template(shortname, templatename):
     '''
@@ -77,14 +76,18 @@ def create_course_from_template(templatename, shortname, fullname):
     
     return id
 
-def _adduser(firstname, lastname, username, email):
+def adduser(firstname, lastname, username, email):
     cmd_adduser = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
     subprocess.call(cmd_adduser,
                     cwd=MOODLE_DIR, 
                     shell=True)
 
-def _enroll(username, course_sn):
-    cmd_addtocourse = 'moosh course-enrol -s %s %s' % (course_sn, username)
+def enroll_user(username, course_sn, teacher=False):
+    if not teacher:
+        cmd_addtocourse = 'moosh course-enrol -s %s %s' % (course_sn, username)
+    else:
+        cmd_addtocourse = 'moosh course-enrol -r teacher -s %s %s' % (course_sn, username)
+        
     subprocess.call(cmd_addtocourse, 
                     cwd=MOODLE_DIR, 
                     shell=True)
@@ -145,4 +148,3 @@ def _course_create(shortname, fullname, category_id):
                             shell=True)
     text = proc.communicate()
     print text
-

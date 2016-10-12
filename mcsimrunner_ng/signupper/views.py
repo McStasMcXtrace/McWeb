@@ -263,6 +263,7 @@ def chpassword(req):
 #                  Contact form                    #
 ####################################################
 
+
 def contact(req):
     ''' contact form rendering and submission '''
     form = req.POST
@@ -301,6 +302,26 @@ def contact(req):
 ########################################################################################################
 
 
+def courseman_login(req):
+    ''' login and check for superuser status '''
+    form = req.POST
+    
+    username = form.get('username', '')
+    password = form.get('password', '')
+    
+    if not username or not password:
+        return render(req, 'course_login.html')
+    
+    user = authenticate(username=username, password=password)
+    if user is None or not user.is_active or not user.is_superuser:
+        return render(req, 'course_login.html')
+    
+    login(req, user)
+    req.session['ldap_password'] = form.get('ldap_password', '')
+
+    return redirect('/coursemanage/users')
+
+
 def _cmdict(next, message='', dict=None):
     ''' used for course manage rendering '''
     templates_url = '/coursemanage/templates'
@@ -313,11 +334,8 @@ def _cmdict(next, message='', dict=None):
 
 @login_required
 def courseman_templates(req):
-    #courses = mu.get_courses()
-    courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
+    courses = mu.get_courses()
     templates = mu.get_templates()
-    
-    # TODO: impl moodle actions
     
     return render(req, 'course_template.html', _cmdict(next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
 
@@ -328,7 +346,7 @@ def courseman_templates_post(req):
     tmpl = form['course_selector']
     name = form['field_shortname_tmpl']
     
-    # TODO: impl moodle actions
+    mu.create_template(name, tmpl)
     
     return HttpResponse('%s, %s' % (tmpl, name))
 
@@ -340,6 +358,7 @@ def courseman_courses(req):
 
 @login_required
 def courseman_courses_post(req):
+    '''  '''
     form = req.POST
     
     tmpl = form['tmpl_selector']
@@ -347,12 +366,16 @@ def courseman_courses_post(req):
     shortname = form['field_shortname']
     title = form['tbx_title']
     
+    mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+    
     username = form['tbx_username']
     firstname = form['tbx_firstname']
     lastname = form['tbx_lastname']
     email = form['tbx_email']
     
-    # TODO: impl moodle actions
+    mu.adduser(firstname=firstname, lastname=lastname, username=username, email=email)
+
+    mu.enroll_user(username=username, course_sn=shortname, teacher=True)
     
     return HttpResponse('%s, %s, %s, %s, %s, %s, %s, %s' % (tmpl, site, shortname, title, username, firstname, lastname, email))
 
@@ -366,6 +389,7 @@ def courseman_users_delete(req, id):
 
 @login_required
 def courseman_users(req):
+    ''' display the list of signups '''
     message = ''
     
     colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
@@ -375,7 +399,7 @@ def courseman_users(req):
     next = '/coursemanage/users-post'
     uploadnext = '/coursemanage/uploadcsv-post'
     
-    courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
+    courses = mu.get_courses()
     
     displaysignups = 'none'
     signups = Signup.objects.filter(is_added=False)
@@ -421,11 +445,12 @@ def courseman_users_post(req):
     # get filtered signups and update
     form = req.POST
     ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
-    objs = Signup.objects.filter(id__in=ids)
-    utils.update_signups(objs, form)
+    signups = Signup.objects.filter(id__in=ids)
+    utils.update_signups(signups, form)
+    utils.assign_courses(signups, [form['course_selector']] + COURSES_MANDATORY)
     
     # perform the appropriate add-user actions for each signup
-    for s in objs:
+    for s in signups:
         #utils.adduser(signup, ldap_password=req.session['ldap_password'])
         utils.adduser(s, ldap_password='pw', accept_ldap_exists=True)
     
