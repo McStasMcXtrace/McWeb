@@ -19,13 +19,31 @@
             <tr><td><input type="submit" value="Upload" style="margin-right:20px;"></td></tr>
         </table>
     </fieldset>
+
+    <fieldset style="margin:5px;">
+        <table>
+            <legend>Create new template</legend>
+            <tr>
+                <td style="width:500px;"><label>Create from course</label></td>
+                <td style="text-align:left;">
+                    <select style="min-width:200px;" name="course_selector">
+                        <option>-- select --</option>
+                        {% for t in courses %}
+                        <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" id="field_shortname_tmpl" name="field_shortname_tmpl"/>
+    </fieldset>
 </form>
 </div>
 
-<form enctype="multipart/form-data" method="POST" action="{{ next }}" style="display:{{ displaysignups }}">
-    <input type="hidden" name="ids" value="{{ ids }}">
-    {% csrf_token %}
-    <fieldset style="margin:5px;">
+<fieldset style="margin:auto; width:1000px">
+    <form enctype="multipart/form-data" method="POST" action="{{ next }}" style="display:{{ displaysignups }}">
+        <input type="hidden" name="ids" value="{{ ids }}">
+        {% csrf_token %}
         <table>
             <!-- create headers -->
             <tr>
@@ -48,8 +66,18 @@
                 </tr>
             {% endfor %}
         </table>
-        <div style="text-align:right;"><input type="submit" value="Add users" style="margin-right:20px;"></div>
-    </fieldset>
-</form>
+        <div>
+            <select style="min-width:200px;" name="course_selector">
+                    <option>-- select enrollment course --</option>
+                    {% for t in courses %}
+                    <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </select>
+            <input type="submit" value="Add users" style="margin-right:20px;">
+        </div>
+    </form>
+</fieldset>
+<div style="margin-left:auto; margin-right:auto;">
+</div>
 
 {% endblock %}

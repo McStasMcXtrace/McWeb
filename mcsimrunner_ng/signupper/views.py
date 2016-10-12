@@ -21,7 +21,6 @@ from django.core.validators import validate_email
 
 import ast
 import os
-import csv
 
 import utils
 from mcweb import settings
@@ -42,7 +41,6 @@ def login_au(req):
     
     username = form.get('username', '')
     password = form.get('password', '')
-    
     
     if not username or not password:
         return render(req, 'login_au.html')
@@ -174,69 +172,15 @@ def userlist_au(req, listtype='new'):
 def userlist_au_post(req):
     ''' handles list form submission '''
     
-    # get filtered signups
+    # get filtered signups and update
     form = req.POST
     ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
     objs = Signup.objects.filter(id__in=ids)
-    
-    # get course headers 
-    headers, noncourses = utils.get_colheaders()
-    courseheaders = headers[noncourses:]
-    
-    # get and save new configuration for each signup
-    for s in objs:
-        # get checked courses
-        courses = []
-        for course in courseheaders:
-            # NOTE: non-checked checkboxes do not become included in the form submission
-            cbx = form.get('%s_%s' % (str(s.id), course))
-            if cbx:
-                courses.append(course)
-        s.courses = courses
-        s.save()
-        
-        # get name, email and username fields
-        s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
-        s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
-        s.email = form.get('%s_%s' % (str(s.id), 'email'))
-        s.username = form.get('%s_%s' % (str(s.id), 'username'))
-        s.save()
+    utils.update_signups(objs, form)
     
     # perform the appropriate add-user actions for each signup
-    # NOTE: this algorithm is only fool-proof down to the db save() operation succeeding
-    ldap_password = req.session['ldap_password']
     for s in objs:
-        try:
-            # try add to ldap
-            if not s.added_ldap:
-                ldaputils.ldap_adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
-                s.added_ldap = timezone.now()
-                s.save()
-            
-            # try add to moodle
-            if not s.added_moodle:
-                mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
-                s.added_moodle = timezone.now()
-                s.save()
-            
-            # try notify user
-            if not s.notified:
-                utils.notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
-                s.notified = timezone.now()
-                s.save()
-            
-            # all three tasks have been completed successfully at some point, mark and save
-            s.is_new = False
-            s.is_limbo = False
-            s.is_added = True
-            s.fail_str = ''
-            s.save()
-            
-        except Exception as e:
-            s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
-            s.is_limbo = True
-            s.is_new = False
-            s.save()
+        utils.adduser(signup, ldap_password=req.session['ldap_password'])
     
     # return to the list 
     if len(utils.get_signups()) > 0:
@@ -426,9 +370,12 @@ def courseman_users(req):
     
     colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
     rows_ids = []
+    ids = []
         
     next = '/coursemanage/users-post'
     uploadnext = '/coursemanage/uploadcsv-post'
+    
+    courses = ['fakecourse_01', 'fakecourse_02', 'fakecourse_03', 'fakecourse_04' ]
     
     displaysignups = 'none'
     signups = Signup.objects.filter(is_added=False)
@@ -446,9 +393,11 @@ def courseman_users(req):
             row.append(Ci(s.username, txt=use_textbox, header='username'))
             row.append(Ci(s.password, header='passwd'))
             row.append(Ci('delete', btn=True))
+            
             rows_ids.append([row, str(s.id)])
+            ids.append(s.id)
     
-    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups}))
+    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups, 'courses' : courses}))
 
 @login_required
 def courseman_users_uploadcsv_post(req):
@@ -468,14 +417,19 @@ def courseman_users_uploadcsv_post(req):
 @login_required
 def courseman_users_post(req):
     form = req.POST
+
+    # get filtered signups and update
+    form = req.POST
+    ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+    objs = Signup.objects.filter(id__in=ids)
+    utils.update_signups(objs, form)
     
-    # TODO: impl moodle actions
+    # perform the appropriate add-user actions for each signup
+    for s in objs:
+        #utils.adduser(signup, ldap_password=req.session['ldap_password'])
+        utils.adduser(s, ldap_password='pw', accept_ldap_exists=True)
     
-    # attempt to add each one using the demo-site signup function
-    # get all non-added signups 
-    # override using form data
-    
-    return HttpResponse('(adding users to LDAP and moodle)')
+    return redirect('/coursemanage/users')
 
 
 ####################################################

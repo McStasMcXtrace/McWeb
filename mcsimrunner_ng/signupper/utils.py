@@ -7,6 +7,12 @@ from models import Signup
 from datetime import datetime
 import os
 import csv
+import re
+from django.utils import timezone
+from ldaputils import ldaputils
+from mcweb.settings import MCWEB_LDAP_DN
+from moodleutils import moodleutils as mu
+
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -151,3 +157,76 @@ def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_on
         
         signup = create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
 
+
+def update_signups(objs, form):
+    ''' updates signup objects from objs, according to form, and saves '''
+    # get course headers 
+    headers, noncourses = get_colheaders()
+    courseheaders = headers[noncourses:]
+    
+    # get and save new configuration for each signup
+    for s in objs:
+        # get checked courses
+        courses = []
+        for course in courseheaders:
+            # NOTE: non-checked checkboxes do not become included in the form submission
+            cbx = form.get('%s_%s' % (str(s.id), course))
+            if cbx:
+                courses.append(course)
+        s.courses = courses
+        s.save()
+        
+        # get name, email and username fields
+        s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
+        s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
+        s.email = form.get('%s_%s' % (str(s.id), 'email'))
+        s.username = form.get('%s_%s' % (str(s.id), 'username'))
+        s.save()
+
+def adduser(signup, ldap_password, accept_ldap_exists=False):
+    ''' 
+    Adds signup to ldap and moodle, and enrolls to the selected moodle courses.
+    
+    accept_ldap_exists : if True, accept ldap error "Already exists", but added_ldap property is untouched.
+    '''
+    s = signup
+    try:
+        # try add to ldap
+        if not s.added_ldap:
+            try:
+                ldaputils.ldap_adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
+                s.added_ldap = timezone.now()
+                s.save()
+            except Exception as e:
+                if not accept_ldap_exists:
+                    raise e
+                m = re.search('Already exists', e.__str__())
+                print m
+                if not m:
+                    raise e
+        
+        # try add to moodle
+        if not s.added_moodle:
+            mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
+            s.added_moodle = timezone.now()
+            s.save()
+        
+        # try notify user
+        if not s.notified:
+            notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
+            s.notified = timezone.now()
+            s.save()
+        
+        # all three tasks have been completed successfully at some point, mark and save
+        s.is_new = False
+        s.is_limbo = False
+        s.is_added = True
+        s.fail_str = ''
+        s.save()
+        
+    except Exception as e:
+        s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
+        print s.fail_str
+        s.is_limbo = True
+        s.is_new = False
+        s.save()
