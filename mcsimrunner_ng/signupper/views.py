@@ -383,7 +383,7 @@ def courseman_courses_post(req):
     if site != '' and shortname != '' and title != '' and not m:
         mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
     else:
-        req.session['message'] = 'Please select a proper course and a template name.'
+        req.session['message'] = 'Please select a proper template and a course name.'
         return redirect('/coursemanage/courses')
     
     username = form['tbx_username']
