@@ -477,7 +477,14 @@ def courseman_users_post(req):
     ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
     signups = Signup.objects.filter(id__in=ids)
     utils.update_signups(signups, form)
-    utils.assign_courses(signups, [form['course_selector']] + COURSES_MANDATORY)
+    
+    cs = form['course_selector']
+    if re.match('\-\-\sselect', cs):
+        req.session['message'] = 'Please select a course.'
+        return redirect('/coursemanage/users')
+    
+    courses = [cs] + COURSES_MANDATORY
+    utils.assign_courses(signups, courses)
     
     override_ldap = False
     if form.get('override_ldap'):
@@ -496,6 +503,7 @@ def courseman_users_post(req):
 ####################################################
 #                  Deprecated                      #
 ####################################################
+
 
 #@deprecated
 def signup(req):
