@@ -68,6 +68,7 @@ def create_signup(firstname, lastname, email, username, courses_lst):
     signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd())
     signup.courses = courses_lst
     signup.save()
+    return signup
 
 def gettodaystr():
     ''' this string is part of the filename of csv files '''
