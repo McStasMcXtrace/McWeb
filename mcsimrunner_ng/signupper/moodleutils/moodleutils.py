@@ -91,6 +91,8 @@ def enroll_user(username, course_sn, teacher=False):
     subprocess.call(cmd_addtocourse, 
                     cwd=MOODLE_DIR, 
                     shell=True)
+    
+    # TODO: implement error checking
 
 def _course_list():
     '''

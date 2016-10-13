@@ -21,6 +21,7 @@ from django.core.validators import validate_email
 
 import ast
 import os
+import re
 
 import utils
 from mcweb import settings
@@ -322,11 +323,13 @@ def courseman_login(req):
     return redirect('/coursemanage/users')
 
 
-def _cmdict(next, message='', dict=None):
+def _cmdict(req, next, dict=None):
     ''' used for course manage rendering '''
     templates_url = '/coursemanage/templates'
     courses_url = '/coursemanage/courses'
     enroll_url = '/coursemanage/users'
+    message = req.session.get('message', '')
+    req.session['message'] = ''
     d = {'next' : next, 'message' : message, 'templates_url' : templates_url, 'courses_url' : courses_url, 'enroll_url' : enroll_url}
     if dict != None:
         d.update(dict)
@@ -335,29 +338,35 @@ def _cmdict(next, message='', dict=None):
 @login_required
 def courseman_templates(req):
     ''' display template creation form, including existing templates and courses '''
-    
     courses = mu.get_courses()
     templates = mu.get_templates()
     
-    return render(req, 'course_template.html', _cmdict(next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
+    return render(req, 'course_template.html', _cmdict(req, next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
 
 @login_required
 def courseman_templates_post(req):
     ''' handle new template from course request '''
     form = req.POST
     
-    tmplname =  form['field_shortname_tmpl']
     shortname = form['course_selector']
+    tmplname =  form['field_shortname_tmpl']
     
-    mu.create_template(shortname, tmplname)
+    m = re.match('\-\-\sselect\sfrom', shortname)
+    if tmplname != '' and not m:
+        mu.create_template(shortname, tmplname)
+        req.session['message'] = 'Template %s created from %s.' % (tmplname, shortname)
+    else:
+        req.session['message'] = 'Please select a proper course and a template name.'
     
     return redirect('/coursemanage/templates')
 
 @login_required
 def courseman_courses(req):
+    ''' display the course creation form '''
+    
     templates = mu.get_templates()
     
-    return render(req, 'course_create.html', _cmdict(next='/coursemanage/courses-post', dict={'templates' : templates}))
+    return render(req, 'course_create.html', _cmdict(req, next='/coursemanage/courses-post', dict={'templates' : templates}))
 
 @login_required
 def courseman_courses_post(req):
@@ -369,18 +378,34 @@ def courseman_courses_post(req):
     shortname = form['field_shortname']
     title = form['tbx_title']
     
-    mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+    m = re.match('\-\-\sselect\sfrom', shortname)
+    if site != '' and shortname != '' and title != '' and not m:
+        mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+    else:
+        req.session['message'] = 'Please select a proper course and a template name.'
+        return redirect('/coursemanage/courses')
     
     username = form['tbx_username']
     firstname = form['tbx_firstname']
     lastname = form['tbx_lastname']
     email = form['tbx_email']
     
-    if firstname != '' and lastname != '' and email != '':
+    if username == '':
+        req.session['message'] = 'Please assign a teacher for the course.'
+        return redirect('/coursemanage/courses')
+    
+    if firstname != '' or email != '':
+        if firstname == '' or email == '':
+            req.session['message'] = 'New user creation requires a name and an email.'
+            return redirect('/coursemanage/courses')
         mu.adduser(firstname=firstname, lastname=lastname, username=username, email=email)
+    
+    # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
     mu.enroll_user(username=username, course_sn=shortname, teacher=True)
     
-    return redirect('/coursemanage/users')
+    req.session['message'] = 'Course %s created with teacher %s.' % (shortname, username)
+    
+    return redirect('/coursemanage/courses')
 
 @login_required
 def courseman_users_delete(req, id):
@@ -393,7 +418,6 @@ def courseman_users_delete(req, id):
 @login_required
 def courseman_users(req):
     ''' display the list of signups '''
-    message = ''
     
     colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
     rows_ids = []
@@ -424,7 +448,7 @@ def courseman_users(req):
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
     
-    return render(req, 'course_enroll.html', _cmdict(next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups, 'courses' : courses}))
+    return render(req, 'course_enroll.html', _cmdict(req, next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups, 'courses' : courses}))
 
 @login_required
 def courseman_users_uploadcsv_post(req):
