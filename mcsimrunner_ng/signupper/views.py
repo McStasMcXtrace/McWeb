@@ -433,7 +433,7 @@ def courseman_users(req):
     displaysignups = 'none'
     signups = Signup.objects.filter(is_added=False)
     
-    if signups != None:
+    if len(signups) > 0:
         displaysignups = ''
         for s in signups:
             row = []
