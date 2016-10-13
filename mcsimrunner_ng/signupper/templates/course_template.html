@@ -3,7 +3,6 @@
 
 <div style="margin-left:auto; margin-right:auto; width:600px;">
 
-
 <fieldset style="margin:5px;">
     <legend>Existing templates</legend>
     {% for t in templates %}
@@ -19,12 +18,12 @@
 
     <fieldset style="margin:5px;">
         <table>
-            <legend>Create new template</legend>
+            <legend>New template</legend>
             <tr>
                 <td style="width:500px;"><label>Create from course</label></td>
                 <td style="text-align:left;">
                     <select style="min-width:200px;" name="course_selector">
-                        <option>-- select --</option>
+                        <option>-- select from the list below --</option>
                         {% for t in courses %}
                         <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
                         {% endfor %}
@@ -32,7 +31,7 @@
                 </td>
             </tr>
             <tr>
-                <td><label>Name</label></td>
+                <td><label>Template name</label></td>
                 <td style="text-align:left;"><input type="text" id="tbx_sn_tmpl" name="tbx_sn_tmpl" onkeyup="update_sn_tmpl();"/></td>
             </tr>
             <tr>
@@ -47,6 +46,9 @@
         <input type="submit" value="Create template" style="margin-right:20px;">
     </fieldset>
 </form>
+
+<p style="margin-left: 5px;">NOTE: Template creation may take up to a few minutes.</p>
+
 </div>
 
 {% endblock %}
