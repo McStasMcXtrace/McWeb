@@ -29,6 +29,7 @@ from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
+from models import Signup
 
 
 ####################################################################
@@ -398,7 +399,8 @@ def courseman_courses_post(req):
         if firstname == '' or email == '':
             req.session['message'] = 'New user creation requires a name and an email.'
             return redirect('/coursemanage/courses')
-        mu.adduser(firstname=firstname, lastname=lastname, username=username, email=email)
+        teacher = utils.create_signup(firstname, lastname, email, username, [])
+        utils.adduser(teacher, ldap_password=req.session['ldap_password'])
     
     # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
     mu.enroll_user(username=username, course_sn=shortname, teacher=True)
