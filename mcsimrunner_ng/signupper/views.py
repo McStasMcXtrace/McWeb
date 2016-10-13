@@ -424,7 +424,7 @@ def courseman_users(req):
     colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
     rows_ids = []
     ids = []
-        
+    
     next = '/coursemanage/users-post'
     uploadnext = '/coursemanage/uploadcsv-post'
     
@@ -479,9 +479,16 @@ def courseman_users_post(req):
     utils.update_signups(signups, form)
     utils.assign_courses(signups, [form['course_selector']] + COURSES_MANDATORY)
     
+    override_ldap = False
+    if form.get('override_ldap'):
+        override_ldap = True
+    
     # perform the appropriate add-user actions for each signup
+    req.session['message'] = 'All signups were added succesfully.'
     for signup in signups:
-        utils.adduser(signup, ldap_password=req.session['ldap_password'])
+        utils.adduser(signup, ldap_password=req.session['ldap_password'], accept_ldap_exists=override_ldap)
+        if signup.fail_str != '':
+            req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
     
     return redirect('/coursemanage/users')
 

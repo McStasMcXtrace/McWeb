@@ -22,8 +22,8 @@
 </form>
 </div>
 
-<fieldset style="margin:auto; width:1000px">
-    <form enctype="multipart/form-data" method="POST" action="{{ next }}" style="display:{{ displaysignups }}">
+<fieldset style="margin:auto; width:1000px; display:{{ displaysignups }};">
+    <form enctype="multipart/form-data" method="POST" action="{{ next }}">
         <input type="hidden" name="ids" value="{{ ids }}">
         {% csrf_token %}
         <table>
@@ -49,6 +49,7 @@
             {% endfor %}
         </table>
         <div>
+            <label><input type="checkbox"/> Override LDAP "Already exists"</label><br>
             <select style="min-width:200px;" name="course_selector">
                     <option>-- select enrollment course --</option>
                     {% for t in courses %}
