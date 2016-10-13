@@ -179,7 +179,7 @@ def userlist_au_post(req):
     utils.update_signups(objs, form)
     
     # perform the appropriate add-user actions for each signup
-    for s in objs:
+    for signup in objs:
         utils.adduser(signup, ldap_password=req.session['ldap_password'])
     
     # return to the list 
