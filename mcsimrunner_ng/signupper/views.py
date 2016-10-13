@@ -443,8 +443,9 @@ def courseman_users_uploadcsv_post(req):
 
 @login_required
 def courseman_users_post(req):
+    ''' The "ids" list, set previously on the form, is used to ensure that only viewed signup instances are added. '''
     form = req.POST
-
+    
     # get filtered signups and update
     form = req.POST
     ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
