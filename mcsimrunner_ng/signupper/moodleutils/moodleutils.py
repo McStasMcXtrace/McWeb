@@ -86,7 +86,7 @@ def enroll_user(username, course_sn, teacher=False):
     if not teacher:
         cmd_addtocourse = 'moosh course-enrol -s %s %s' % (course_sn, username)
     else:
-        cmd_addtocourse = 'moosh course-enrol -r teacher -s %s %s' % (course_sn, username)
+        cmd_addtocourse = 'moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
         
     subprocess.call(cmd_addtocourse, 
                     cwd=MOODLE_DIR, 
