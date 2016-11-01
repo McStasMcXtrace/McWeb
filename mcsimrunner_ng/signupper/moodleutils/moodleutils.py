@@ -60,10 +60,10 @@ def create_course_from_template(templatename, shortname, fullname):
     Returns the id of the new course, which can be used to add users.
     '''
     # create empty course with the right shortname/fullname
-    _course_create(shortname=shortname, fullname=fullname, category_id='1')
+    _course_create(shortname=shortname, fullname=fullname, category_id=DEFAULT_CATEGORY_ID)
     
     # TODO: check that the course exists, or exit with an error
-    
+
     # get the course id of the newly created course
     lst = _course_list()
     id = ''
@@ -72,9 +72,9 @@ def create_course_from_template(templatename, shortname, fullname):
             id = c[0]
     
     # restore to the newly created course 
-    _course_restore_e(backupname=templatename, course_id=id)
+    message = _course_restore_e(backupname=templatename, course_id=id)
     
-    return id
+    return templatename, id, message
 
 def adduser(firstname, lastname, username, email):
     cmd_adduser = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
@@ -96,7 +96,7 @@ def enroll_user(username, course_sn, teacher=False):
 
 def _course_list():
     '''
-    returns: ["category","shortname","fullname"]
+    returns: ["courseid","shortname","fullname"]
     '''
     proc = subprocess.Popen('moosh course-list', 
                             stdout=subprocess.PIPE,
@@ -105,7 +105,7 @@ def _course_list():
                             shell=True)
     com = proc.communicate()
     
-    unit = '[/\-\w\s]+'
+    unit = '[/\,\.\\\(\)\[\]\{\}\-\w\s]+'
     spat = r'"(%s)","(%s)","(%s)","(%s)","(%s)"' % (unit, unit, unit, unit, unit)
     
     v_lst = []
@@ -131,16 +131,15 @@ def _course_backup(backupname, course_id):
                             cwd=MOODLE_DIR,
                             shell=True)
     text = proc.communicate()
-    print text
 
 def _course_restore_e(backupname, course_id):
-    proc = subprocess.Popen('moosh course-restore -e %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)), 
+    proc = subprocess.Popen('moosh course-restore -e %s %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)),
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR, 
+                            cwd=MOODLE_DIR,
                             shell=True)
     text = proc.communicate()
-    print text
+    return "running"
 
 def _course_create(shortname, fullname, category_id):
     proc = subprocess.Popen('moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname),
@@ -149,4 +148,3 @@ def _course_create(shortname, fullname, category_id):
                             cwd=MOODLE_DIR,
                             shell=True)
     text = proc.communicate()
-    print text

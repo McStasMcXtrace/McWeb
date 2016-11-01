@@ -381,7 +381,7 @@ def courseman_courses_post(req):
     
     m = re.match('\-\-\sselect\sfrom', shortname)
     if site != '' and shortname != '' and title != '' and not m:
-        mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+        (backupname, courseid, status) = mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
     else:
         req.session['message'] = 'Please select a proper template and a course name.'
         return redirect('/coursemanage/courses')
@@ -405,7 +405,7 @@ def courseman_courses_post(req):
     # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
     mu.enroll_user(username=username, course_sn=shortname, teacher=True)
     
-    req.session['message'] = 'Course %s created with teacher %s.' % (shortname, username)
+    req.session['message'] = 'Course %s created with teacher %s. Restoring contents in background...' % (shortname, username)
     
     return redirect('/coursemanage/courses')
 
