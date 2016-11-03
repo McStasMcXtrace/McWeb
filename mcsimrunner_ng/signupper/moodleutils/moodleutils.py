@@ -11,10 +11,12 @@ moosh example commands:
 import subprocess
 import re
 import os
+import tempfile
 from mcweb.settings import MOODLE_DIR
 
 TEMPLATES_DIR = "/srv/mcweb/moodle-course-templates"
 DEFAULT_CATEGORY_ID = '1'
+MOODLE_RESTORE_JOBS_DIR = '/srv/mcweb/moodle-restore-jobs'
 
 def add_enroll_user(firstname, lastname, username, email, courses_sn_lst):
     '''
@@ -133,12 +135,13 @@ def _course_backup(backupname, course_id):
     text = proc.communicate()
 
 def _course_restore_e(backupname, course_id):
-    proc = subprocess.Popen('moosh course-restore -e %s %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)),
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR,
-                            shell=True)
-    text = proc.communicate()
+    tf = tempfile.NamedTemporaryFile()
+    fname = os.path.basename(tf.name) + '.mrjob'
+    
+    f = open(os.path.join(MOODLE_RESTORE_JOBS_DIR, fname), 'w')
+    f.write('moosh course-restore -e %s %s\n' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)))
+    f.close()
+    
     return "running"
 
 def _course_create(shortname, fullname, category_id):

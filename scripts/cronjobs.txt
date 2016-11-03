@@ -1,12 +1,19 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 # min(0-59) hour(0-23) dom(1-31) month(1-12) dow(1-7)
 #
 # Look for new instruments / update DB:
-*/10 * * * * /srv/mcweb/McWeb/scripts/update_instr.sh
+*/10 * * * * /srv/mcweb/McWeb/scripts/update_instr.sh > /dev/null
 #
 # Manage signups
-0 */6 * * * /srv/mcweb/McWeb/scripts/remind_admin.sh
+0 */6 * * * /srv/mcweb/McWeb/scripts/remind_admin.sh > /dev/null
 #
 # Daily moodle cron job
-0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php 
+0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php > /dev/null
+#
 # Hourly emptying of cache to attempt fixing image issues...
-3 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_cache.sh
+3,33 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_cache.sh > /dev/null
+#
+# Each minute, check if we restore any course material 
+*/1 * * * * /srv/mcweb/McWeb/scripts/moodle_restoreme.sh > /dev/null
+
