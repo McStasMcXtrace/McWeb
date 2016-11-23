@@ -1,8 +1,0 @@
-{
-  "commandWhitelist"    : [ "l3dGen", "hsiGen", "aopt", "sav", "TcGet",
-                            "TcGetBatch", "mops", "cuttlefish", "cad2vis", "wget", "gzip" ],
-  "envWhitelist"        : [ "JTK_LAYER_FILTERS" ],
-  "cookieWhitelist"     : [ "SMSESSION" ],
-  "cookieAwareCommands" : [ "hsiGen", "l3dGen" ],
-  "groupAwareCommands"  : [ "aopt", "l3dGen" ]
-}
