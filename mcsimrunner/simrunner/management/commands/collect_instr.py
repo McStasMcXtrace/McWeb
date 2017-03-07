@@ -19,7 +19,7 @@ def mkdir_p(path):
         else: raise
 
 def make_html_docs(group):
-    ''' run mcdoc in instrument group folder, move html files to static/doc/... '''
+    ''' run mcdoc in instrument group folder, move html files to static/doc/..., create links back to the instr files '''
     cmd = 'mcdoc -t .' 
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
@@ -33,6 +33,13 @@ def make_html_docs(group):
     cmd = 'mv sim/' + group + '/*.html static/doc/' + group + '/'
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
+                               stderr=subprocess.PIPE,
+                               shell=True)
+    (stdoutdata, stderrdata) = process.communicate()
+    
+    cmd = 'ln -s $PWD/sim/' + group + '/*.instr static/doc/' + group + '/'
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
