@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>A web-based Interface for McStas</title>
-    <script type="text/javascript" src="/static/login.js"></script>
+    <script>
+        window.onload = function() {
+            document.getElementById("username").focus();
+        };
+    </script>
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
