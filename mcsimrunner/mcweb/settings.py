@@ -42,10 +42,6 @@ MPI_PR_WORKER=10
 MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
 
-# Use aopt from instantReality (http://www.instantreality.org)
-USE_AOPT = True
-AOPT_CMD = "aopt.sh"
-
 # list of courses for signupper - each entry will appear as a checkbox when generating
 # the signup form using the command "python manage.py signupform"
 COURSES = [
@@ -88,7 +84,7 @@ SECRET_KEY = 'xne_dc*7f3#q(l*c1a97v@q!g$myz@4lcwt5ij&wx7t4)e+b5k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
+ALLOWED_HOSTS = ['fysik.dtu.dk', 'mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
 
 # Application definition
 INSTALLED_APPS = (
@@ -169,6 +165,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, "static"),
 )
 #STATIC_ROOT = os.path.join(BASE_DIR, 'static')

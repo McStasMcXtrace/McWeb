@@ -7,7 +7,7 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, USE_AOPT, AOPT_CMD
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER
 import subprocess
 import os
 import time
@@ -239,21 +239,6 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         
         os.rename(oldfilename, newfilename)
         os.rename(oldwrlfilename, newwrlfilename)
-
-        if USE_AOPT==1:
-            logging.info("spawning aopt command " + AOPT_CMD)
-            process3 = subprocess.Popen(AOPT_CMD + " -i layout.wrl -N layout.html",
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        shell=True, 
-                                        cwd = simrun.data_folder)
-            (stdoutdata3, stderrdata3) = process3.communicate()
-            
-        if print_mcdisplay_output:
-            print(stdoutdata3)
-            if (stderrdata3 is not None) and (stderrdata3 != ''):
-                print(stderrdata3) 
-        
         
         logging.info('layout: %s' % newfilename)
         logging.info('layout: %s' % newwrlfilename)
@@ -361,6 +346,7 @@ def threadwork(simrun):
         # process
         mcrun(simrun)
         mcdisplay_webgl(simrun)
+        mcdisplay(simrun)
         mcplot(simrun)
         
         # post-processing

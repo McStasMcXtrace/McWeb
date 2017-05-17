@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from os.path import basename
 from models import InstrGroup, Instrument, SimRun
-from mcweb.settings import USE_AOPT
 import json
 from generate_static import McStaticDataBrowserGenerator
 from django.views.decorators.clickjacking import xframe_options_exempt
