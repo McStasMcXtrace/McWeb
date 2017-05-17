@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>Instrument</title>
-    <script type="text/javascript" src="/static/instrument.js"></script>
+    <script>
+        window.onload = function() {
+            document.getElementById('paramsinput')[0].focus();
+        };
+    </script>
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
