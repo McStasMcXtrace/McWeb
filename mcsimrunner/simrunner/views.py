@@ -117,7 +117,7 @@ def instrument(req, group_name, instr_name=None, menu=False):
     return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
                                            'instr_image': instr.image,
                                            'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
-                                           'grpinstr_style': grpinstr_style, 'instr_urlbit': instr_urlbit})
+                                           'show_menu': menu, 'instr_urlbit': instr_urlbit})
 
 @login_required    
 def instrument_post(req):
@@ -157,10 +157,10 @@ def simrun(req, sim_id):
     
     if simrun.complete:
         # apply config of 3d instrument layout browser
-        if USE_AOPT:
-            iframestyle = ""
-        else:
-            iframestyle = "display:none"
+        #if USE_AOPT:
+        #    iframestyle = ""
+        #else:
+        iframestyle = "display:none"
         
         # generate data browser (TODO: make sure static page generation only happens once)
         lin_log_html = 'lin_log_url: impl.'

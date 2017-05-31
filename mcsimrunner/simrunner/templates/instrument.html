@@ -28,7 +28,9 @@
         <input type="hidden" name="instr_displayname" value="{{ instr_displayname }}">
         <input type="hidden" name="params_jsonified" value="{{ params_jsonified }}">
 
-        <fieldset style="{{ grpinstr_style }}">
+        {% if show_menu %}
+        <a href="/instrument/{{ group_name }}/{{ instr_displayname }}">Hide menu</a>
+        <fieldset>
             <legend>Browse instrument groups</legend>
             <ul>
                 {% for g in group_names %}
@@ -39,7 +41,7 @@
             </ul>
         </fieldset>
 
-        <fieldset style="{{ grpinstr_style }}">
+        <fieldset>
             <legend>Instruments in {{ group_name }}</legend>
             <ul>
                 {% for i in instr_displaynames %}
@@ -49,6 +51,9 @@
                 {% endfor %}
             </ul>
         </fieldset>
+        {% else %}
+        <a href="/instrument-menu/{{ group_name }}/{{ instr_displayname }}">Show menu</a>
+        {% endif %}
 
         <fieldset>
             <legend>
