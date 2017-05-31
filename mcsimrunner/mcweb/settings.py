@@ -34,13 +34,16 @@ AUTHENTICATION_BACKENDS = (
 # number of MPI processes pr worker process
 MPI_PR_WORKER=10
 
-# mcplot configuration
+# mcplot and mcdisplay configuration
 #  For Python + Gnuplot use
 #MCPLOT_CMD = "mcplot-gnuplot-py -s"
 #MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
 #  For Perl + PGPLOT use
 MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
+
+MCDISPLAY = "mcdisplay" # should be mcdisplay.pl from mcstas 2.4
+MCDISPLAY_WEBGL = "/srv/mcweb/McWeb/mcsimrunner_ng/mcdisplay-webgl"
 
 # list of courses for signupper - each entry will appear as a checkbox when generating
 # the signup form using the command "python manage.py signupform"
