@@ -14,7 +14,7 @@ Signupper views:
 '''
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.validators import validate_email
@@ -99,7 +99,7 @@ class Ci:
         self.data = data
         self.header = header
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def userlist_au(req, listtype='new'):
     ''' list all new signups, added users or limbo-users '''
     
@@ -171,7 +171,7 @@ def userlist_au(req, listtype='new'):
     return render(req, 'userlist_au.html', {'next': '/userlist_au-post', 'uploadnext': '/upload_au_post', 'ids': ids, 'rows_ids': rows_ids, 'colheaders': colheaders, 
                                             'message': message, 'buttondisplay': buttondisplay, 'uploaddisplay': uploaddisplay})
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def userlist_au_post(req):
     ''' handles list form submission '''
     
@@ -193,7 +193,7 @@ def userlist_au_post(req):
     else:
         return redirect('/userlist_au/added')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def userlist_au_action(req, action, signup_id):
     ''' handles submitted action - delete or edit '''
     if action == 'delete':
@@ -208,7 +208,7 @@ def userlist_au_action(req, action, signup_id):
     
     return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, signup_id))
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def upload_au_post(req):
     ''' handles csv upload - NOTE: the csv-file is not saved to disk '''
     if len(req.FILES) > 0:
@@ -222,13 +222,13 @@ def upload_au_post(req):
     
     return redirect('/userlist_au/new')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def userdetail_au(req, id):
     ''' change some values in a signup '''
     
     return HttpResponse('id=%s' % (id))
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def chpassword(req):
     ''' A simple password change form, but requires an "admin-tool" session with the ldap admin password. '''
     form = req.POST
@@ -340,7 +340,7 @@ def _cmdict(req, next, dict=None):
         d.update(dict)
     return d
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_templates(req):
     ''' display template creation form, including existing templates and courses '''
     courses = mu.get_courses()
@@ -348,7 +348,7 @@ def courseman_templates(req):
     
     return render(req, 'course_template.html', _cmdict(req, next='/coursemanage/templates-post', dict={'courses' : courses, 'templates' : templates}))
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_templates_post(req):
     ''' handle new template from course request '''
     form = req.POST
@@ -365,7 +365,7 @@ def courseman_templates_post(req):
     
     return redirect('/coursemanage/templates')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_courses(req):
     ''' display the course creation form '''
     
@@ -373,7 +373,7 @@ def courseman_courses(req):
     
     return render(req, 'course_create.html', _cmdict(req, next='/coursemanage/courses-post', dict={'templates' : templates}))
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_courses_post(req):
     ''' create a new course from a template, enroll a user as teacher (and possibly create the user) '''
     form = req.POST
@@ -413,7 +413,7 @@ def courseman_courses_post(req):
     
     return redirect('/coursemanage/courses')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_users_delete(req, id):
     ''' deletes the requested signup object '''
     s = Signup.objects.filter(id=int(id))
@@ -421,7 +421,7 @@ def courseman_users_delete(req, id):
     
     return redirect('/coursemanage/users')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_users(req):
     ''' display the list of signups '''
     
@@ -456,7 +456,7 @@ def courseman_users(req):
     
     return render(req, 'course_enroll.html', _cmdict(req, next='', dict={'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids, 'next' : next, 'uploadnext' : uploadnext, 'displaysignups' : displaysignups, 'courses' : courses}))
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_users_uploadcsv_post(req):
     ''' handles csv upload - NOTE: the csv-file is not saved to disk '''
     if len(req.FILES) > 0:
@@ -471,7 +471,7 @@ def courseman_users_uploadcsv_post(req):
     
     return redirect('/coursemanage/users')
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def courseman_users_post(req):
     ''' The "ids" list, set previously on the form, is used to ensure that only viewed signup instances are added. '''
     form = req.POST
