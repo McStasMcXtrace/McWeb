@@ -47,13 +47,14 @@ def login_au(req):
     if not username or not password:
         return render(req, 'login_au.html')
     
+    # TODO: authenticate properly for superuser status
     user = authenticate(username=username, password=password)
     if user is None or not user.is_active or not user.is_superuser:
         return render(req, 'login_au.html')
     
     login(req, user)
     req.session['ldap_password'] = form.get('ldap_password', '')
-
+    
     return redirect('userlist_au')
 
 def signup_au(req):
@@ -82,7 +83,7 @@ def signup_au_get(req):
         courses.append(c)
     
     utils.create_signup(firstname, lastname, email, username, courses)
-        
+    
     # get a thank-you message to the user
     return redirect('/thanks/')
 
@@ -226,7 +227,6 @@ def userdetail_au(req, id):
     ''' change some values in a signup '''
     
     return HttpResponse('id=%s' % (id))
-    #return render(req, 'userdetail_au.html')
 
 @login_required
 def chpassword(req):
@@ -260,6 +260,10 @@ def chpassword(req):
         print(e.message)
         return render(req, 'chpassword.html', {'message': 'your password could not be changed (%s)' % e.message})
 
+def num_signups(req):
+    ''' count the total number of signup instances and return this number '''
+    num = len(Signup.objects.all())
+    return HttpResponse('%d' % num)
 
 ####################################################
 #                  Contact form                    #

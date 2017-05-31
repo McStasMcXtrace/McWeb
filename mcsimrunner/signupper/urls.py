@@ -33,4 +33,6 @@ urlpatterns = [
     
     # contact form
     url(r'^contact/?$', views.contact, name="contact"),
+    
+    url(r'^howmany/?$', views.num_signups, name="num_signups"),
 ]
