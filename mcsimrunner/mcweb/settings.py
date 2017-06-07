@@ -34,6 +34,8 @@ AUTHENTICATION_BACKENDS = (
 # number of MPI processes pr worker process
 MPI_PR_WORKER=10
 
+MCRUN = 'mcrun.pl'
+
 # mcplot and mcdisplay configuration
 #  For Python + Gnuplot use
 #MCPLOT_CMD = "mcplot-gnuplot-py -s"
