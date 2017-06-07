@@ -8,6 +8,7 @@ import subprocess
 import os, errno
 import shutil
 from simrunner.models import InstrGroup, Instrument
+from mcweb.settings import MCRUN
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
@@ -71,7 +72,7 @@ def get_group_instrs(basedir):
 def get_instr_params(instr_grp, instr_file):
     ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
     
-    cmd = 'mcrun --mpi ' + instr_file + " --info"
+    cmd = MCRUN + ' --mpi ' + instr_file + " --info"
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,

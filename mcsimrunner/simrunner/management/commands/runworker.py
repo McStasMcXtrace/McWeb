@@ -7,7 +7,7 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, MCRUN
 import mcweb.settings as settings
 import subprocess
 import os
@@ -252,7 +252,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
     # assemble the run command 
-    runstr = 'mcrun --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
+    runstr = MCRUN + ' --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     if simrun.scanpoints > 1:
         runstr = runstr + ' -N ' + str(simrun.scanpoints)
