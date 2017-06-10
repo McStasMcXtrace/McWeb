@@ -15,7 +15,7 @@ from django_auth_ldap.config import LDAPSearch
 
 # --- START Deployment configuration ---
 
-MCWEB_LDAP_DN = 'dc=fysik,dc=dtu,dc=dk'
+MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
 MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
 
@@ -167,6 +167,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
+STATIC_ROOT = '/srv/mcweb/McWeb/mcsimrunner/static/'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),

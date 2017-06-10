@@ -174,6 +174,7 @@ def mcdisplay_webgl(simrun, pout=False):
     dirname = 'mcdisplay'
     instr = '%s.instr' % simrun.instr_displayname
     cmd = '/srv/mcweb/McWeb/mcsimrunner_ng/mcdisplay-webgl --default --nobrowse --ncount=300 --dirname=%s %s' % (dirname, instr)
+    
     # TODO: inplement --inspect, --first, --last
     
     # run mcdisplay
@@ -182,7 +183,7 @@ def mcdisplay_webgl(simrun, pout=False):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
-                               cwd = simrun.data_folder)
+                               cwd = '/srv/mcweb/McWeb/mcsimrunner_ng/' + simrun.data_folder)
     (stdoutdata, stderrdata) = process.communicate()
     if pout:
         print(stdoutdata)
@@ -190,15 +191,15 @@ def mcdisplay_webgl(simrun, pout=False):
             print(stderrdata)
     
     # copy files
-    logging.info('mcdisplay: renaming index.html')
-    os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
+    #logging.info('mcdisplay: renaming index.html')
+    #os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
 
 def mcdisplay(simrun, print_mcdisplay_output=False):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
     try:
         instr = '%s.instr' % simrun.instr_displayname
         
-        cmd = 'mcdisplay -png --multi %s -n1 ' % instr
+        cmd = 'mcdisplay -png %s -n1 ' % instr
         vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % instr
         for p in simrun.params:
             s = str(p[1])
@@ -360,6 +361,7 @@ def threadwork(simrun):
         
         # process
         mcrun(simrun)
+        mcdisplay(simrun)
         mcdisplay_webgl(simrun)
         mcplot(simrun)
         

@@ -36,6 +36,13 @@ def make_html_docs(group):
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
+
+    cmd = 'ln -s $PWD/sim/' + group + '/*.instr static/doc/' + group + '/'
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               shell=True)
+    (stdoutdata, stderrdata) = process.communicate()
         
 def get_group_instrs(basedir):
     ''' returns a dict of {group: [instr_files]}, assuming depth of one from basedir NOTE: "datafiles" is omited '''
