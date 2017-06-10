@@ -2,14 +2,14 @@
 <head>
     <title>VNT: Single Login Page</title>
     <script language="javascript">
-      function OnButton1(){
-      document.Form1.action = "http://www.e-neutrons.org/moodle/login/index.php" ;    // First target
-      document.Form1.target = "iframe2" ;                    // Open in a iframe
-      document.Form1.submit() ;                              // Submit the page
-      document.Form1.action = "/loginslim-post" ;
-      document.Form1.target = "iframe1" ;                    // Open in a iframe
-      document.Form1.submit() ;                              // Submit the page
-      return true;
+        function OnButton1(){
+            document.Form1.action = "http://www.e-neutrons.org/moodle/login/index.php" ;    // First target
+            document.Form1.target = "iframe2" ;                    // Open in a iframe
+            document.Form1.submit() ;                              // Submit the page
+            document.Form1.action = "/loginslim-post" ;
+            document.Form1.target = "iframe1" ;                    // Open in a iframe
+            document.Form1.submit() ;                              // Submit the page
+            return true;
         }
     </script>
     <script type="text/javascript" src="http://www.e-neutrons.org/moodle/lib/cookies.js"></script>

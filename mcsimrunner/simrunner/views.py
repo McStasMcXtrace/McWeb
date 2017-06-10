@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from os.path import basename
 from models import InstrGroup, Instrument, SimRun
-from mcweb.settings import USE_AOPT
 import json
 from generate_static import McStaticDataBrowserGenerator
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -118,7 +117,7 @@ def instrument(req, group_name, instr_name=None, menu=False):
     return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
                                            'instr_image': instr.image,
                                            'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
-                                           'grpinstr_style': grpinstr_style, 'instr_urlbit': instr_urlbit})
+                                           'show_menu': menu, 'instr_urlbit': instr_urlbit})
 
 @login_required    
 def instrument_post(req):
@@ -157,19 +156,13 @@ def simrun(req, sim_id):
         return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
     
     if simrun.complete:
-        # apply config of 3d instrument layout browser
-        if USE_AOPT:
-            iframestyle = ""
-        else:
-            iframestyle = "display:none"
-        
         # generate data browser (TODO: make sure static page generation only happens once)
         lin_log_html = 'lin_log_url: impl.'
         gen = McStaticDataBrowserGenerator()
         gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
                               'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                               'lin_log_html': lin_log_html,
-                              'data_folder': simrun.data_folder, 'iframestyle': iframestyle})
+                              'data_folder': simrun.data_folder})
 
         if simrun.scanpoints == 1:
             gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)

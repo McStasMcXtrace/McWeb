@@ -34,7 +34,9 @@ AUTHENTICATION_BACKENDS = (
 # number of MPI processes pr worker process
 MPI_PR_WORKER=10
 
-# mcplot configuration
+MCRUN = 'mcrun.pl'
+
+# mcplot and mcdisplay configuration
 #  For Python + Gnuplot use
 #MCPLOT_CMD = "mcplot-gnuplot-py -s"
 #MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
@@ -42,9 +44,8 @@ MPI_PR_WORKER=10
 MCPLOT_CMD = "mcplot -png"
 MCPLOT_LOGCMD = "mcplot -png -log"
 
-# Use aopt from instantReality (http://www.instantreality.org)
-USE_AOPT = True
-AOPT_CMD = "aopt.sh"
+MCDISPLAY = "mcdisplay.pl" # should be mcdisplay.pl from mcstas 2.4
+MCDISPLAY_WEBGL = "mcdisplay-webgl"
 
 # list of courses for signupper - each entry will appear as a checkbox when generating
 # the signup form using the command "python manage.py signupform"
@@ -88,7 +89,7 @@ SECRET_KEY = 'xne_dc*7f3#q(l*c1a97v@q!g$myz@4lcwt5ij&wx7t4)e+b5k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
+ALLOWED_HOSTS = ['elearn1-int.fysik.dtu.dk', 'fysik.dtu.dk', 'mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
 
 # Application definition
 INSTALLED_APPS = (
@@ -170,6 +171,6 @@ USE_TZ = True
 STATIC_ROOT = '/srv/mcweb/McWeb/mcsimrunner/static/'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, "static"),
 )
 #STATIC_ROOT = os.path.join(BASE_DIR, 'static')

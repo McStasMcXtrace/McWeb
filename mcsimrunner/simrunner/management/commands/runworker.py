@@ -7,14 +7,14 @@ mcrun, mcdisplay and mcplot stdout and stderr.
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, USE_AOPT, AOPT_CMD
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, MCRUN
+import mcweb.settings as settings
 import subprocess
 import os
 import time
 import tarfile
 import threading
 import logging
-import shutil
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -173,8 +173,8 @@ def mcdisplay_webgl(simrun, pout=False):
     
     dirname = 'mcdisplay'
     instr = '%s.instr' % simrun.instr_displayname
-    cmd = '/srv/mcweb/McWeb/mcsimrunner_ng/mcdisplay-webgl --default --nobrowse --ncount=300 --dirname=%s %s' % (dirname, instr)
-    
+
+    cmd = '%s --default --nobrowse --ncount=300 --dirname=%s %s' % (settings.MCDISPLAY_WEBGL, dirname, instr)
     # TODO: inplement --inspect, --first, --last
     
     # run mcdisplay
@@ -199,8 +199,9 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     try:
         instr = '%s.instr' % simrun.instr_displayname
         
-        cmd = 'mcdisplay -png %s -n1 ' % instr
-        vrmlcmd = 'mcdisplay --format=VRML %s -n1 ' % instr
+        cmd = '%s -png --multi %s -n1 ' % (settings.MCDISPLAY, instr)
+        vrmlcmd = '%s --format=VRML %s -n1 ' % (settings.MCDISPLAY, instr)
+
         for p in simrun.params:
             s = str(p[1])
             # support for scan sweeps; if a param contains comma, get str before (mcdisplay dont like comma)
@@ -240,34 +241,20 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         
         os.rename(oldfilename, newfilename)
         os.rename(oldwrlfilename, newwrlfilename)
-
-        if USE_AOPT==1:
-            logging.info("spawning aopt command " + AOPT_CMD)
-            process3 = subprocess.Popen(AOPT_CMD + " -i layout.wrl -N layout.html",
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        shell=True, 
-                                        cwd = simrun.data_folder)
-            (stdoutdata3, stderrdata3) = process3.communicate()
-            
-        if print_mcdisplay_output:
-            print(stdoutdata3)
-            if (stderrdata3 is not None) and (stderrdata3 != ''):
-                print(stderrdata3) 
-        
         
         logging.info('layout: %s' % newfilename)
         logging.info('layout: %s' % newwrlfilename)
         
     except Exception as e:
-        raise Exception('mcdisplay fail: %s \nwith stderr:      %s \n     stderr_wrml: %s' % e.__str__(), stderrdata, stderrdata2)
+        logging.error('mcdisplay fail: %s \nwith stderr:      %s \n     stderr_wrml: %s' % (e.__str__(), stderrdata, stderrdata2))
     
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
     # assemble the run command 
-    runstr = 'mcrun --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
+    runstr = MCRUN + ' --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
     runstr = runstr + ' -n ' + str(simrun.neutrons)
-    runstr = runstr + ' -N ' + str(simrun.scanpoints)
+    if simrun.scanpoints > 1:
+        runstr = runstr + ' -N ' + str(simrun.scanpoints)
     if simrun.seed > 0:
         runstr = runstr + ' -s ' + str(simrun.seed)
     for p in simrun.params:
@@ -363,6 +350,7 @@ def threadwork(simrun):
         mcrun(simrun)
         mcdisplay(simrun)
         mcdisplay_webgl(simrun)
+        mcdisplay(simrun)
         mcplot(simrun)
         
         # post-processing

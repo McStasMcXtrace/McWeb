@@ -12,7 +12,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
     sn: lastname
     uid: username
     email: email
-    pw: password
+    pw: user password
     '''
     def get_new_uid():
         ''' opens _ldap_uidindexfile, iterates, saves and returns '''

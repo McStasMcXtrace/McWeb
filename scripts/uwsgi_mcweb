@@ -11,12 +11,12 @@
 ### END INIT INFO
  
 VIRTUALENV=/srv/mcweb/mcvenv/
-DIR=/srv/mcweb/McWeb/mcsimrunner_ng/
+DIR=/srv/mcweb/McWeb/mcsimrunner/
 DAEMON=$VIRTUALENV/bin/uwsgi
 WRKDAEMON=$DIR/manage.py
-DAEMON_NAME=uwsgi
+DAEMON_NAME=uwsgi_mcweb
 DAEMON_NAME_WRK=mcweb-worker
-NUMWORKERS=1
+NUMWORKERS=4
 
 # This next line determines what user the script runs as.
 DAEMON_USER=www-data
