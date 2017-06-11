@@ -263,7 +263,7 @@ def chpassword(req):
 def num_signups(req):
     ''' count the total number of signup instances and return this number '''
     num = len(Signup.objects.all())
-    return HttpResponse('%d' % num)
+    return HttpResponse('Status: %d registered users' % num)
 
 ####################################################
 #                  Contact form                    #
