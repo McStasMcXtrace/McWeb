@@ -1,7 +1,7 @@
 #!/bin/bash
 source /srv/mcweb/mcvenv/bin/activate
 
-cd /srv/mcweb/McWeb/mcsimrunner_ng/
+cd /srv/mcweb/McWeb/mcsimrunner/
 
 OLD=$(cat checksum)
 
