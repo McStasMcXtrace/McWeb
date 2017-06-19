@@ -11,9 +11,11 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Daily moodle cron job
 0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php > /dev/null
 #
-# Hourly emptying of cache to attempt fixing image issues...
+# Half-Hourly emptying of cache to attempt fixing image issues...
 3,33 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_cache.sh > /dev/null
 #
 # Each minute, check if we restore any course material 
 */1 * * * * /srv/mcweb/McWeb/scripts/moodle_restoreme.sh > /dev/null
-
+#
+# Half-hourly reset of the demo00 account in moodle
+0,30 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_demo00_account.sh > /dev/null
