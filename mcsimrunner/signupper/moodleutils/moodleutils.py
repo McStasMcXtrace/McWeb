@@ -86,7 +86,7 @@ def adduser(firstname, lastname, username, email):
 
 def enroll_user(username, course_sn, teacher=False):
     if not teacher:
-        cmd_addtocourse = 'moosh course-enrol -s %s %s' % (course_sn, username)
+        cmd_addtocourse = 'moosh course-enrol -r student -s %s %s' % (course_sn, username)
     else:
         cmd_addtocourse = 'moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
         
