@@ -183,7 +183,7 @@ def mcdisplay_webgl(simrun, pout=False):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
-                               cwd = '/srv/mcweb/McWeb/mcsimrunner_ng/' + simrun.data_folder)
+                               cwd = '/srv/mcweb/McWeb/mcsimrunner/' + simrun.data_folder)
     (stdoutdata, stderrdata) = process.communicate()
     if pout:
         print(stdoutdata)
@@ -348,7 +348,6 @@ def threadwork(simrun):
         
         # process
         mcrun(simrun)
-        mcdisplay(simrun)
         mcdisplay_webgl(simrun)
         mcdisplay(simrun)
         mcplot(simrun)

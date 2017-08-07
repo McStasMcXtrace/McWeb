@@ -28,8 +28,8 @@ def login_post(req):
     login(req, user)
 
     # TODO: enable default group and instrument on user object
-    default_group = 'group1'
-    default_instr = 'PSI_DMC'
+    default_group = 'intro-ns'
+    default_instr = 'SANSsimple'
     
     return redirect('instrument', group_name=default_group, instr_name=default_instr)
 
