@@ -118,7 +118,7 @@ def _course_list():
             a = re.search(spat, l)
             v_lst.append([a.group(1),a.group(3),a.group(4)])
         except:
-            break
+            continue
     
     return v_lst[1:]
 
