@@ -1,0 +1,61 @@
+##
+# You should look at the following URL's in order to grasp a solid understanding
+# of Nginx configuration files in order to fully unleash the power of Nginx.
+# http://wiki.nginx.org/Pitfalls
+# http://wiki.nginx.org/QuickStart
+# http://wiki.nginx.org/Configuration
+#
+# Generally, you will want to move this file somewhere, and start with a clean
+# file but keep this around for reference. Or just disable in sites-enabled.
+#
+# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
+##
+
+# Default server configuration
+#
+
+
+server {
+	listen 80 default_server;
+
+    root /srv/mcweb;
+    index index.html index.htm index.php;
+
+    charset utf-8;
+
+    client_max_body_size 75M;
+
+    # simulator
+    rewrite ^/simulator/(.*)$ /;
+    location /static {
+        alias      /srv/mcweb/McWeb/mcsimrunner/static;
+    }
+    location /out {
+        alias      /srv/mcweb/McWeb/mcsimrunner/out;
+    }
+    location / {
+        uwsgi_pass unix:/srv/mcweb/McWeb/mcweb.sock;
+        include    /etc/nginx/uwsgi_params; #these also exist in /etc/nginx/
+    }
+
+    rewrite ^/moodle/(.*\.php)(/)(.*)$ /moodle/$1?file=/$3 last;
+    location /moodle {
+        alias /srv/mcweb/moodle;
+    }
+
+    location /mediawiki {
+        alias /srv/mcweb/mediawiki;
+    }
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        try_files $uri $uri/ = 404;
+        #   # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+        #   # With php5-fpm:
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+    }
+
+}
+
