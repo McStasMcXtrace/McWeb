@@ -2,7 +2,7 @@
 
 STARTDIR=`pwd`
 # Basic infrastructure
-apt-get install net-tools sudo openssh-server xbase-clients
+apt-get -y install net-tools sudo openssh-server xbase-clients
 
 # Add nonfree and contrib repo
 sed -i.bak s/main/main\ contrib\ non-free/g /etc/apt/sources.list
@@ -16,19 +16,26 @@ apt-get update
 cd $STARTDIR
 
 # Base packages for McCode + MPI
-apt-get install mcstas-suite-perl mcstas-suite-python openmpi-bin libopenmpi-dev
+apt-get -y install mcstas-suite-perl mcstas-suite-python openmpi-bin libopenmpi-dev
 
-# Packages for bootstrapping an McWeb instance
-apt-get install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx mysql-server php-fpm php-mysql
+echo "deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7" > /etc/apt/sources.list.d/mysql.list
+echo "deb-src http://repo.mysql.com/apt/debian/ stretch mysql-5.7" >> /etc/apt/sources.list.d/mysql.list
+wget -O /tmp/RPM-GPG-KEY-mysql https://repo.mysql.com/RPM-GPG-KEY-mysql
+apt-key add /tmp/RPM-GPG-KEY-mysql
+apt-get update
+apt-get -y install mysql-server mysql-client
 
-# Install nginx and remove stop apache2 from being default webserver
+# Remove stop apache2 from being default webserver
 update-rc.d apache2 remove
 service apache2 stop
-apt-get install nginx
+
+# Packages for bootstrapping an McWeb instance
+apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl
 
 rm -rf /srv/mcweb
 mkdir /srv/mcweb
-sudo chown -R www-data:www-data /srv/mcweb /var/www/
+mkdir -p /srv/moodledata
+sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata
 
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
@@ -47,6 +54,9 @@ echo echo Please run the following commands as root to set up your Django with L
 echo echo \\\> python ldap_initdb.py USE_YOUR_LDAP_PASSWD_HERE >>  McWeb_finishup
 echo echo >>  McWeb_finishup
 echo echo Afterwards, please sudo /etc/init.d/uwsgi_mcweb start >>  McWeb_finishup
+
+cat /srv/mcweb/McWeb/scripts/nginx-default > /etc/nginx/sites-enabled/default
+service nginx restart
 
 # Moodle
 sudo -u www-data git clone https://github.com/moodle/moodle.git
@@ -89,8 +99,6 @@ echo
 echo Resuming setup...
 sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
-echo 
-
 cd /srv/mcweb/
 echo "***************************************************************************"
 echo Dropping you to www-data shell where you should perform the bewlow commands
@@ -101,3 +109,6 @@ echo source /srv/mcweb/mcvenv/bin/activate
 echo sh mcvenv_finishup
 echo sh McWeb_finishup
 sudo -u www-data -s
+
+#echo Please secure your mysql installation below:
+#mysql_secure_installation
