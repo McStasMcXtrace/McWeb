@@ -80,7 +80,7 @@ ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
 update-rc.d uwsgi_mcweb defaults
 
 # Install and configure LDAP
-apt-get install slapd ldap-utils
+apt-get -y install slapd ldap-utils
 echo
 echo
 echo PLEASE REMEMBER / STORE your LDAP admin password as well as
@@ -108,6 +108,7 @@ echo
 echo source /srv/mcweb/mcvenv/bin/activate
 echo sh mcvenv_finishup
 echo sh McWeb_finishup
+echo sh moodle_finishup
 sudo -u www-data -s
 
 #echo Please secure your mysql installation below:
