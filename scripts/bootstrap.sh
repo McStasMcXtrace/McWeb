@@ -25,6 +25,12 @@ apt-key add /tmp/RPM-GPG-KEY-mysql
 apt-get update
 apt-get -y install mysql-server mysql-client
 
+echo
+echo
+echo -n Please enter your mysql root password and press [ENTER]:
+read MYSQL_PASS
+export MYSQL_PASS
+
 # Remove stop apache2 from being default webserver
 update-rc.d apache2 remove
 service apache2 stop
@@ -46,30 +52,15 @@ echo pip install simplejson django_auth_ldap uwsgi python-ldap >> mcvenv_finishu
 sudo -u www-data bash mcvenv_finishup
 
 sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
-cd McWeb/mcsimrunner/
-
-sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
-echo cd McWeb/mcsimrunner/ >> McWeb_finishup
-echo python manage.py migrate >> McWeb_finishup
-echo python manage.py collect_instr >>  McWeb_finishup
-echo echo Please assist Django in creating a local superuser account: >>  McWeb_finishup
-echo echo python manage.py createsuperuser >>  McWeb_finishup
-echo python manage.py createsuperuser >>  McWeb_finishup
-echo echo Please assist Django in creating the final LDAP: >>  McWeb_finishup
-echo echo \\\> python manage.py ldap_initdb USE_YOUR_LDAP_PASSWD_HERE >>  McWeb_finishup
-echo echo >>  McWeb_finishup
-echo echo Afterwards, please sudo /etc/init.d/uwsgi_mcweb start >>  McWeb_finishup
-
-cat /srv/mcweb/McWeb/scripts/nginx-default > /etc/nginx/sites-enabled/default
-service nginx restart
 
 # Moodle
-cd $STARTDIR
+cd /srv/mcweb
 sudo -u www-data git clone https://github.com/moodle/moodle.git
 cd moodle
 sudo -u www-data git checkout MOODLE_33_STABLE
 
 # Moosh
+cd /srv/mcweb
 sudo -u www-data git clone git://github.com/tmuras/moosh.git
 cd moosh
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -79,7 +70,7 @@ php -r "unlink('composer-setup.php');"
 php composer.phar install
 ln -sf $PWD/moosh.php /usr/local/bin/moosh
 
-cd $STARTDIR
+cd /srv/mcweb
 
 ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
 update-rc.d uwsgi_mcweb defaults
@@ -88,31 +79,51 @@ update-rc.d uwsgi_mcweb defaults
 apt-get -y install slapd ldap-utils
 echo
 echo
-echo PLEASE REMEMBER / STORE your LDAP admin password as well as
-echo 
+echo -n Please enter your LDAP admin password and press [ENTER]:
+read LDAP_PASS
 LDAPDOMAIN=`slapcat |grep dn:\ dc|cut -f2- -d\ `
-echo 1\) Your LDAP "domainname": $LDAPDOMAIN
-echo
 LDAPADMIN=`slapcat |grep admin | grep dn:\ cn=admin | cut -f2- -d\ `
-echo 2\) Your LDAP admin "username": $LDAPADMIN
-echo
-sleep 10
+export LDAP_PASS
+export LDAPADMIN
 export LDAPDOMAIN
-echo
 
 # Last setup of uwsgi etc
 echo Resuming setup...
 sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
 cd /srv/mcweb/
-echo "***************************************************************************"
-echo Dropping you to www-data shell where you should perform the bewlow commands
-echo "***************************************************************************"
-echo
-echo
-echo source /srv/mcweb/mcvenv/bin/activate
-echo sh McWeb_finishup
-sudo -u www-data bash McWeb_finishup
 
-#echo Please secure your mysql installation below:
-#mysql_secure_installation
+sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
+echo cd McWeb/mcsimrunner/ >> McWeb_finishup
+echo python manage.py migrate >> McWeb_finishup
+echo python manage.py collect_instr >>  McWeb_finishup
+echo python manage.py ldap_initdb $LDAP_PASS >>  McWeb_finishup
+echo echo Please assist Django in creation of your djangoadmin user: >>  McWeb_finishup
+echo python manage.py createsuperuser --username=djangoadmin >>  McWeb_finishup >>  McWeb_finishup
+echo echo -n Please enter your Django admin user pass again and press \[ENTER\]: >>  McWeb_finishup
+echo read DJANGO_PASS >>  McWeb_finishup
+echo python manage.py ldap_adduser $LDAP_PASS Django Admin djangoadmin admin@localhost \$DJANGO_PASS >>  McWeb_finishup
+echo echo >>  McWeb_finishup
+echo echo Essential setup done, here is a summary: >>  McWeb_finishup
+echo echo >>  McWeb_finishup
+echo echo LDAP setup: >>  McWeb_finishup
+echo echo domainname: $LDAPDOMAIN >>  McWeb_finishup
+echo echo admin string: $LDAPADMIN >>  McWeb_finishup
+echo echo password: $LDAP_PASS >>  McWeb_finishup
+echo echo >>  McWeb_finishup
+echo echo MySQL setup: >>  McWeb_finishup
+echo echo username: root >>  McWeb_finishup
+echo echo password: $MYSQL_PASS >>  McWeb_finishup
+echo echo >>  McWeb_finishup
+echo echo Django setup: >>  McWeb_finishup
+echo echo username: djangoadmin >>  McWeb_finishup
+echo echo password: \$DJANGO_PASS >>  McWeb_finishup
+echo echo >>  McWeb_finishup >>  McWeb_finishup
+
+sudo -u www-data bash McWeb_finishup
+/etc/init.d/uwsgi_mcweb start
+
+cat /srv/mcweb/McWeb/scripts/nginx-default > /etc/nginx/sites-enabled/default
+service nginx restart
+
+
