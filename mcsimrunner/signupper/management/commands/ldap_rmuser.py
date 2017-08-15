@@ -1,9 +1,9 @@
 '''
-A command for accessing ldaputils.ldap_rmuser.
+A command for accessing ldaputils.rmuser.
 '''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
-from signupper.ldaputils.ldaputils import ldap_rmuser
+from signupper.ldaputils.ldaputils import rmuser
 
 class Command(BaseCommand):
     ''' ldap rmuser. '''
@@ -15,11 +15,11 @@ class Command(BaseCommand):
         parser.add_argument('uid', nargs=1, type=str, help='uid (username) of user to be removed')
         
     def handle(self, *args, **options):
-        ''' Implements the django ldap_rmuser command '''
+        ''' Implements the django rmuser command '''
         uid = options['uid'][0]
         admin_password = options['admin_password'][0]
         try:
-            ldap_rmuser(MCWEB_LDAP_DN, admin_password, uid)
+            rmuser(MCWEB_LDAP_DN, admin_password, uid)
             print('%s has been removed from the mcweb LDAP db' % uid)
         except Exception as e:
             print('%s could not be removed: %s' % (uid, e.__str__()))

@@ -199,7 +199,7 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
         # try add to ldap
         if not s.added_ldap:
             try:
-                ldaputils.ldap_adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
+                ldaputils.adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
                 s.added_ldap = timezone.now()
                 s.save()
             except Exception as e:

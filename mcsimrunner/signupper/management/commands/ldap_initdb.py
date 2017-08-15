@@ -3,7 +3,7 @@ A command to make it easy calling the function ldaputils.initdb(), to enter the 
 '''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
-from signupper.ldaputils.ldaputils import ldap_initdb
+from signupper.ldaputils.ldaputils import initdb
 
 class Command(BaseCommand):
     ''' Django ldap init db command for mcweb. '''
@@ -15,4 +15,4 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         ''' Implements Django ldap init db command execution. '''
-        ldap_initdb(MCWEB_LDAP_DN, options['password'][0])
+        initdb(MCWEB_LDAP_DN, options['password'][0])

@@ -253,7 +253,7 @@ def chpassword(req):
     # apply password change or show error
     try:
         ldap_admin_pw = req.session['ldap_password']
-        ldaputils.ldap_chpassword(MCWEB_LDAP_DN, ldap_admin_pw, username, pw_current, pw_new)
+        ldaputils.chpassword(MCWEB_LDAP_DN, ldap_admin_pw, username, pw_current, pw_new)
         return HttpResponse('Your password has been changed.')
 
     except Exception as e:

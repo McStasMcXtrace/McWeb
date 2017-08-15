@@ -4,7 +4,7 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess 
 
-def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
+def adduser(dn, admin_password, cn, sn, uid, email, pw):
     ''' 
     Add a user to LDAP using the command-line tool ldapadd.
     
@@ -54,7 +54,7 @@ def ldap_adduser(dn, admin_password, cn, sn, uid, email, pw):
     finally:
         os.remove('_uid_user.ldif')
     
-def ldap_rmuser(dn, admin_password, uid):
+def rmuser(dn, admin_password, uid):
     ''' 
     Removes a user given by uid from the mcweb-configured LDAP database. 
     
@@ -82,13 +82,18 @@ def ldap_rmuser(dn, admin_password, uid):
     finally:
         os.remove('_rmuser.ldif')
 
-def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
+def find_user(dn, uid):
+    '''
+    Check LDAP db for entries of uid field equal to input.
+    '''
+
+def chpassword(dn, admin_password, uid, current_password, new_password):
     ''' 
-    This is a change password function. Unfortunately, it only works with the admin password...
+    This is a change password function. It only works with the admin password.
     
     uid: username
-    current_password: the current password of user identified with uid
-    new_password: the new password will be set to this 
+    current_password: the current password of user, identified with uid
+    new_password: the new password
     '''
     chpassword = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: userpassword\nuserpassword: %s\n-\nadd: userpassword\nuserpassword: %s' % (uid, dn, current_password, new_password)
     
@@ -107,8 +112,52 @@ def ldap_chpassword(dn, admin_password, uid, current_password, new_password):
             raise Exception(stderr.replace('\n', ''))
     finally:
         os.remove('_chpassword.ldif')
+
+def _chfield(dn, admin_password, uid, value_name, current_value, new_value):
+    '''
+    Change a user field if it exists.
+    '''
+    chfield = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: %s\n%s: %s\n-\nadd: %s\n%s: %s' % (uid, dn, value_name, value_name, current_value, value_name, value_name, new_value)
     
-def ldap_initdb(dn, admin_password):
+    ldif = open('_chvalue.ldif', 'w')
+    ldif.write(chfield)
+    ldif.close()
+    try:
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chvalue.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        (stdout, stderr) = process.communicate()
+        if stderr:
+            ps = ''
+            for c in cmd:
+                ps = '%s %s' % (ps, c)
+            raise Exception(stderr.replace('\n', ''))
+    finally:
+        os.remove('_chvalue.ldif')
+
+def chcn(dn, admin_password, uid, current_cn, new_cn):
+    '''
+    Chance cn of user.
+    '''
+    _chfield(dn, admin_password, uid, 'cn', current_value=current_cn, new_value=new_cn)
+
+def chsn(dn, admin_password, uid, current_sn, new_sn):
+    '''
+    Chance sn of user.
+    '''
+    _chfield(dn, admin_password, uid, 'sn', current_value=current_sn, new_value=new_sn)
+
+def chemail(dn, admin_password, uid, current_email, new_email):
+    '''
+    Chance email of user.
+    '''
+    _chfield(dn, admin_password, uid, 'semail', current_value=current_email, new_value=new_email)
+
+# a very local test:
+# _chfield('dc=risoe,dc=dk', 'secret_admin_pass', 'jaga15', 'userpassword', 'hest1', 'hest2')
+
+def initdb(dn, admin_password):
     ''' inits  the ldap db for mcweb user addition '''
     # add cn_usergroup
     cn_usergroup = 'dn: cn=usergroup,%s\ngidNumber: 500\ncn: usergroup\nobjectClass: posixGroup\nobjectClass: top' % dn    

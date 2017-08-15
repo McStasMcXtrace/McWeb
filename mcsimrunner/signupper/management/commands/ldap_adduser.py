@@ -1,16 +1,16 @@
 '''
-A command for accessing ldaputils.ldap_adduser.
+A command for accessing ldaputils.adduser.
 '''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
-from signupper.ldaputils.ldaputils import ldap_adduser
+from signupper.ldaputils.ldaputils import adduser
 
 class Command(BaseCommand):
     ''' ldap adduser. '''
     help = 'Adds a user entry to the mcweb-configured LDAP db. '
 
     def add_arguments(self, parser):
-        # ldap_adduser(dn, admin_password, cn, sn, uid, email, pw)
+        # adduser(dn, admin_password, cn, sn, uid, email, pw)
         parser.add_argument('admin_password', nargs=1, type=str, help='ldap admin password')
         parser.add_argument('cn', nargs=1, type=str, help='name')
         parser.add_argument('sn', nargs=1, type=str, help='sirname')
@@ -27,7 +27,7 @@ class Command(BaseCommand):
         email = options['email'][0]
         pw = options['pw'][0]
         try:
-            ldap_adduser(MCWEB_LDAP_DN, admin_password, cn, sn, uid, email, pw)
+            adduser(MCWEB_LDAP_DN, admin_password, cn, sn, uid, email, pw)
             print('%s has been added to the the mcweb LDAP db' % uid)
         except Exception as e:
             print('%s could not be added: %s' % (uid, e.__str__()))
