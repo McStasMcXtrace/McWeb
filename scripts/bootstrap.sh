@@ -36,12 +36,14 @@ update-rc.d apache2 remove
 service apache2 stop
 
 # Packages for bootstrapping an McWeb instance
-apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl
+apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl php-ldap
 
 rm -rf /srv/mcweb
 mkdir /srv/mcweb
 mkdir -p /srv/moodledata
-sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata
+mkdir -p /srv/mcweb/moodle-course-templates
+mkdir -p /srv/mcweb/moodle-restore-jobs
+sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata 
 
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
@@ -94,7 +96,7 @@ sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb
 cd /srv/mcweb/
 
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
-sudo -u www-data /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
+sudo -u www-data cp /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
 sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
 echo cd McWeb/mcsimrunner/ >> McWeb_finishup
 echo python manage.py migrate >> McWeb_finishup
@@ -122,6 +124,7 @@ echo echo username: djangoadmin >>  McWeb_finishup
 echo echo password: \$DJANGO_PASS >>  McWeb_finishup
 echo echo email-adress: admin@localhost >>  McWeb_finishup
 echo echo >>  McWeb_finishup 
+echo crontab /srv/mcweb/McWeb/scripts/cronjobs.txt >> McWeb_finishup 
 
 sudo -u www-data bash McWeb_finishup
 /etc/init.d/uwsgi_mcweb start
