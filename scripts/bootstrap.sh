@@ -40,18 +40,23 @@ sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
 sudo -u www-data -H virtualenv mcvenv
+sudo -u www-data cp mcvenv/bin/activate > mcvenv_finishup
 echo pip install -I Django==1.8.2 >> mcvenv_finishup
 echo pip install simplejson django_auth_ldap uwsgi python-ldap >> mcvenv_finishup
+sudo -u www-data bash mcvenv_finishup
 
 sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
+cd McWeb/mcsimrunner/
+
+sudo -u www-data cp mcvenv/bin/activate > McWeb_finishup
 echo cd McWeb/mcsimrunner/ >> McWeb_finishup
 echo python manage.py migrate >> McWeb_finishup
 echo python manage.py collect_instr >>  McWeb_finishup
 echo echo Please assist Django in creating a local superuser account: >>  McWeb_finishup
 echo echo python manage.py createsuperuser >>  McWeb_finishup
 echo python manage.py createsuperuser >>  McWeb_finishup
-echo echo Please run the following commands as root to set up your Django with LDAP: >>  McWeb_finishup
-echo echo \\\> python ldap_initdb.py USE_YOUR_LDAP_PASSWD_HERE >>  McWeb_finishup
+echo echo Please assist Django in creating the final LDAP: >>  McWeb_finishup
+echo echo \\\> python manage.py ldap_initdb USE_YOUR_LDAP_PASSWD_HERE >>  McWeb_finishup
 echo echo >>  McWeb_finishup
 echo echo Afterwards, please sudo /etc/init.d/uwsgi_mcweb start >>  McWeb_finishup
 
@@ -59,9 +64,10 @@ cat /srv/mcweb/McWeb/scripts/nginx-default > /etc/nginx/sites-enabled/default
 service nginx restart
 
 # Moodle
+cd $STARTDIR
 sudo -u www-data git clone https://github.com/moodle/moodle.git
-echo cd moodle >> moodle_finishup
-echo git checkout MOODLE_33_STABLE >> moodle_finishup
+cd moodle
+sudo -u www-data git checkout MOODLE_33_STABLE
 
 # Moosh
 sudo -u www-data git clone git://github.com/tmuras/moosh.git
@@ -74,7 +80,6 @@ php composer.phar install
 ln -sf $PWD/moosh.php /usr/local/bin/moosh
 
 cd $STARTDIR
-
 
 ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
 update-rc.d uwsgi_mcweb defaults
@@ -106,10 +111,8 @@ echo "**************************************************************************
 echo
 echo
 echo source /srv/mcweb/mcvenv/bin/activate
-echo sh mcvenv_finishup
 echo sh McWeb_finishup
-echo sh moodle_finishup
-sudo -u www-data -s
+sudo -u www-data bash McWeb_finishup
 
 #echo Please secure your mysql installation below:
 #mysql_secure_installation
