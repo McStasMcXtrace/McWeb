@@ -127,7 +127,7 @@ def ldap_initdb(dn, admin_password):
     ldif.write(ou_users)
     ldif.close()
     try:
-        process = subprocess.Popen(['sudo', 'ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
+        process = subprocess.Popen(['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
         process.communicate()
     finally:
         os.remove('_ou_users.ldif')
