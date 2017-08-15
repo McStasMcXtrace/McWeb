@@ -99,7 +99,7 @@ echo python manage.py migrate >> McWeb_finishup
 echo python manage.py collect_instr >>  McWeb_finishup
 echo python manage.py ldap_initdb $LDAP_PASS >>  McWeb_finishup
 echo echo Please assist Django in creation of your djangoadmin user: >>  McWeb_finishup
-echo python manage.py createsuperuser --username=djangoadmin >>  McWeb_finishup >>  McWeb_finishup
+echo python manage.py createsuperuser --username=djangoadmin --email=admin@localhost >>  McWeb_finishup >>  McWeb_finishup
 echo echo -n Please enter your Django admin user pass again and press \[ENTER\]: >>  McWeb_finishup
 echo read DJANGO_PASS >>  McWeb_finishup
 echo python manage.py ldap_adduser $LDAP_PASS Django Admin djangoadmin admin@localhost \$DJANGO_PASS >>  McWeb_finishup
@@ -118,7 +118,8 @@ echo echo >>  McWeb_finishup
 echo echo Django setup: >>  McWeb_finishup
 echo echo username: djangoadmin >>  McWeb_finishup
 echo echo password: \$DJANGO_PASS >>  McWeb_finishup
-echo echo >>  McWeb_finishup >>  McWeb_finishup
+echo echo email-adress: admin@localhost >>  McWeb_finishup
+echo echo >>  McWeb_finishup 
 
 sudo -u www-data bash McWeb_finishup
 /etc/init.d/uwsgi_mcweb start
