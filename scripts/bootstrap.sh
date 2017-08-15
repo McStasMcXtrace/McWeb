@@ -93,6 +93,8 @@ sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb
 
 cd /srv/mcweb/
 
+sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
+sudo -u www-data /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
 sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
 echo cd McWeb/mcsimrunner/ >> McWeb_finishup
 echo python manage.py migrate >> McWeb_finishup
