@@ -60,6 +60,11 @@ COURSES_MANDATORY = [
     'quiz-taster',
     ]
 
+# default group and instrument to display from /instrument url
+DEFAULT_GROUP = 'intro-ns'
+DEFAULT_INSTR = 'SANSsimple'
+
+
 # moodle install dir for signupper
 MOODLE_DIR = '/srv/mcweb/moodle'
 

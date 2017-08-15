@@ -11,6 +11,7 @@ from models import InstrGroup, Instrument, SimRun
 import json
 from generate_static import McStaticDataBrowserGenerator
 from django.views.decorators.clickjacking import xframe_options_exempt
+from mcweb.settings import DEFAULT_GROUP, DEFAULT_INSTR
 @xframe_options_exempt
 
 def home(req):
@@ -28,8 +29,8 @@ def login_post(req):
     login(req, user)
 
     # TODO: enable default group and instrument on user object
-    default_group = 'intro-ns'
-    default_instr = 'SANSsimple'
+    default_group = DEFAULT_GROUP
+    default_instr = DEFAULT_INSTR
     
     return redirect('instrument', group_name=default_group, instr_name=default_instr)
 
