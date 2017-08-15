@@ -40,7 +40,7 @@ sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
 sudo -u www-data -H virtualenv mcvenv
-sudo -u www-data cp mcvenv/bin/activate > mcvenv_finishup
+sudo -u www-data cp mcvenv/bin/activate mcvenv_finishup
 echo pip install -I Django==1.8.2 >> mcvenv_finishup
 echo pip install simplejson django_auth_ldap uwsgi python-ldap >> mcvenv_finishup
 sudo -u www-data bash mcvenv_finishup
@@ -48,7 +48,7 @@ sudo -u www-data bash mcvenv_finishup
 sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
 cd McWeb/mcsimrunner/
 
-sudo -u www-data cp mcvenv/bin/activate > McWeb_finishup
+sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
 echo cd McWeb/mcsimrunner/ >> McWeb_finishup
 echo python manage.py migrate >> McWeb_finishup
 echo python manage.py collect_instr >>  McWeb_finishup
