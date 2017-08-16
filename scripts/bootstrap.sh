@@ -18,6 +18,7 @@ cd $STARTDIR
 # Base packages for McCode + MPI
 apt-get -y install mcstas-suite-perl mcstas-suite-python openmpi-bin libopenmpi-dev
 
+# MySQL
 echo "deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7" > /etc/apt/sources.list.d/mysql.list
 echo "deb-src http://repo.mysql.com/apt/debian/ stretch mysql-5.7" >> /etc/apt/sources.list.d/mysql.list
 wget -O /tmp/RPM-GPG-KEY-mysql https://repo.mysql.com/RPM-GPG-KEY-mysql
@@ -30,6 +31,12 @@ echo
 echo -n Please enter your mysql root password and press [ENTER]:
 read MYSQL_PASS
 export MYSQL_PASS
+
+# Postgresql 
+apt-get install postgresql php-pgsql
+
+# Mediawiki
+apt-get install mediawiki php-apcu
 
 # Remove stop apache2 from being default webserver
 update-rc.d apache2 remove
@@ -44,6 +51,7 @@ mkdir -p /srv/moodledata
 mkdir -p /srv/mcweb/moodle-course-templates
 mkdir -p /srv/mcweb/moodle-restore-jobs
 sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata 
+ln -sf /var/lib/mediawiki /srv/mcweb/mediawiki
 
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb

@@ -43,14 +43,24 @@ server {
         alias /srv/mcweb/moodle;
     }
 
+    # Protect mediawiki install image dir againt scripting attacks
+    location /mediawiki/images {
+        location ~ .*\.(php)?$ { 	
+	  deny all; 
+        }
+        location ~ .*\.(py)?$ { 
+          deny all; 
+        }
+    }
+
     location /mediawiki {
         alias /srv/mcweb/mediawiki;
     }
 
+    
     location ~ \.php$ {
          include snippets/fastcgi-php.conf;
          fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
     }
-
 }
 
