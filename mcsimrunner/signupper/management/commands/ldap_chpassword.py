@@ -8,8 +8,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('admin_password', nargs=1, type=str, help='ldap admin password')
         parser.add_argument('uid', nargs=1, type=str, help='uid (username)')
-        parser.add_argument('old', nargs=1, type=str, help='old/current password value')
-        parser.add_argument('new', nargs=1, type=str, help='new password value')
+        parser.add_argument('oldvalue', nargs=1, type=str, help='old/current password value')
+        parser.add_argument('newvalue', nargs=1, type=str, help='new password value')
 
     def handle(self, *args, **options):
         admin_password = options['admin_password'][0]
@@ -17,7 +17,7 @@ class Command(BaseCommand):
         oldvalue = options['oldvalue'][0]
         newvalue = options['newvalue'][0]
         try:
-            chpassword(dn=MCWEB_LDAP_DN, admin_password=admin_password, uid=uid, value_name='userpassword', current_value=oldvalue, new_value=newvalue)
+            chpassword(dn=MCWEB_LDAP_DN, admin_password=admin_password, uid=uid, current_password=oldvalue, new_password=newvalue)
             print('user "%s" password was changed' % uid)
         except Exception as e:
             print('password of user "%s" could not be changed: %s' % (uid, e.__str__()))
