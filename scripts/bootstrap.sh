@@ -58,9 +58,13 @@ apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-vi
 rm -rf /srv/mcweb
 mkdir /srv/mcweb
 mkdir -p /srv/moodledata
+mkdir -p /srv/moodledata/repository
+mkdir -p /srv/moodledata/repository/uploads
 mkdir -p /srv/mcweb/moodle-course-templates
 mkdir -p /srv/mcweb/moodle-restore-jobs
 sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata 
+# Directory for Moodle filesystem access, group right www-data 
+sudo chmod g+w /srv/moodledata/repository/uploads
 ln -sf /var/lib/mediawiki /srv/mcweb/mediawiki
 
 # Bootstrap McWeb via sudo / git
