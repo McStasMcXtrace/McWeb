@@ -1,12 +1,8 @@
-'''
-A command for accessing ldaputils.rmuser.
-'''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
 from signupper.ldaputils.ldaputils import rmuser
 
 class Command(BaseCommand):
-    ''' ldap rmuser. '''
     help = 'Removes user entry from the mcweb-configured LDAP db. '
 
     def add_arguments(self, parser):

@@ -1,12 +1,8 @@
-'''
-A command for accessing ldaputils._chfield.
-'''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
 from signupper.ldaputils.ldaputils import _chfield
 
 class Command(BaseCommand):
-    ''' ldap chfield. '''
     help = 'Changes a named field of a user account (use slapcat to figure out what the field name is).'
 
     def add_arguments(self, parser):
