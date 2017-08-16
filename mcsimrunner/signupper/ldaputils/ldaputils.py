@@ -113,7 +113,7 @@ def chpassword(dn, admin_password, uid, current_password, new_password):
     finally:
         os.remove('_chpassword.ldif')
 
-def _chfield(dn, admin_password, uid, value_name, current_value, new_value):
+def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     '''
     Change a user field if it exists.
     '''
@@ -135,24 +135,6 @@ def _chfield(dn, admin_password, uid, value_name, current_value, new_value):
             raise Exception(stderr.replace('\n', ''))
     finally:
         os.remove('_chvalue.ldif')
-
-def chcn(dn, admin_password, uid, current_cn, new_cn):
-    '''
-    Chance cn of user.
-    '''
-    _chfield(dn, admin_password, uid, 'cn', current_value=current_cn, new_value=new_cn)
-
-def chsn(dn, admin_password, uid, current_sn, new_sn):
-    '''
-    Chance sn of user.
-    '''
-    _chfield(dn, admin_password, uid, 'sn', current_value=current_sn, new_value=new_sn)
-
-def chemail(dn, admin_password, uid, current_email, new_email):
-    '''
-    Chance email of user.
-    '''
-    _chfield(dn, admin_password, uid, 'semail', current_value=current_email, new_value=new_email)
 
 # a very local test:
 # _chfield('dc=risoe,dc=dk', 'secret_admin_pass', 'jaga15', 'userpassword', 'hest1', 'hest2')
