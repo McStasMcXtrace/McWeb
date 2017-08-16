@@ -32,11 +32,21 @@ echo -n Please enter your mysql root password and press [ENTER]:
 read MYSQL_PASS
 export MYSQL_PASS
 
+echo
+echo
+echo -n Please enter your wanted PostgreSQL 'mediawiki' access password and press [ENTER]:
+read PGSQL_PASS
+export PGSQL_PASS
+
 # Postgresql 
-apt-get install postgresql php-pgsql
+apt-get -y install postgresql php-pgsql
+cd /tmp
+sudo -u postgres -H -- psql -d template1 -c "create user mediawiki with password '$PGSQL_PASS';"
+sudo -u postgres -H -- psql -d template1 -c "create database mediawiki;"
+sudo -u postgres -H -- psql -d template1 -c "GRANT ALL PRIVILEGES ON DATABASE mediawiki to mediawiki;"
 
 # Mediawiki
-apt-get install mediawiki php-apcu
+apt-get -y install mediawiki php-apcu
 
 # Remove stop apache2 from being default webserver
 update-rc.d apache2 remove
@@ -126,6 +136,11 @@ echo echo >>  McWeb_finishup
 echo echo MySQL setup: >>  McWeb_finishup
 echo echo username: root >>  McWeb_finishup
 echo echo password: $MYSQL_PASS >>  McWeb_finishup
+echo echo >>  McWeb_finishup
+echo echo PosgreSQL/mediawiki setup: >>  McWeb_finishup
+echo echo username: mediawiki >>  McWeb_finishup
+echo echo password: $PGSQL_PASS >>  McWeb_finishup
+echo echo database: mediaqiki >>  McWeb_finishup
 echo echo >>  McWeb_finishup
 echo echo Django setup: >>  McWeb_finishup
 echo echo username: djangoadmin >>  McWeb_finishup
