@@ -82,6 +82,7 @@ cd /srv/mcweb
 sudo -u www-data git clone https://github.com/moodle/moodle.git
 cd moodle
 sudo -u www-data git checkout MOODLE_33_STABLE
+sudo -u www-data cp McWeb/bootstrap_data/moodle/* /srv/mcweb/moodle-course-templates/
 
 # Moosh
 cd /srv/mcweb
