@@ -42,7 +42,7 @@ export PGSQL_PASS
 apt-get -y install postgresql php-pgsql
 cd /tmp
 sudo -u postgres -H -- psql -d template1 -c "create user mediawiki with password '$PGSQL_PASS';"
-sudo -u postgres -H -- psql -d template1 -c "create database mediawiki;"
+sudo -u postgres -H -- psql -d template1 -c "create database my_wiki;"
 sudo -u postgres -H -- psql -d template1 -c "GRANT ALL PRIVILEGES ON DATABASE mediawiki to mediawiki;"
 
 # Mediawiki
@@ -144,7 +144,7 @@ echo echo >>  McWeb_finishup
 echo echo PosgreSQL/mediawiki setup: >>  McWeb_finishup
 echo echo username: mediawiki >>  McWeb_finishup
 echo echo password: $PGSQL_PASS >>  McWeb_finishup
-echo echo database: mediaqiki >>  McWeb_finishup
+echo echo database: my_wiki >>  McWeb_finishup
 echo echo >>  McWeb_finishup
 echo echo Django setup: >>  McWeb_finishup
 echo echo username: djangoadmin >>  McWeb_finishup
