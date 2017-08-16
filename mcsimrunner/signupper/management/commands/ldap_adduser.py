@@ -1,12 +1,8 @@
-'''
-A command for accessing ldaputils.adduser.
-'''
 from django.core.management.base import BaseCommand
 from mcweb.settings import MCWEB_LDAP_DN
 from signupper.ldaputils.ldaputils import adduser
 
 class Command(BaseCommand):
-    ''' ldap adduser. '''
     help = 'Adds a user entry to the mcweb-configured LDAP db. '
 
     def add_arguments(self, parser):
