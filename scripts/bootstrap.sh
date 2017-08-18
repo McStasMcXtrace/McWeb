@@ -34,16 +34,16 @@ export MYSQL_PASS
 
 echo
 echo
-echo -n Please enter your wanted PostgreSQL 'mediawiki' access password and press [ENTER]:
+echo -n Please enter your wanted PostgreSQL 'wikiuser' access password and press [ENTER]:
 read PGSQL_PASS
 export PGSQL_PASS
 
 # Postgresql 
 apt-get -y install postgresql php-pgsql
 cd /tmp
-sudo -u postgres -H -- psql -d template1 -c "create user mediawiki with password '$PGSQL_PASS';"
+sudo -u postgres -H -- psql -d template1 -c "create user wikiuser with password '$PGSQL_PASS';"
 sudo -u postgres -H -- psql -d template1 -c "create database my_wiki;"
-sudo -u postgres -H -- psql -d template1 -c "GRANT ALL PRIVILEGES ON DATABASE mediawiki to mediawiki;"
+sudo -u postgres -H -- psql -d template1 -c "GRANT ALL PRIVILEGES ON DATABASE my_wiki to wikiuser;"
 
 # Mediawiki
 apt-get -y install mediawiki php-apcu
@@ -143,7 +143,7 @@ echo echo username: root >>  McWeb_finishup
 echo echo password: $MYSQL_PASS >>  McWeb_finishup
 echo echo >>  McWeb_finishup
 echo echo PosgreSQL/mediawiki setup: >>  McWeb_finishup
-echo echo username: mediawiki >>  McWeb_finishup
+echo echo username: wikiuser >>  McWeb_finishup
 echo echo password: $PGSQL_PASS >>  McWeb_finishup
 echo echo database: my_wiki >>  McWeb_finishup
 echo echo >>  McWeb_finishup
