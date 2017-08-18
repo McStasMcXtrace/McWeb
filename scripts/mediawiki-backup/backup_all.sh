@@ -17,7 +17,7 @@ fi
 MWDIR="/srv/mcweb/mediawiki/"
 BACKUPBASE="mediawiki_"
 
-MONTH=`date +"%b"`
+MONTH=`date +"%m"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 BACKUPDIR="${BACKUPBASE}${YEAR}${MONTH}${DAY}"
