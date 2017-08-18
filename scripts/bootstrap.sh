@@ -2,7 +2,7 @@
 
 STARTDIR=`pwd`
 # Basic infrastructure
-apt-get -y install net-tools sudo openssh-server xbase-clients
+apt-get -y install net-tools sudo openssh-server xbase-clients zip unzip
 
 # Add nonfree and contrib repo
 sed -i.bak s/main/main\ contrib\ non-free/g /etc/apt/sources.list
@@ -128,7 +128,11 @@ export LDAPGRP
 echo Resuming setup...
 sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
+# Install piwik
+cd /tmp/
+wget https://builds.piwik.org/piwik.zip
 cd /srv/mcweb/
+sudo -u www-data unzip /tmp/piwik.zip
 
 # Check if we were givern a mediawiki archive as a $1
 if [ -n "$1" ]; then
