@@ -4,20 +4,30 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess
 import re
-import StringIO
 
-def listusers(dn):
-    ''' list and return user entries '''
-    class UserEntry:
-        def __init__(self, uid, cn, sn, mail):
-            self.uid = uid
-            self.cn = cn
-            self.sn = sn
-            self.mail = mail
-        def __str__(self):
-            return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
+class LdapUserEntry:
+    ''' record contents of list returned by listusers()'''
+    def __init__(self, uid, cn, sn, mail):
+        self.uid = uid
+        self.cn = cn
+        self.sn = sn
+        self.mail = mail
+    def __str__(self):
+        return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
+
+def listusers(dn, uid=None):
+    '''
+    List and return all user entries
     
-    proc = subprocess.Popen('ldapsearch -x -b "ou=users,%s"' % dn,
+    Can also be used to return a single user entry, and thus to search for a user entry.
+    Always returns a list, this will be of length all_users, 1 or 0 in the cases listed above.
+    '''
+    if not uid:
+        cmd = 'ldapsearch -x -b "ou=users,%s"' % dn
+    else:
+        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (dn, uid)
+    
+    proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             shell=True)
@@ -33,7 +43,7 @@ def listusers(dn):
             sn = re.search('sn: (\w+)\n', section).group(1)
             mail = re.search('mail: ([\w\.\@]+)\n', section).group(1)
             
-            users.append(UserEntry(uid, cn, sn, mail))
+            users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
             continue
     
