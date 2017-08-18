@@ -22,6 +22,7 @@ DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 BACKUPDIR="${BACKUPBASE}${YEAR}${MONTH}${DAY}"
 IMAGES="${BACKUPDIR}/images.tgz"
+LOGOS="${BACKUPDIR}/logos.tgz"
 DBDUMP="${BACKUPDIR}/pgdump.sql"
 
 WORKDIR=`pwd`
@@ -30,6 +31,8 @@ mkdir $BACKUPDIR
 cd $MWDIR
 echo Generating image archive
 tar cfz $WORKDIR/$IMAGES images
+echo Generating logo archive
+tar cfz $WORKDIR/$LOGOS logos
 echo Dumping database $DBNAME
 sudo -u postgres -H -- pg_dump $DBNAME > $WORKDIR/$DBDUMP
 cp $MWDIR/LocalSettings.php $WORKDIR/$BACKUPDIR/LocalSettings.php
@@ -39,6 +42,7 @@ echo Storing/anonymising LocalSettings.php
 sed -i 's/\$wgSitename = "\(.*\)";/\$wgSitename = "@SITENAME@";/' LocalSettings.php
 sed -i 's/\$wgServer = "\(.*\)";/\$wgServer = "@SERVERNAME@";/' LocalSettings.php
 sed -i 's/\$wgEmergencyContact = "\(.*\)";/\$wgEmergencyContact = "@ADMINMAIL@";/' LocalSettings.php
+sed -i 's/\$wgPasswordSender = "\(.*\)";/\$wgPasswordSender = "@ADMINMAIL@";/' LocalSettings.php
 sed -i 's/\$wgDBname = "\(.*\)";/\$wgDBname = "@DBNAME@";/' LocalSettings.php
 sed -i 's/\$wgDBuser = "\(.*\)";/\$wgDBuser = "@DBUSER@";/' LocalSettings.php
 sed -i 's/\$wgDBpassword = "\(.*\)";/\$wgDBpassword = "@DBPASS@";/' LocalSettings.php
@@ -50,3 +54,5 @@ sed -i 's/\$wgLDAPEncryptionType = array(\"\(.*\)\" => "clear");/\$wgLDAPEncrypt
 sed -i 's/\$wgLDAPPort = array(\"\(.*\)\" => 389);/\$wgLDAPPort = array(\"@LDAP_FULLDOM_UNDERSCORE@\" => 389);/' LocalSettings.php
 sed -i 's/\$wgLDAPBaseDNs = array(\"\(.*\)\" => \"\(.*\)\");/\$wgLDAPBaseDNs = array(\"@LDAP_FULLDOM_UNDERSCORE@\" => \"@LDAP_DN@\");/' LocalSettings.php
 sed -i 's/\$wgLDAPGroupBaseDNs = array(\"\(.*\)\" => \"\(.*\)\");/\$wgLDAPGroupBaseDNs = array(\"@LDAP_FULLDOM_UNDERSCORE@\" => \"@LDAP_GROUP_OU@\");/' LocalSettings.php
+# PIWIK
+sed -i 's/\$wgPiwikURL = "\(.*\)";/\$wgPiwikURL = "@PIWIK_URL@";/' LocalSettings.php
