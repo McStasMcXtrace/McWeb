@@ -57,6 +57,21 @@ server {
         alias /srv/mcweb/mediawiki;
     }
 
+    # Protect mediawiki install image dir againt scripting attacks
+    location /wiki/images {
+        location ~ .*\.(php)?$ { 	
+	  deny all; 
+        }
+        location ~ .*\.(py)?$ { 
+          deny all; 
+        }
+    }
+
+    location /wiki {
+        alias /srv/mcweb/wiki;
+    }
+
+
     
     location ~ \.php$ {
          include snippets/fastcgi-php.conf;

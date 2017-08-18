@@ -45,8 +45,8 @@ sudo -u postgres -H -- psql -d template1 -c "create user wikiuser with password 
 sudo -u postgres -H -- psql -d template1 -c "create database my_wiki;"
 sudo -u postgres -H -- psql -d template1 -c "GRANT ALL PRIVILEGES ON DATABASE my_wiki to wikiuser;"
 
-# Mediawiki
-apt-get -y install mediawiki php-apcu
+# Mediawiki-dependency... Unfortunately we can currently not follow Debian here... :-(
+apt-get -y install php-apcu
 
 # Remove stop apache2 from being default webserver
 update-rc.d apache2 remove
@@ -65,7 +65,6 @@ mkdir -p /srv/mcweb/moodle-restore-jobs
 sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata 
 # Directory for Moodle filesystem access, group right www-data 
 sudo chmod g+w /srv/moodledata/repository/uploads
-ln -sf /var/lib/mediawiki /srv/mcweb/mediawiki
 
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
@@ -95,8 +94,15 @@ php -r "unlink('composer-setup.php');"
 php composer.phar install
 ln -sf $PWD/moosh.php /usr/local/bin/moosh
 
+# Mediawiki 1.26.4...
 cd /srv/mcweb
+sudo -u www-data git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git mediawiki
+sudo -u www-data ln -s mediawiki wiki
+cd mediawiki
+sudo -u www-data git checkout 1.26.4
+sudo -u www-data php ../moosh/composer.phar install --no-dev
 
+cd /srv/mcweb
 ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
 update-rc.d uwsgi_mcweb defaults
 
