@@ -55,8 +55,8 @@ service apache2 stop
 # Packages for bootstrapping an McWeb instance
 apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl php-ldap
 
-rm -rf /srv/mcweb
-mkdir /srv/mcweb
+#rm -rf /srv/mcweb
+#mkdir /srv/mcweb
 mkdir -p /srv/moodledata
 mkdir -p /srv/moodledata/repository
 mkdir -p /srv/moodledata/repository/uploads
@@ -134,6 +134,7 @@ wget https://builds.piwik.org/piwik.zip
 cd /srv/mcweb/
 sudo -u www-data unzip /tmp/piwik.zip
 
+cd $STARTDIR
 # Check if we were givern a mediawiki archive as a $1
 if [ -n "$1" ]; then
     if [ -d "$1" ]; then
