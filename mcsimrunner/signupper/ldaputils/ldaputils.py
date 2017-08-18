@@ -2,7 +2,42 @@
 ldap functions using ldifs tooo add/remove users, change password and init the db for mcweb usage.
 '''
 import os
-import subprocess 
+import subprocess
+import re
+import StringIO
+
+def listusers(dn):
+    ''' list and return user entries '''
+    class UserEntry:
+        def __init__(self, uid, cn, sn, mail):
+            self.uid = uid
+            self.cn = cn
+            self.sn = sn
+            self.mail = mail
+        def __str__(self):
+            return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
+    
+    proc = subprocess.Popen('ldapsearch -x -b "ou=users,%s"' % dn,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=True)
+    std_out = proc.communicate()[0]
+    
+    sections = str.split(std_out, 'dn: uid=')
+    users = []
+    
+    for section in sections:
+        try:
+            uid = re.match('(\w+),', section).group(1)
+            cn = re.search('cn: (\w+)\n', section).group(1)
+            sn = re.search('sn: (\w+)\n', section).group(1)
+            mail = re.search('mail: ([\w\.\@]+)\n', section).group(1)
+            
+            users.append(UserEntry(uid, cn, sn, mail))
+        except:
+            continue
+    
+    return users
 
 def adduser(dn, admin_password, cn, sn, uid, email, pw):
     ''' 
