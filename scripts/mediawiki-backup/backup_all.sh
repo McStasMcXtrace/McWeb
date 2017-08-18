@@ -32,7 +32,7 @@ echo Generating image archive
 tar cfz $WORKDIR/$IMAGES images
 echo Dumping database $DBNAME
 sudo -u postgres -H -- pg_dump $DBNAME > $WORKDIR/$DBDUMP
-cp $MWDIR/LocalSettings.php > $WORKDIR/$BACKUPDIR/LocalSettings.php
+cp $MWDIR/LocalSettings.php $WORKDIR/$BACKUPDIR/LocalSettings.php
 cd $WORKDIR/$BACKUPDIR
 echo Storing/anonymising LocalSettings.php
 # MediaWiki / Database config
