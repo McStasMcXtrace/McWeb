@@ -16,7 +16,7 @@
 
 
 server {
-	listen 80 default_server;
+    listen 80 default_server;
 
     root /srv/mcweb;
     index index.html index.htm index.php;
@@ -71,7 +71,9 @@ server {
         alias /srv/mcweb/wiki;
     }
 
-
+    location /mathjax {
+        alias /srv/mcweb/mathjax;
+    }
     
     location ~ \.php$ {
          include snippets/fastcgi-php.conf;
