@@ -3,8 +3,10 @@
 # Script to backup all parts of an "e-neutrons" style mediawiki database and configuration:
 #
 # 1) Image files in /srv/mcweb/mediawiki/images
-# 2) PostgreSQL database given as $1 (on legacy e-neutrons.org site named vntwiki)
-# 3) LocalSettings.php (DB passwords stripped out for security)
+# 2) Logo files in /srv/mcweb/mediawiki/logos
+# 3) Extensions in /srv/mcweb/mediawiki/extensions
+# 4) PostgreSQL database given as $1 (on legacy e-neutrons.org site named vntwiki)
+# 5) LocalSettings.php (DB passwords stripped out for security)
 
 # Check if database name given, otherwise use "vntwiki"
 DBNAME=$1
@@ -23,6 +25,7 @@ YEAR=`date +"%Y"`
 BACKUPDIR="${BACKUPBASE}${YEAR}${MONTH}${DAY}"
 IMAGES="${BACKUPDIR}/images.tgz"
 LOGOS="${BACKUPDIR}/logos.tgz"
+EXTS="${BACKUPDIR}/extensions.tgz"
 DBDUMP="${BACKUPDIR}/pgdump.sql"
 
 WORKDIR=`pwd`
@@ -33,6 +36,8 @@ echo Generating image archive
 tar cfz $WORKDIR/$IMAGES images
 echo Generating logo archive
 tar cfz $WORKDIR/$LOGOS logos
+echo Generating extension archive
+tar cfz $WORKDIR/$EXTS extensions
 echo Dumping database $DBNAME
 sudo -u postgres -H -- pg_dump $DBNAME > $WORKDIR/$DBDUMP
 cp $MWDIR/LocalSettings.php $WORKDIR/$BACKUPDIR/LocalSettings.php

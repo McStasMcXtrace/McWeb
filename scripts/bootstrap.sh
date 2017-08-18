@@ -102,6 +102,16 @@ cd mediawiki
 sudo -u www-data git checkout 1.26.4
 sudo -u www-data php ../moosh/composer.phar install --no-dev
 
+# Check if we were givern a mediawiki archive as a $1
+if [ -n "$1" ]; then
+    echo Attempting to restore mediawiki archive from $1
+    if [ -d "$1" ]; then
+	
+    else
+	echo Directory $1 nonexistent, dropping restore
+    fi
+fi
+
 cd /srv/mcweb
 ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
 update-rc.d uwsgi_mcweb defaults
