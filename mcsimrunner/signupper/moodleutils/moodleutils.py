@@ -20,7 +20,7 @@ MOODLE_RESTORE_JOBS_DIR = '/srv/mcweb/moodle-restore-jobs'
 
 def add_enroll_user(firstname, lastname, username, email, courses_sn_lst):
     '''
-    add user to moodle and enroll_user in coursecds in courses_lst
+    add user to moodle and enroll_user in courses in courses_lst
     '''
     adduser(firstname, lastname, username, email)
     for course in courses_sn_lst:
