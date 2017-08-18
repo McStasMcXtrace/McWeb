@@ -10,23 +10,30 @@ if [ -n "$1" ]; then
 	if [ -f "$WORKDIR/$1/images.tgz" ]; then
 	    echo Unpacking image archive
 	    cd /srv/mcweb/mediawiki
-	    tar xzf $WORKDIR/$1/images.tgz
+	    sudo -u www-data tar xzf $WORKDIR/$1/images.tgz
 	else
 	    echo $1/images.tgz did not exist, dropping image restore
 	fi
         if [ -f "$WORKDIR/$1/logos.tgz" ]; then
 	    echo Unpacking logo archive
 	    cd /srv/mcweb/mediawiki
-	    tar xzf $WORKDIR/$1/logos.tgz
+	    sudo -u www-data tar xzf $WORKDIR/$1/logos.tgz
 	else
 	    echo $1/logos.tgz did not exist, dropping logo restore
 	fi
 	if [ -f "$WORKDIR/$1/extensions.tgz" ]; then
 	    echo Unpacking extension archive
 	    cd /srv/mcweb/mediawiki
-	    tar xzf $WORKDIR/$1/extensions.tgz
+	    sudo -u www-data tar xzf $WORKDIR/$1/extensions.tgz
 	else
 	    echo $1/extensions.tgz did not exist, dropping extension restore
+	fi
+	if [ -f "$WORKDIR/$1/skins.tgz" ]; then
+	    echo Unpacking skin archive
+	    cd /srv/mcweb/mediawiki
+	    sudo -u www-data tar xzf $WORKDIR/$1/skins.tgz
+	else
+	    echo $1/skins.tgz did not exist, dropping skin restore
 	fi
 	if [ -f "$WORKDIR/$1/pgdump.sql" ]; then
 	    echo Installing database
