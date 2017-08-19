@@ -55,8 +55,8 @@ service apache2 stop
 # Packages for bootstrapping an McWeb instance
 apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl php-ldap
 
-#rm -rf /srv/mcweb
-#mkdir /srv/mcweb
+rm -rf /srv/mcweb
+mkdir /srv/mcweb
 mkdir -p /srv/moodledata
 mkdir -p /srv/moodledata/repository
 mkdir -p /srv/moodledata/repository/uploads
@@ -143,32 +143,39 @@ if [ -n "$1" ]; then
 	cd `dirname $1`
 	/srv/mcweb/McWeb/scripts/mediawiki-backup/restore_all.sh $BACKUPDIR
         # Now configure the LocalSettings script from the backup for our new system
+	cd $STARTDIR
 	cd $1
 	# LDAP first
+	echo Setting up mediawiki for LDAP use
 	LDAP_FULLDOM_UNDERSCORE=`echo $LDAPDOMAIN | sed s/dc\=//g | sed s/\,/_/g`
 	sed -i "s/@LDAP_FULLDOM_UNDERSCORE@/${LDAP_FULLDOM_UNDERSCORE}/g" LocalSettings.php
 	sed -i "s/@LDAP_FULLDOM_UNDERSCORE@/${LDAP_FULLDOM_UNDERSCORE}/g" LocalSettings.php
 	sed -i "s/@LDAP_DN@/${LDAPDOMAIN}/g" LocalSettings.php
 	sed -i "s/@LDAP_GROUP_OU@/${LDAPGRP}/g" LocalSettings.php
 	# Password for DB
+	echo Setting up mediawiki for PostgreSQL access
 	sed -i "s/@DBNAME@/my_wiki/g" LocalSettings.php
 	sed -i "s/@DBUSER@/wikiuser/g" LocalSettings.php
 	sed -i "s/@DBPASS@/${PGSQL_PASS}/g" LocalSettings.php
 	# Mail etc.
+	echo Setting up mediawiki mail options
 	sed -i "s/@ADMINMAIL@/admin@localhost/g" LocalSettings.php
 	# The server itself etc.
-	IPADDR=`ip addr show eth0 | grep inet\  | cut -f 2 -d\t | cut -f 1 -d/ | sed s/\ //g`
+	echo Setting up mediawiki site and servername
+	IPADDR=`ip addr show | grep inet\ | cut -f 2 -d\t | cut -f 1 -d/ |grep -v 127 | sed "s/\ //g"`
 	SERVERNAME=`hostname`
 	sed -i "s/@SITENAME@/${SERVERNAME}/g" LocalSettings.php
-	sed -i "s/@SERVERNAME@/${IPADDR}/g" LocalSettings.php
-	sed -i "s/@PIWIK_URL@/\/piwik/g" LocalSettings.php
+	sed -i "s+@SERVERNAME@+http://${IPADDR}+g" LocalSettings.php
+	sed -i "s+@PIWIK_URL@+/piwik+g" LocalSettings.php
 	chown www-data:www-data LocalSettings.php
-	sudo -u www-data cp LocalSettings /srv/mcweb/mediawiki/
+	echo Copying LocalSettings to mediawiki install
+	sudo -u www-data cp LocalSettings.php /srv/mcweb/mediawiki/
 	cd /srv/mcweb/mediawiki
 	sudo -u www-data php maintenance/update.php
     fi
 fi
 
+cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
 sudo -u www-data cp /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
 sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
