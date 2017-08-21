@@ -166,7 +166,7 @@ if [ -n "$1" ]; then
 	SERVERNAME=`hostname`
 	sed -i "s/@SITENAME@/${SERVERNAME}/g" LocalSettings.php
 	sed -i "s+@SERVERNAME@+http://${IPADDR}+g" LocalSettings.php
-	sed -i "s+@PIWIK_URL@+/piwik+g" LocalSettings.php
+	sed -i "s+@PIWIK_URL@+/${IPADDR}/piwik+g" LocalSettings.php
 	chown www-data:www-data LocalSettings.php
 	echo Copying LocalSettings to mediawiki install
 	sudo -u www-data cp LocalSettings.php /srv/mcweb/mediawiki/
