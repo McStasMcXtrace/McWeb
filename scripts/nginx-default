@@ -71,6 +71,10 @@ server {
         alias /srv/mcweb/wiki;
     }
 
+    location /piwik {
+        alias /srv/mcweb/piwik;
+    }
+
     location /mathjax {
         alias /srv/mcweb/mathjax;
     }
