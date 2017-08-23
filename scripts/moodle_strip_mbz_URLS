@@ -46,7 +46,7 @@ if [ -f "$MBZFILE_IN" ]; then
 	    cd $WORKDIR
 	    rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLstrip
 	    # On OS X basename needs a suffix to .bak, we'll just remove these by the second find
-	    find ${MBZBASE}_URLstrip -name url.xml -exec sed -i.bak 's+$URL++g' \{\} \;
+	    find ${MBZBASE}_URLstrip -name url.xml -exec sed -i.bak "s+${URL}++g" \{\} \;
 	    find ${MBZBASE}_URLstrip -name url.xml.bak -exec rm \{\} \;
 	    echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
 	    echo >> ${MBZBASE}_url.striplog
