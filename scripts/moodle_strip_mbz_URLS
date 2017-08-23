@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script to remove a "absolute-URL" prefix from a moodle mbz course backup
 #
 # Takes two arguments:
@@ -38,6 +38,14 @@ if [ -f "$MBZFILE_IN" ]; then
 	string='http://www.google.com/test/link.php'
 	if [[ $URL =~ $regex ]]; then 
 	    echo "URL $URL seems valid"
+	    # Check that trailing char is not a /
+	    i="$((${#URL}-1))"
+	    if [ "${URL:$i:1}" = "/" ]; then
+		echo -n "Warning: Stripping off the trailing / from $URL -> "
+		URL="${URL:0:$i}"
+		echo $URL
+		sleep 1
+	    fi
 	    # Create directory for the archive(s)
 	    mkdir -p $MBZBASE
 	    mkdir -p ${MBZBASE}_URLstrip
