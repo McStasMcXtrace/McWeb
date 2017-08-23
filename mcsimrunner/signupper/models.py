@@ -6,8 +6,8 @@ from django.utils import timezone
 import json
 from django.db.models import BooleanField
 
+
 class Signup(Model):
-    ''' meta-signup book keeping type '''
     username = CharField(max_length=200)
     firstname = CharField(max_length=200)
     lastname = CharField(max_length=200)
@@ -15,13 +15,11 @@ class Signup(Model):
     password = CharField(max_length=200)
     
     created = DateTimeField('Submitted', default=timezone.now)
-    added_ldap = DateTimeField('Added to ldap', blank=True, null=True)
-    added_moodle = DateTimeField('Added to moodle', blank=True, null=True)
     notified = DateTimeField('Notified', blank=True, null=True)
+    deleted = DateTimeField('Deleted', blank=True, null=True)
     
-    is_new = BooleanField(default=True)
-    is_added = BooleanField(default=False)
-    is_limbo = BooleanField(default=False)
+    is_in_ldap = BooleanField(default=False)
+    is_self_signup = BooleanField(default=False)
     
     fail_str = CharField(max_length=1000, blank=True, null=True)
     
