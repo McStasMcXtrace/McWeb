@@ -1,9 +1,10 @@
 #!/bin/bash
 # Script to remove a "absolute-URL" prefix from a moodle mbz course backup
 #
-# Takes two arguments:
+# Takes three arguments:
 # 1) mbz filename (e.g. testlinks_20170823.mbz)
 # 2) The URL to remove, e.g. https://elearn1.fysik.dtu.dk/
+# 3) If a last argument is given, the modified archive replaces the original
 # 
 # Work:
 # 0) Sanity checks and user confirmation
@@ -12,6 +13,7 @@
 # 3) Use sed to strip off the URL
 # 4) Assemble a "status" logfile with the found differences
 # 5) Assemble a new mbz under a modified filename
+# 6) Cleanup and optionally move the modified archive in place of original
 
 # Check that we have an existent filename
 if [ "x$1" = "x" ]; then
@@ -60,6 +62,7 @@ if [ -f "$MBZFILE_IN" ]; then
 	    echo >> ${MBZBASE}_url.striplog
 	    diff -r $MBZBASE ${MBZBASE}_URLstrip >> ${MBZBASE}_url.striplog
 	    tar cfz ${MBZBASE}_URLstrip.mbz ${MBZBASE}_URLstrip
+	    rm -rf $MBZBASE/ ${MBZBASE}_URLstrip/
 	else
 	    echo "$URL does not look like a proper URL, exiting"
 	    exit 1;
@@ -71,4 +74,12 @@ if [ -f "$MBZFILE_IN" ]; then
 else
     echo $MBZFILE_IN not found, exiting
     exit 1;
+fi
+
+if [ ! "x$3" = "x" ]; then
+    # No arguments
+    echo "Warning: \n  Replacing your initial achive ${MBZBASE}.mbz by ${MBZBASE}_URLstrip.mbz"
+    echo "(Leaving original with .org suffix)"
+    mv ${MBZBASE}.mbz ${MBZBASE}.org
+    mv ${MBZBASE}_URLstrip.mbz ${MBZBASE}.mbz
 fi
