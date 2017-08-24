@@ -1,0 +1,210 @@
+html, body {
+  	font-family:  sans-serif, "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana;
+	font-weight: normal;
+	font-size: 12px;
+	color: #444;
+    margin: 0px;
+
+    height: 100%;
+    overflow: hidden;
+}
+li {
+    list-style-type: none;
+    display: block;
+    margin-left:-30px;
+    font-size: 18;
+}
+a {
+    color: #444;
+    text-decoration: none;
+}
+a:hover {
+    color: grey;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/*
+*
+*   page general layout
+*
+*/
+
+#wrapper {
+    width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+#main_tbl {
+    /*position: absolute;*/
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+}
+#content_tbl {
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+}
+#content_td {
+}
+#sidebar_td {
+    width: 220px;
+    border-right:1px solid black;
+}
+#sidebar {
+    height: 100%;
+    /* debug */
+    /* background-color: green;
+    color: white; */
+}
+#content {
+    height: 100%;
+    width: 100%;
+    /* scroll-able related */
+    position: relative;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-right: 20px; /* to push scrollbar out of view */
+    /* debug */
+    /*background-color: blue;*/
+}
+#content_scrollarea {
+    /* scroll-able related */
+    position: absolute;
+    /*height: 2000px;*/
+    width: 100%;
+    /* debug */
+    /*color: white;
+    background-color: grey; */
+}
+#footer_td {
+    height:70px;
+}
+#footer {
+    /*height:100%;*/
+    /*padding-top:5px;*/
+    text-align: center;
+    font-weight: bold;
+    font-size: 14pt;
+    /* debug */
+    /* background-color: red;
+    color: white;*/
+}
+
+/*
+*
+* sidebar stuff
+*
+*/
+#sidebar_headline_container {
+    text-align:center;
+    font-weight:bold;
+    margin-top:5px;
+    margin-bottom:10px;
+}
+#sidebar_headline {
+    font-size:16pt;
+    margin:0px;
+    padding:0px;
+}
+#sidebar_subheadline {
+        font-size:9pt;
+        margin:0px;
+        padding:0px;
+}
+#social_media {
+    text-align:center;
+    margin-bottom:45px;
+}
+
+#login_btn {
+    position: relative;
+    width: 150px;
+    height: 30px;
+    margin-left: 35px;
+    margin-top: 50px;
+    padding-top: 8px;
+    padding-bottom: 3px;
+    text-align: center;
+    font-size: 16pt;
+    font-weight: bold;
+    color: white;
+    background-color: 8ccb95;
+    border: 10px solid 57a265;
+    cursor: pointer;
+}
+.sidebar_ul {
+    text-align: center;
+}
+.sidebar_li {
+    margin-top: 20px;
+}
+
+/*
+*
+* content- and sub-menu area with a page image, sub menu and page content html
+* e.g. stuff inside "content_scrollarea"
+*
+*/
+
+#img_post {
+    width: 100%;
+}
+#img_post_wrapper {
+    /*background-image: url( "/static/post_img.png");*/
+    width: 100%;
+    height: 400px;
+    text-align:center;
+    overflow:hidden;
+}
+
+#content_html {
+    padding-left: 250px;
+    padding-right: 20px;
+}
+#sub_menu {
+    /*width: 240px;*/
+    /*margin: 20px;*/
+    margin-top: 100px;
+    float: left;
+}
+.submenu_ul {
+    text-align: left;
+}
+.submenu_li {
+    margin-top: 5px;
+}
+
+/*
+*
+*
+* aktuelt stypes
+*
+*
+*/
+#akt_itm {
+    margin: 15px;
+    padding: 5px;
+    border: 1px solid black;
+    height: 210px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#akt_itm_html {
+    float: left;
+    width: 450px;
+}
+
+#akt_itm_img {
+    margin-top: 13px;
+    margin-left: 10px;
+    width: 320px;
+    background-color: red;
+}

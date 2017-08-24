@@ -1,0 +1,49 @@
+<DOCTYPE="html">
+<html>
+<head>
+    <title>mcweb user manage</title>
+    <script type="text/javascript" src="../static/scripts.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/signupper_style.css"/>
+</head>
+<body>
+
+<div id="wrapper">
+
+    <table id="main_tbl"><tr>
+        <td id="sidebar_td">
+            <div id="sidebar">
+                <div id="sidebar_menu">
+                    <ul class="sidebar_ul">
+                        {% for url, name in menu_items.items %}
+                        {% if url == menu %}
+                        <li class="sidebar_li" style="font-weight:bold;"><a href="/manage/{{ url }}">{{ name }}</a></li>
+                        {% else %}
+                        <li class="sidebar_li"><a href="/manage/{{ url }}">{{ name }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </td>
+        <td>
+            <table id="content_tbl">
+            <tr>
+                <td id="content_td">
+                    <div id="content">
+                        <div id="content_scrollarea">
+                            {% block content %}
+                            {% endblock %}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td id="footer_td">
+                </td>
+            </tr>
+            </table>
+        </td>
+    </tr></table>
+</div>
+</body>
+</html>
