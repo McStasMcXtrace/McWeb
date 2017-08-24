@@ -2,7 +2,7 @@
 
 STARTDIR=`pwd`
 # Basic infrastructure
-apt-get -y install net-tools sudo openssh-server xbase-clients
+apt-get -y install net-tools sudo openssh-server xbase-clients zip unzip
 
 # Add nonfree and contrib repo
 sed -i.bak s/main/main\ contrib\ non-free/g /etc/apt/sources.list
@@ -102,15 +102,9 @@ cd mediawiki
 sudo -u www-data git checkout 1.26.4
 sudo -u www-data php ../moosh/composer.phar install --no-dev
 
-# Check if we were givern a mediawiki archive as a $1
-if [ -n "$1" ]; then
-    echo Attempting to restore mediawiki archive from $1
-    if [ -d "$1" ]; then
-	
-    else
-	echo Directory $1 nonexistent, dropping restore
-    fi
-fi
+# Mathjax for use with mediawiki
+cd /srv/mcweb
+sudo tar xzf /srv/mcweb/McWeb/other/mathjax.tgz
 
 cd /srv/mcweb
 ln -sf /srv/mcweb/McWeb/scripts/uwsgi_mcweb /etc/init.d/uwsgi_mcweb
@@ -124,16 +118,64 @@ echo -n Please enter your LDAP admin password and press [ENTER]:
 read LDAP_PASS
 LDAPDOMAIN=`slapcat |grep dn:\ dc|cut -f2- -d\ `
 LDAPADMIN=`slapcat |grep admin | grep dn:\ cn=admin | cut -f2- -d\ `
+LDAPGRP=`slapcat |grep ^dn | grep dn:\ ou=users | cut -f2- -d\ `
 export LDAP_PASS
 export LDAPADMIN
 export LDAPDOMAIN
+export LDAPGRP
 
 # Last setup of uwsgi etc
 echo Resuming setup...
 sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
+# Install piwik
+cd /tmp/
+wget https://builds.piwik.org/piwik.zip
 cd /srv/mcweb/
+sudo -u www-data unzip /tmp/piwik.zip
 
+cd $STARTDIR
+# Check if we were givern a mediawiki archive as a $1
+if [ -n "$1" ]; then
+    if [ -d "$1" ]; then
+	echo Attempting to restore mediawiki archive from $1
+	BACKUPDIR=`basename $1`
+	cd `dirname $1`
+	/srv/mcweb/McWeb/scripts/mediawiki-backup/restore_all.sh $BACKUPDIR
+        # Now configure the LocalSettings script from the backup for our new system
+	cd $STARTDIR
+	cd $1
+	# LDAP first
+	echo Setting up mediawiki for LDAP use
+	LDAP_FULLDOM_UNDERSCORE=`echo $LDAPDOMAIN | sed s/dc\=//g | sed s/\,/_/g`
+	sed -i "s/@LDAP_FULLDOM_UNDERSCORE@/${LDAP_FULLDOM_UNDERSCORE}/g" LocalSettings.php
+	sed -i "s/@LDAP_FULLDOM_UNDERSCORE@/${LDAP_FULLDOM_UNDERSCORE}/g" LocalSettings.php
+	sed -i "s/@LDAP_DN@/${LDAPDOMAIN}/g" LocalSettings.php
+	sed -i "s/@LDAP_GROUP_OU@/${LDAPGRP}/g" LocalSettings.php
+	# Password for DB
+	echo Setting up mediawiki for PostgreSQL access
+	sed -i "s/@DBNAME@/my_wiki/g" LocalSettings.php
+	sed -i "s/@DBUSER@/wikiuser/g" LocalSettings.php
+	sed -i "s/@DBPASS@/${PGSQL_PASS}/g" LocalSettings.php
+	# Mail etc.
+	echo Setting up mediawiki mail options
+	sed -i "s/@ADMINMAIL@/admin@localhost/g" LocalSettings.php
+	# The server itself etc.
+	echo Setting up mediawiki site and servername
+	IPADDR=`ip addr show | grep inet\ | cut -f 2 -d\t | cut -f 1 -d/ |grep -v 127 | sed "s/\ //g"`
+	SERVERNAME=`hostname`
+	sed -i "s/@SITENAME@/${SERVERNAME}/g" LocalSettings.php
+	sed -i "s+@SERVERNAME@+http://${IPADDR}+g" LocalSettings.php
+	sed -i "s+@PIWIK_URL@+/${IPADDR}/piwik+g" LocalSettings.php
+	chown www-data:www-data LocalSettings.php
+	echo Copying LocalSettings to mediawiki install
+	sudo -u www-data cp LocalSettings.php /srv/mcweb/mediawiki/
+	cd /srv/mcweb/mediawiki
+	sudo -u www-data php maintenance/update.php
+    fi
+fi
+
+cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
 sudo -u www-data cp /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
 sudo -u www-data cp mcvenv/bin/activate McWeb_finishup

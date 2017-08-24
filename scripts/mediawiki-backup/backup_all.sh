@@ -5,6 +5,7 @@
 # 1) Image files in /srv/mcweb/mediawiki/images
 # 2) Logo files in /srv/mcweb/mediawiki/logos
 # 3) Extensions in /srv/mcweb/mediawiki/extensions
+# 4) MediaWiki skins in /srv/mcweb/mediawiki/skins
 # 4) PostgreSQL database given as $1 (on legacy e-neutrons.org site named vntwiki)
 # 5) LocalSettings.php (DB passwords stripped out for security)
 
@@ -26,6 +27,7 @@ BACKUPDIR="${BACKUPBASE}${YEAR}${MONTH}${DAY}"
 IMAGES="${BACKUPDIR}/images.tgz"
 LOGOS="${BACKUPDIR}/logos.tgz"
 EXTS="${BACKUPDIR}/extensions.tgz"
+SKINS="${BACKUPDIR}/skins.tgz"
 DBDUMP="${BACKUPDIR}/pgdump.sql"
 
 WORKDIR=`pwd`
@@ -38,6 +40,8 @@ echo Generating logo archive
 tar cfz $WORKDIR/$LOGOS logos
 echo Generating extension archive
 tar cfz $WORKDIR/$EXTS extensions
+echo Generating skins archive
+tar cfz $WORKDIR/$SKINS skins
 echo Dumping database $DBNAME
 sudo -u postgres -H -- pg_dump $DBNAME > $WORKDIR/$DBDUMP
 cp $MWDIR/LocalSettings.php $WORKDIR/$BACKUPDIR/LocalSettings.php
