@@ -126,6 +126,10 @@ def get_instr_params(instr_grp, instr_file):
 class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
     
+    def add_arguments(self, parser):
+        parser.add_argument('--html', action='store_true', help="output linebreaks are replaced by <br />, etc.")
+
+    
     def handle(self, *args, **options):
         print 'collecting instruments one depth in sim/...'
         
@@ -169,7 +173,7 @@ class Command(BaseCommand):
                         print "Adding image for instrument %s" % i
                     else:
                         instr.image = '/static/noimage.png'
-    
+                    
                     # update instr params
                     instr.params = get_instr_params(g, i)
                     instr.save()
@@ -183,10 +187,18 @@ class Command(BaseCommand):
         print 'collect_instr done.'
         print
         if len(error_log) > 0:
-            print
-            print "ERRORS: The following errors were encountered:"
-            print
-            for l in error_log:
-                print
-                print(l)
             
+            if options['html']:
+                print
+                print "<p>ERRORS: The following errors were encountered:</p>"
+                print
+                
+                text = '\n'.join(error_log)
+                lines = text.splitlines()
+                lines = '<br/>\n'.join(lines)
+                print(lines)
+            else:
+                print
+                print "ERRORS: The following errors were encountered:"
+                print
+                print('\n'.join(error_log))
