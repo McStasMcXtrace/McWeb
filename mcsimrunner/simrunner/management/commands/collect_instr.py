@@ -129,6 +129,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print 'collecting instruments one depth in sim/...'
         
+        # error log
+        error_log = []
+        
         grp_instr = get_group_instrs('sim/')
         for g in grp_instr:
             try:
@@ -146,27 +149,44 @@ class Command(BaseCommand):
                 make_html_docs(g)
             except:
                 raise Exception('make_html_docs failed')
-                
+            
+            # instruments in group:
             for i in grp_instr[g]:
-                displayname = i
-                name = g + "_" + i
-                try: 
-                    instr = Instrument.objects.get(name=name)
-                    print "instrument %s exists in db" % i
-                except Instrument.DoesNotExist:    
-                    instr = Instrument(group=group, name=name, displayname=displayname)
-                    print "instrument %s created" % i
-                    
-                if os.path.isfile('sim/' + g + '/' + i + '.png'):
-                    instr.image = "/static/doc/" + g + "/" + i + ".png"
-                    shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
-                    print "Adding image for instrument %s" % i
-                else:
-                    instr.image = '/static/noimage.png'
-
-                # update instr params
-                instr.params = get_instr_params(g, i)
-                instr.save()
-                print "instrument %s params updated" % i
                 
+                try:
+                    displayname = i
+                    name = g + "_" + i
+                    try: 
+                        instr = Instrument.objects.get(name=name)
+                        print "instrument %s exists in db" % i
+                    except Instrument.DoesNotExist:    
+                        instr = Instrument(group=group, name=name, displayname=displayname)
+                        print "instrument %s created" % i
+                        
+                    if os.path.isfile('sim/' + g + '/' + i + '.png'):
+                        instr.image = "/static/doc/" + g + "/" + i + ".png"
+                        shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
+                        print "Adding image for instrument %s" % i
+                    else:
+                        instr.image = '/static/noimage.png'
+    
+                    # update instr params
+                    instr.params = get_instr_params(g, i)
+                    instr.save()
+                    print "instrument %s params updated" % i
+                except Exception as e:
+                    error_str = "instrument %s: %s" % (i, e.__str__())
+                    print error_str
+                    error_log.append(error_str)
+                    continue
+        
         print 'collect_instr done.'
+        print
+        if len(error_log) > 0:
+            print
+            print "ERRORS: The following errors were encountered:"
+            print
+            for l in error_log:
+                print
+                print(l)
+            
