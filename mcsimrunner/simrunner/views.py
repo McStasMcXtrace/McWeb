@@ -173,6 +173,8 @@ def simrun(req, sim_id):
         return redirect('/%s/browse.html' % simrun.data_folder)
     
     # simrun live status 
-    return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'neutrons': simrun.neutrons, 'seed': simrun.seed,
+    return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                                       'neutrons': simrun.neutrons, 'seed': simrun.seed,
                                        'scanpoints': simrun.scanpoints, 'params': simrun.params,
-                                       'status': simrun.status, 'date_time_created': timezone.localtime(simrun.created).strftime("%H:%M:%S")})
+                                       'status': simrun.status, 'date_time_created': timezone.localtime(simrun.created).strftime("%H:%M:%S"),
+                                       'data_folder' : simrun.data_folder})

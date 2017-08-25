@@ -22,6 +22,12 @@
         <p><strong>random seed:</strong> {{ seed }}</p>
         <p><strong>simulation steps:</strong> {{ scanpoints }}</p>
     </fieldset>
+
+    <fieldset>
+        <legend>Debug info</legend>
+        <a href="/{{ data_folder }}/stdout.txt">stdout</a>
+        <a href="/{{ data_folder }}/stderr.txt">stderr</a>
+    </fieldset>
     <p id="mcstas">A web-based interface for <a href="http://www.mcstas.org" target=_blank>McStas</a>.</p>
 </div>
 </body>
