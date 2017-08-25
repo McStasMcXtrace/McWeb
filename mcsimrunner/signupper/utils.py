@@ -209,7 +209,10 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
                     raise e
         
         # try add to moodle
-        mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
+        if not s.is_in_moodle:
+            mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
+            s.is_in_moodle = True
+            s.save()
         
         # try notify user
         if not s.notified:
