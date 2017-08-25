@@ -129,12 +129,17 @@ SERVERNAME=`hostname`
 export IPADDR
 export SERVERNAME
 
+echo -n Please enter your Django upload password and press [ENTER]:
+read UPLOADPW
+export UPLOADPW
+
 # Last setup of uwsgi etc
 echo Resuming setup...
 sed "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py.in > /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 sed -i "s/@LDAP_PW@/${LDAP_PASS}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
 sed -i "s/@IPADDR@/${IPADDR}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
 sed -i "s/@SERVERNAME@/${SERVERNAME}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
+sed -i "s/@UPLOADPW@/${UPLOADPW}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
 # Install piwik
 cd /tmp/

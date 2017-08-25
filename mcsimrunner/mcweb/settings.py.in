@@ -71,7 +71,7 @@ DEFAULT_INSTR = 'SANSsimple'
 MOODLE_DIR = '/srv/mcweb/moodle'
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
-FILE_UPLOAD_PW = 'upload123'
+FILE_UPLOAD_PW = '@UPLOADPW@'
 
 # --- END Deployment configuration ---
 
