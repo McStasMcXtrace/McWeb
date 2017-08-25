@@ -19,6 +19,8 @@ MCWEB_LDAP_DN = 'dc=risoe,dc=dk'
 
 MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
 
+LDAP_PW = '@LDAP_PW@'
+
 # email / email list used for admin notifications
 MCWEB_ADMIN_EMAIL = 'admin@e-neutrons.org'
 
