@@ -124,11 +124,17 @@ export LDAP_PASS
 export LDAPADMIN
 export LDAPDOMAIN
 export LDAPGRP
+IPADDR=`ip addr show | grep inet\ | cut -f 2 -d\t | cut -f 1 -d/ |grep -v 127 | sed "s/\ //g"`
+SERVERNAME=`hostname`
+export IPADDR
+export SERVERNAME
 
 # Last setup of uwsgi etc
 echo Resuming setup...
 sed "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py.in > /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 sed -i "s/@LDAP_PW@/${LDAP_PASS}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
+sed -i "s/@IPADDR@/${IPADDR}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
+sed -i "s/@SERVERNAME@/${SERVERNAME}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
 
 # Install piwik
 cd /tmp/
@@ -164,8 +170,6 @@ if [ -n "$1" ]; then
 	sed -i "s/@ADMINMAIL@/admin@localhost/g" LocalSettings.php
 	# The server itself etc.
 	echo Setting up mediawiki site and servername
-	IPADDR=`ip addr show | grep inet\ | cut -f 2 -d\t | cut -f 1 -d/ |grep -v 127 | sed "s/\ //g"`
-	SERVERNAME=`hostname`
 	sed -i "s/@SITENAME@/${SERVERNAME}/g" LocalSettings.php
 	sed -i "s+@SERVERNAME@+http://${IPADDR}+g" LocalSettings.php
 	sed -i "s+@PIWIK_URL@+/${IPADDR}/piwik+g" LocalSettings.php

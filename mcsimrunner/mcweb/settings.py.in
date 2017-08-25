@@ -96,7 +96,7 @@ SECRET_KEY = 'xne_dc*7f3#q(l*c1a97v@q!g$myz@4lcwt5ij&wx7t4)e+b5k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['elearn1-int.fysik.dtu.dk', 'fysik.dtu.dk', 'mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
+ALLOWED_HOSTS = ['@SERVERNAME@','@IPADDR@','elearn1-int.fysik.dtu.dk', 'fysik.dtu.dk', 'mcstas-01.risoe.dk', 'e-neutrons.org', 'sim.e-neutrons.org', '192.168.49.131']
 
 # Application definition
 INSTALLED_APPS = (
