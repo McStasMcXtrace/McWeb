@@ -83,6 +83,8 @@ def adduser(firstname, lastname, username, email):
     subprocess.call(cmd_adduser,
                     cwd=MOODLE_DIR, 
                     shell=True)
+    
+    # TODO: implement error checking
 
 def enroll_user(username, course_sn, teacher=False):
     if not teacher:
