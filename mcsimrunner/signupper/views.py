@@ -644,14 +644,15 @@ def man_courses(req, menu, post, base_context):
         if firstname != '' or email != '':
             if firstname == '' or email == '':
                 req.session['message'] = 'New user creation requires a name and an email.'
-                return redirect('/coursemanage/courses')
+                return redirect("/manage/%s" % menu)
             teacher = utils.create_signup(firstname, lastname, email, username, [])
             utils.adduser(teacher, ldap_password=LDAP_PW)
+            req.session['message'] = 'New user %s has been created.' % username
         
         # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
         mu.enroll_user(username=username, course_sn=shortname, teacher=True)
         
-        req.session['message'] = 'Course %s created with teacher %s. Restoring contents in background...' % (shortname, username)
+        req.session['message'] = '\n'.join(req.session['message'], 'Course %s created with teacher %s. Restoring contents in background...' % (shortname, username))
         
         return redirect("/manage/%s" % menu)
     elif post:

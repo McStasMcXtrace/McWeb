@@ -13,7 +13,6 @@ from ldaputils import ldaputils
 from mcweb.settings import MCWEB_LDAP_DN
 from moodleutils import moodleutils as mu
 
-
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
     try:
@@ -103,7 +102,6 @@ The e-neutrons.org admin team
     finally:
         os.remove('_body')
 
-
 def notify_contactentry(replyto, text):
     ''' send a new contact entry notification to mcweb admin '''
     body = text    
@@ -183,24 +181,26 @@ def update_signups(signups, form):
         s.username = form.get('%s_%s' % (str(s.id), 'username'))
         s.save()
 
+
 def assign_courses(signups, courses):
     ''' adds strings in courses (a list) to each signup in signups (a list) '''
     for s in signups:
         s.courses = s.courses + courses
 
-def adduser(signup, ldap_password, accept_ldap_exists=False):
+def adduser(signup, ldap_password, accept_ldap_exists=False, is_self_signup=False):
     ''' 
     Adds signup to ldap and moodle, and enrolls to the selected moodle courses.
     
     accept_ldap_exists : if True, accept ldap error "Already exists", but added_ldap property is untouched.
     '''
     s = signup
+    s.is_self_signup = is_self_signup
     try:
         # try add to ldap
         if not s.added_ldap:
             try:
                 ldaputils.adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
-                s.added_ldap = timezone.now()
+                s.is_in_ldap = True
                 s.save()
             except Exception as e:
                 if not accept_ldap_exists:
@@ -212,7 +212,6 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
         # try add to moodle
         if not s.added_moodle:
             mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
-            s.added_moodle = timezone.now()
             s.save()
         
         # try notify user
@@ -221,16 +220,7 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
             s.notified = timezone.now()
             s.save()
         
-        # all three tasks have been completed successfully at some point, mark and save
-        s.is_new = False
-        s.is_limbo = False
-        s.is_added = True
-        s.fail_str = ''
-        s.save()
-        
     except Exception as e:
         s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
         print s.fail_str
-        s.is_limbo = True
-        s.is_new = False
         s.save()
