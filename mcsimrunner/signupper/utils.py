@@ -62,9 +62,9 @@ def get_signups_limbo():
     ''' return relevant signup objects '''
     return Signup.objects.filter(is_limbo=True)
 
-def create_signup(firstname, lastname, email, username, courses_lst):
+def create_signup(firstname, lastname, email, username, courses_lst, is_self_signup=False):
     ''' most simple way of creating a new signup instance '''
-    signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd())
+    signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd(), is_self_signup=is_self_signup)
     signup.courses = courses_lst
     signup.save()
     return signup
@@ -187,17 +187,16 @@ def assign_courses(signups, courses):
     for s in signups:
         s.courses = s.courses + courses
 
-def adduser(signup, ldap_password, accept_ldap_exists=False, is_self_signup=False):
+def adduser(signup, ldap_password, accept_ldap_exists=False):
     ''' 
     Adds signup to ldap and moodle, and enrolls to the selected moodle courses.
     
-    accept_ldap_exists : if True, accept ldap error "Already exists", but added_ldap property is untouched.
+    accept_ldap_exists : if True, accept ldap error "Already exists", but is_in_ldap property is untouched.
     '''
     s = signup
-    s.is_self_signup = is_self_signup
     try:
         # try add to ldap
-        if not s.added_ldap:
+        if not s.is_in_ldap:
             try:
                 ldaputils.adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
                 s.is_in_ldap = True

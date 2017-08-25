@@ -652,7 +652,7 @@ def man_courses(req, menu, post, base_context):
         # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
         mu.enroll_user(username=username, course_sn=shortname, teacher=True)
         
-        req.session['message'] = '\n'.join(req.session['message'], 'Course %s created with teacher %s. Restoring contents in background...' % (shortname, username))
+        req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
         
         return redirect("/manage/%s" % menu)
     elif post:
