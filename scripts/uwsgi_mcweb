@@ -16,7 +16,6 @@ DAEMON=$VIRTUALENV/bin/uwsgi
 WRKDAEMON=$DIR/manage.py
 DAEMON_NAME=uwsgi_mcweb
 DAEMON_NAME_WRK=mcweb-worker
-NUMWORKERS=4
 
 # This next line determines what user the script runs as.
 DAEMON_USER=www-data
@@ -30,19 +29,13 @@ PIDFILE_WRK=/var/run/mcweb-worker
 do_start () {
     log_daemon_msg "Starting system $DAEMON_NAME daemon"
     start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $DAEMON -- uwsgi_mcweb.ini
-    for i in `seq 1 $NUMWORKERS`
-    do
-	start-stop-daemon --start --background --pidfile $PIDFILE_WRK.$i --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $WRKDAEMON -- runworker
-    done
+    start-stop-daemon --start --background --pidfile $PIDFILE_WRK --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $WRKDAEMON -- runworker
     log_end_msg $?
 }
 do_stop () {
     log_daemon_msg "Stopping system $DAEMON_NAME daemon"
     start-stop-daemon --stop --pidfile $PIDFILE --retry 10
-    for i in `seq 1 $NUMWORKERS`
-    do
-	start-stop-daemon --stop --pidfile $PIDFILE_WRK.$i --retry 10
-    done
+    start-stop-daemon --stop --pidfile $PIDFILE_WRK --retry 10
     log_end_msg $?
 }
  
