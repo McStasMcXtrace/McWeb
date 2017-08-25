@@ -133,6 +133,11 @@ echo -n Please enter your Django upload password and press [ENTER]:
 read UPLOADPW
 export UPLOADPW
 
+echo -n Please enter desired simulator MPI cores pr. sim job press [ENTER]:
+read MPICORES
+export MPICORES
+
+
 # Last setup of uwsgi etc
 echo Resuming setup...
 sed "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py.in > /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
@@ -140,6 +145,7 @@ sed -i "s/@LDAP_PW@/${LDAP_PASS}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.
 sed -i "s/@IPADDR@/${IPADDR}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
 sed -i "s/@SERVERNAME@/${SERVERNAME}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py 
 sed -i "s/@UPLOADPW@/${UPLOADPW}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
+sed -i "s/@MPICORES@/${MPICORES}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
 # Install piwik
 cd /tmp/
@@ -179,7 +185,7 @@ if [ -n "$1" ]; then
 	sed -i "s+@SERVERNAME@+http://${IPADDR}+g" LocalSettings.php
 	sed -i "s+@PIWIK_URL@+/${IPADDR}/piwik+g" LocalSettings.php
 	chown www-data:www-data LocalSettings.php
-	echo Copying LocalSettings to mediawiki install
+	echo Copying LocalSettings to medsettingsiawiki install
 	sudo -u www-data cp LocalSettings.php /srv/mcweb/mediawiki/
 	cd /srv/mcweb/mediawiki
 	sudo -u www-data php maintenance/update.php
