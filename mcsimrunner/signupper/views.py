@@ -25,7 +25,7 @@ import re
 
 import utils
 from mcweb import settings
-from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW
+from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
@@ -524,7 +524,6 @@ def superlogin(req):
         return render(req, 'course_login.html')
     
     login(req, user)
-    req.session['ldap_password'] = form.get('ldap_password', '')
 
     return redirect('/manage')
 
@@ -647,7 +646,7 @@ def man_courses(req, menu, post, base_context):
                 req.session['message'] = 'New user creation requires a name and an email.'
                 return redirect('/coursemanage/courses')
             teacher = utils.create_signup(firstname, lastname, email, username, [])
-            utils.adduser(teacher, ldap_password=req.session['ldap_password'])
+            utils.adduser(teacher, ldap_password=LDAP_PW)
         
         # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
         mu.enroll_user(username=username, course_sn=shortname, teacher=True)
@@ -689,7 +688,7 @@ def man_bulk_signup(req, menu, post, base_context):
         # perform the appropriate add-user actions for each signup
         req.session['message'] = 'All signups were added succesfully.'
         for signup in signups:
-            utils.adduser(signup, ldap_password=req.session['ldap_password'], accept_ldap_exists=override_ldap)
+            utils.adduser(signup, ldap_password=LDAP_PW, accept_ldap_exists=override_ldap)
             if signup.fail_str != '':
                 req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
         return redirect('/manage/%s' % menu)

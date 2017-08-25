@@ -1,33 +1,6 @@
 {% extends 'man_base.html' %}
 {% block content %}
 
-<script>
-    Date.prototype.yyyymmdd = function() {
-        var mm = this.getMonth() + 1; // getMonth() is zero-based
-        if (mm < 10) mm = "0" + mm;
-        var dd = this.getDate();
-        if (dd < 10) dd = "0" + dd;
-        return [this.getFullYear(), mm, dd].join('');
-    };
-
-    // TODO: string replace ' ' with '_'
-    var update_sn = function()
-    {
-        tbx_site = document.getElementById('tbx_site');
-        tbx_sn = document.getElementById('tbx_sn');
-        var date = new Date();
-        document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
-    }
-    var update_sn_tmpl = function()
-    {
-        tbx = document.getElementById('tbx_sn_tmpl');
-        var date = new Date();
-        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname_tmpl').value = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
-    }
-</script>
-
 <div style="margin-left:auto; margin-right:auto; width:600px;">
 
 <fieldset style="margin:5px;">
