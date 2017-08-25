@@ -19,6 +19,7 @@ class Signup(Model):
     deleted = DateTimeField('Deleted', blank=True, null=True)
     
     is_in_ldap = BooleanField(default=False)
+    is_in_moodle = BooleanField(default=False)
     is_self_signup = BooleanField(default=False)
     
     fail_str = CharField(max_length=1000, default='')
