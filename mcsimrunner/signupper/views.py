@@ -782,7 +782,7 @@ def man_upload(req, menu, post, base_context):
         
         # mkdir if required (and set g to new group_dir)...
         d = form['new_group']
-        if d != '':
+        if d != '' and d not in group_dirs():
             os.mkdir('sim/%s' % d)
             req.session['message'] = 'Group dir %s was created.' % d
             g = d
