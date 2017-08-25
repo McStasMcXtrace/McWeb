@@ -81,6 +81,7 @@ cd /srv/mcweb
 sudo -u www-data git clone https://github.com/moodle/moodle.git
 cd moodle
 sudo -u www-data git checkout MOODLE_33_STABLE
+cd /srv/mcweb
 sudo -u www-data cp McWeb/bootstrap_data/moodle/* /srv/mcweb/moodle-course-templates/
 
 # Moosh
@@ -126,7 +127,7 @@ export LDAPGRP
 
 # Last setup of uwsgi etc
 echo Resuming setup...
-sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
+sed "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py.in > /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
 # Install piwik
 cd /tmp/
@@ -174,6 +175,16 @@ if [ -n "$1" ]; then
 	sudo -u www-data php maintenance/update.php
     fi
 fi
+
+# Self-service-password
+cd /srv/mcweb
+sudo -u www-data git clone https://github.com/ltb-project/self-service-password.git ssp
+cd ssp/conf
+sed -i 's/\$ldap_binddn = "cn=manager,dc=example,dc=com";/\$ldap_binddn = "${LDAPADMIN}";/g' config.inc.php
+sed -i 's/\$ldap_bindpw = "secret";/\$ldap_binddn = "${LDAP_PASS}";/g' config.inc.php
+sed -i 's/\$ldap_base = "dc=example,dc=com";/\$ldap_base = "${LDAPDOMAIN}";/g' config.inc.php
+sed -i 's/\$use_questions = true;/\$use_questions = false;/g' config.inc.php
+sed -i 's/\$use_sms = true;/\$use_sms = false;/g' config.inc.php
 
 cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
