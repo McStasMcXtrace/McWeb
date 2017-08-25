@@ -72,7 +72,7 @@ def get_group_instrs(basedir):
 def get_instr_params(instr_grp, instr_file):
     ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
     
-    cmd = MCRUN + ' --mpi ' + instr_file + " --info"
+    cmd = MCRUN + ' --mpi=1' + instr_file + " --info"
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
@@ -126,11 +126,8 @@ def get_instr_params(instr_grp, instr_file):
 class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
     
-    def add_arguments(self, parser):
-        parser.add_argument('--html', action='store_true', help="output linebreaks are replaced by <br />, etc.")
-
-    
     def handle(self, *args, **options):
+        print "<pre>\n"
         print 'collecting instruments one depth in sim/...'
         
         # error log
@@ -184,21 +181,10 @@ class Command(BaseCommand):
                     error_log.append(error_str)
                     continue
         
-        print 'collect_instr done.'
-        print
         if len(error_log) > 0:
-            
-            if options['html']:
-                print
-                print "<p>ERRORS: The following errors were encountered:</p>"
-                print
-                
-                text = '\n'.join(error_log)
-                lines = text.splitlines()
-                lines = '<br/>\n'.join(lines)
-                print(lines)
-            else:
-                print
-                print "ERRORS: The following errors were encountered:"
-                print
-                print('\n'.join(error_log))
+            print
+            print "ERRORS: The following errors were encountered:"
+            print
+            print('\n'.join(error_log))
+        
+        print "</pre>\n"
