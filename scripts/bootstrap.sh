@@ -230,6 +230,7 @@ echo echo Django setup: >>  McWeb_finishup
 echo echo username: djangoadmin >>  McWeb_finishup
 echo echo password: \$DJANGO_PASS >>  McWeb_finishup
 echo echo email-adress: admin@localhost >>  McWeb_finishup
+echo echo Django upload pass: $UPLOADPASS >>  McWeb_finishup
 echo echo >>  McWeb_finishup 
 echo crontab /srv/mcweb/McWeb/scripts/cronjobs.txt >> McWeb_finishup 
 
