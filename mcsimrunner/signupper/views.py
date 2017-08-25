@@ -25,11 +25,12 @@ import re
 
 import utils
 from mcweb import settings
-from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY
+from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
 from models import Signup
+from collections import OrderedDict
 
 
 ####################################################################
@@ -502,6 +503,312 @@ def courseman_users_post(req):
             req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
     
     return redirect('/coursemanage/users')
+
+
+###############################################################
+#                  New management module                      #
+##############################################################
+
+def superlogin(req):
+    ''' login and check for superuser status '''
+    form = req.POST
+    
+    username = form.get('username', '')
+    password = form.get('password', '')
+    
+    if not username or not password:
+        return render(req, 'course_login.html')
+    
+    user = authenticate(username=username, password=password)
+    if user is None or not user.is_active or not user.is_superuser:
+        return render(req, 'course_login.html')
+    
+    login(req, user)
+    req.session['ldap_password'] = form.get('ldap_password', '')
+
+    return redirect('/manage')
+
+manage_menu_items = OrderedDict([
+                ('users' , 'Users'),
+                ('self_signups' , 'Self-Signups'),
+                ('limbos' , 'Limbos'),
+                ('deleted' , 'Deleted'),
+                ('pause_a' , '---'),
+                ('templates' , 'Templates'),
+                ('courses' , 'Courses'),
+                ('bulk_signup' , 'Bulk Signup'),
+                ('pause_b' , '---'),
+                ('upload' , 'Upload')])
+    
+@user_passes_test(lambda u: u.is_superuser)
+def manage(req, menu=None, post=None):
+    '''  '''
+    if not menu in manage_menu_items or menu in ['pause_a', 'pause_b']:
+        return redirect('/manage/users')
+    
+    message = req.session.get('message', '')
+    req.session['message'] = ''
+    base_context = {'menu' : menu, 'menu_items' : manage_menu_items, 'message' : message}
+    
+    idx = manage_menu_items.keys().index(menu)
+    if idx == 0:
+        return man_users(req, menu, post, base_context)
+    elif idx == 1:
+        return man_selfsignups(req, menu, post, base_context)
+    elif idx == 2:
+        return man_limbos(req, menu, post, base_context)
+    elif idx == 3:
+        return man_deleted(req, menu, post, base_context)
+    elif idx == 5:
+        return man_templates(req, menu, post, base_context)
+    elif idx == 6:
+        return man_courses(req, menu, post, base_context)
+    elif idx == 7:
+        return man_bulk_signup(req, menu, post, base_context)
+    elif idx == 9:
+        return man_upload(req, menu, post, base_context)
+    else:
+        raise Exception("code inconsistence")
+
+
+def man_users(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_users.html', context)
+
+def man_selfsignups(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_users.html', context)
+
+def man_limbos(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_users.html', context)
+
+def man_deleted(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_users.html', context)
+
+
+def man_templates(req, menu, post, base_context):
+    '''  '''
+    if post == 'post':
+        form = req.POST
+        shortname = form['course_selector']
+        tmplname =  form['field_shortname_tmpl']
+        m = re.match('\-\-\sselect\sfrom', shortname)
+        if tmplname != '' and not m:
+            mu.create_template(shortname, tmplname)
+            req.session['message'] = 'Template %s created from %s.' % (tmplname, shortname)
+        else:
+            req.session['message'] = 'Please select a proper course and a template name.'
+        return redirect("/manage/%s" % menu)
+    elif post:
+        return redirect("/manage/%s" % menu)
+    
+    courses = mu.get_courses()
+    templates = mu.get_templates()
+    
+    context = {'courses' : courses, 'templates' : templates, 'next' : '/manage/%s/post' % menu}
+    context.update(base_context)
+    return render(req, 'man_templates.html', context)
+
+
+def man_courses(req, menu, post, base_context):
+    '''  '''
+    if post == 'post':
+        form = req.POST
+        
+        tmpl = form['tmpl_selector']
+        site = form['tbx_site']
+        shortname = form['field_shortname']
+        title = form['tbx_title']
+        
+        m = re.match('\-\-\sselect\sfrom', shortname)
+        if site != '' and shortname != '' and title != '' and not m:
+            (backupname, courseid, status) = mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+        else:
+            req.session['message'] = 'Please select a proper template and a course name.'
+            return redirect("/manage/%s" % menu)
+        
+        username = form['tbx_username']
+        firstname = form['tbx_firstname']
+        lastname = form['tbx_lastname']
+        email = form['tbx_email']
+        
+        if username == '':
+            req.session['message'] = 'Please assign a teacher for the course.'
+            return redirect("/manage/%s" % menu)
+        
+        if firstname != '' or email != '':
+            if firstname == '' or email == '':
+                req.session['message'] = 'New user creation requires a name and an email.'
+                return redirect('/coursemanage/courses')
+            teacher = utils.create_signup(firstname, lastname, email, username, [])
+            utils.adduser(teacher, ldap_password=req.session['ldap_password'])
+        
+        # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
+        mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+        
+        req.session['message'] = 'Course %s created with teacher %s. Restoring contents in background...' % (shortname, username)
+        
+        return redirect("/manage/%s" % menu)
+    elif post:
+        return redirect("/manage/%s" % menu)
+    
+    context = {'templates' : mu.get_templates(),  'next' : '/manage/%s/post' % menu}
+    context.update(base_context)
+    return render(req, 'man_courses.html', context)
+
+
+def man_bulk_signup(req, menu, post, base_context):
+    '''  '''
+    if post == 'post':
+        form = req.POST
+        
+        # get filtered signups and update
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        signups = Signup.objects.filter(id__in=ids)
+        utils.update_signups(signups, form)
+        
+        cs = form['course_selector']
+        if re.match('\-\-\sselect', cs):
+            req.session['message'] = 'Please select a course.'
+            return redirect('/coursemanage/users')
+        
+        courses = [cs] + COURSES_MANDATORY
+        utils.assign_courses(signups, courses)
+        
+        override_ldap = False
+        if form.get('override_ldap'):
+            override_ldap = True
+        
+        # perform the appropriate add-user actions for each signup
+        req.session['message'] = 'All signups were added succesfully.'
+        for signup in signups:
+            utils.adduser(signup, ldap_password=req.session['ldap_password'], accept_ldap_exists=override_ldap)
+            if signup.fail_str != '':
+                req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
+        return redirect('/manage/%s' % menu)
+    
+    elif post == 'uploadcsv-post':
+        if len(req.FILES) > 0:
+            try:
+                f = req.FILES['up_file']
+                # pull csv object to db signup objects 
+                utils.pull_signups_todb(f, courses_only=['hest'])
+            except Exception as e:
+                req.session['message'] = 'Invalid csv file: %s' % e.__str__()
+                #return HttpResponse('Invalid csv file: %s' % e.__str__())
+        return redirect('/manage/%s' % menu)
+    
+    elif post == 'delete':
+        s = Signup.objects.filter(id=int(id))
+        s.delete()
+        return redirect('/manage/%s' % menu)
+    
+    elif post: 
+        return redirect('/manage/%s' % menu)
+    
+    colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
+    rows_ids = []
+    ids = []
+    
+    courses = mu.get_courses()
+    
+    displaysignups = 'none'
+    signups = Signup.objects.filter(is_in_ldap=False)
+    
+    if len(signups) > 0:
+        displaysignups = ''
+        for s in signups:
+            row = []
+            use_textbox = True
+            
+            row.append(Ci(s.created.strftime("%Y%m%d")))
+            row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+            row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+            row.append(Ci(s.email, txt=use_textbox, header='email'))
+            row.append(Ci(s.username, txt=use_textbox, header='username'))
+            row.append(Ci(s.password, header='passwd'))
+            row.append(Ci('delete', btn=True))
+            
+            rows_ids.append([row, str(s.id)])
+            ids.append(s.id)
+    
+    context = {'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids,
+               'next' : '/manage/%s/post' % menu,
+               'uploadnext' : '/manage/%s/uploadcsv-post' % menu,
+               'displaysignups' : displaysignups, 'courses' : courses}
+    context.update(base_context)
+    return render(req, 'man_bulk.html', context)
+
+
+def man_upload(req, menu, post, base_context):
+    '''  '''
+    def group_dirs():
+        for _, dirs, _ in os.walk('sim/'):
+            # stackoverflow-ish alphanum sort 
+            dirs = sorted(dirs, key=lambda item: (int(item.partition(' ')[0])
+                                   if item[0].isdigit() else float('inf'), item))
+            return dirs
+    
+    def shepherd(file_obj, g):
+        file_path = "%s/%s"%(os.path.join(BASE_DIR, 'sim', g), file_obj.name)
+        with open(file_path, 'wb+') as out_file:
+            for chunk in file_obj.chunks():
+                out_file.write(chunk)
+        return "saved to: %s" % file_path
+    
+    if post == 'post':
+        form = req.POST
+        if not form:
+            return redirect('/manage/%s' % menu)
+        
+        # check password
+        pw = form['password']
+        req.session['man_upload_pw'] = pw
+        if pw == '':
+            return redirect('/manage/%s' % menu)
+        if pw != FILE_UPLOAD_PW:
+            req.session['message'] = 'Please enter the correct password'
+            return redirect('/manage/%s' % menu)
+        
+        # handle form
+        g = form['groupdir']
+        
+        # mkdir if required (and set g to new group_dir)...
+        d = form['new_group']
+        if d != '':
+            os.mkdir('sim/%s' % d)
+            req.session['message'] = 'Group dir %s was created.' % d
+            g = d
+        elif g == "select_a_group":
+            req.session['message'] = 'Please select or create a group dir.'
+            return redirect('/manage/%s' % menu)
+        
+        # get file
+        if len(req.FILES) > 0:
+            f = req.FILES['up_file']
+            shepherd(f, g)
+            req.session['message'] = 'File %s uploaded to %s.' % (f.name, g)
+        else:
+            req.session['message'] = 'Please select a file for upload.'
+            return redirect('/manage/%s' % menu)
+        
+        return redirect('/manage/%s' % menu)
+
+    groupdirs = group_dirs()    
+    pw = req.session.get('man_upload_pw', '')
+    
+    context = {'groupdirs': groupdirs, 'password': '', 'password': pw,
+               'next' : '/manage/%s/post' % menu
+               }
+    context.update(base_context)
+    return render(req, 'man_upload.html', context)
 
 
 ####################################################
