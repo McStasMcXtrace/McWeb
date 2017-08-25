@@ -126,7 +126,7 @@ export LDAPGRP
 
 # Last setup of uwsgi etc
 echo Resuming setup...
-sed -i.bak "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
+sed "s/dc=risoe,dc=dk/${LDAPDOMAIN}/g" /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py.in > /srv/mcweb/McWeb/mcsimrunner/mcweb/settings.py
 
 # Install piwik
 cd /tmp/
