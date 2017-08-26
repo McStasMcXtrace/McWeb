@@ -201,6 +201,8 @@ sed -i "s/\$ldap_bindpw = \"secret\";/\$ldap_bindpw = \"${LDAP_PASS}\";/g" confi
 sed -i "s/\$ldap_base = \"dc=example,dc=com\";/\$ldap_base = \"${LDAPDOMAIN}\";/g" config.inc.php
 sed -i "s/\$use_questions = true;/\$use_questions = false;/g" config.inc.php
 sed -i "s/\$use_sms = true;/\$use_sms = false;/g" config.inc.php
+sed -i "s/\$logo = \"images/ltb-logo.png\";/\$logo = \"/static/eneutrons_63x50.png\";/g" config.inc.php
+sed -i "s/\$background_image = \"images/unsplash-space.jpeg\";/\$background_image = \"\";/g" config.inc.php
 
 cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
