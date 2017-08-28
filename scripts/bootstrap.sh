@@ -204,6 +204,12 @@ sed -i "s/\$use_sms = true;/\$use_sms = false;/g" config.inc.php
 sed -i "s+\$logo = \"images/ltb-logo.png\";+\$logo = \"/static/eneutrons_63x50.png\";+g" config.inc.php
 sed -i "s+\$background_image = \"images/unsplash-space.jpeg\";+\$background_image = \"\";+g" config.inc.php
 
+# Simple, static "admin" landing page
+cd /srv/mcweb
+sudo -u www-data mkdir landing
+sed "s/@HOSTNAME@/${SERVERNAME}/g" McWeb/landingpage/landingpage.in.html > landing/index.html
+chown www-data:www-data landing/index.html
+
 cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
 sudo -u www-data cp /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr

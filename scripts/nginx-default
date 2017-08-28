@@ -82,6 +82,10 @@ server {
     location /ssp {
         alias /srv/mcweb/ssp;
     }    
+    
+    location /landing {
+        alias /srv/mcweb/landing;
+    } 
 
     location ~ \.php$ {
          include snippets/fastcgi-php.conf;
