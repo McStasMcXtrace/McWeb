@@ -528,10 +528,12 @@ def superlogin(req):
     return redirect('/manage')
 
 manage_menu_items = OrderedDict([
-                ('bulk_signup' , 'Bulk Signup'),
-                ('self_signups' , 'Self-Signups'),
+                ('bulk_add' , 'Bulk Add'),
+                ('signups' , 'Signups'),
                 ('users' , 'Users'),
                 ('limbos' , 'Limbos'),
+                ('deleted' , 'Deleted'),
+                ('disabled' , 'Disabled'),
                 ('pause_a' , '---'),
                 ('templates' , 'Templates'),
                 ('courses' , 'Courses'),
@@ -557,11 +559,15 @@ def manage(req, menu=None, post=None):
         return man_users(req, menu, post, base_context)
     elif idx == 3:
         return man_limbos(req, menu, post, base_context)
+    elif idx == 4:
+        return man_deleted(req, menu, post, base_context)
     elif idx == 5:
+        return man_disabled(req, menu, post, base_context)
+    elif idx == 7:
         return man_templates(req, menu, post, base_context)
-    elif idx == 6:
-        return man_courses(req, menu, post, base_context)
     elif idx == 8:
+        return man_courses(req, menu, post, base_context)
+    elif idx == 10:
         return man_upload(req, menu, post, base_context)
     else:
         raise Exception("code inconsistence")
@@ -688,9 +694,14 @@ def man_selfsignups(req, menu, post, base_context):
 def man_limbos(req, menu, post, base_context):
     context = {}
     context.update(base_context)
-    return render(req, 'man_users.html', context)
+    return render(req, 'man_limbos.html', context)
 
 def man_deleted(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_deleted.html', context)
+
+def man_disabled(req, menu, post, base_context):
     context = {}
     context.update(base_context)
     return render(req, 'man_users.html', context)
