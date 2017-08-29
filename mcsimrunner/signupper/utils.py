@@ -50,21 +50,19 @@ def get_colheaders():
         header_cols.append(c)
     return (header_cols, num_non_course)
 
-def get_signups():
-    ''' return relevant signup objects '''
-    return Signup.objects.filter(is_new=True)
+def get_signups_inldap():
+    return Signup.objects.filter(is_in_ldap=True)
 
-def get_signups_added():
-    ''' return relevant signup objects '''
-    return Signup.objects.filter(is_added=True)
+def get_signups_all():
+    return Signup.objects.all()
 
-def get_signups_limbo():
-    ''' return relevant signup objects '''
-    return Signup.objects.filter(is_limbo=True)
+def get_signups_self():
+    return Signup.objects.filter(is_self_signup=True)
 
 def create_signup(firstname, lastname, email, username, courses_lst, is_self_signup=False):
     ''' most simple way of creating a new signup instance '''
-    signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd(), is_self_signup=is_self_signup)
+    signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd(),
+                    is_self_signup=is_self_signup)
     signup.courses = courses_lst
     signup.save()
     return signup
@@ -98,7 +96,7 @@ The e-neutrons.org admin team
         retcode = call(cmd, shell=True)
         print(cmd)
         if retcode != 0:
-            raise Exception('retcode: %s' % retcode) 
+            raise Exception('notifyuser mailx retcode: %s' % retcode) 
     finally:
         os.remove('_body')
 
@@ -109,11 +107,11 @@ def notify_contactentry(replyto, text):
         f = open('_contactbody', 'w') 
         f.write(body.encode('utf8'))
         f.close()
-        cmd = 'mail.mailutils -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
+        cmd = 'mailx -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = call(cmd, shell=True)
         print(cmd)
         if retcode != 0:
-            raise Exception('retcode: %s' % retcode)
+            raise Exception('notify_contactentry mail.mailutils retcode: %s' % retcode)
     
     except Exception as e:
         raise Exception('notify_contactentry: %s' % e.message)

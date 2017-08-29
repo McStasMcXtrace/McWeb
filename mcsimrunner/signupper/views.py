@@ -528,14 +528,13 @@ def superlogin(req):
     return redirect('/manage')
 
 manage_menu_items = OrderedDict([
-                ('users' , 'Users'),
+                ('bulk_signup' , 'Bulk Signup'),
                 ('self_signups' , 'Self-Signups'),
+                ('users' , 'Users'),
                 ('limbos' , 'Limbos'),
-                ('deleted' , 'Deleted'),
                 ('pause_a' , '---'),
                 ('templates' , 'Templates'),
                 ('courses' , 'Courses'),
-                ('bulk_signup' , 'Bulk Signup'),
                 ('pause_b' , '---'),
                 ('upload' , 'Upload')])
     
@@ -551,27 +550,133 @@ def manage(req, menu=None, post=None):
     
     idx = manage_menu_items.keys().index(menu)
     if idx == 0:
-        return man_users(req, menu, post, base_context)
+        return man_bulk_signup(req, menu, post, base_context)
     elif idx == 1:
         return man_selfsignups(req, menu, post, base_context)
     elif idx == 2:
-        return man_limbos(req, menu, post, base_context)
+        return man_users(req, menu, post, base_context)
     elif idx == 3:
-        return man_deleted(req, menu, post, base_context)
+        return man_limbos(req, menu, post, base_context)
     elif idx == 5:
         return man_templates(req, menu, post, base_context)
     elif idx == 6:
         return man_courses(req, menu, post, base_context)
-    elif idx == 7:
-        return man_bulk_signup(req, menu, post, base_context)
-    elif idx == 9:
+    elif idx == 8:
         return man_upload(req, menu, post, base_context)
     else:
         raise Exception("code inconsistence")
 
 
 def man_users(req, menu, post, base_context):
-    context = {}
+    '''  '''
+    def post(req):
+        # get filtered signups and update
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        objs = Signup.objects.filter(id__in=ids)
+        utils.update_signups(objs, form)
+        
+        # perform the appropriate add-user actions for each signup
+        for signup in objs:
+            utils.adduser(signup, ldap_password=req.session['ldap_password'])
+        
+        # return to the list 
+        if len(utils.get_signups()) > 0:
+            return redirect('/userlist_au/new')
+        elif len(utils.get_signups_limbo()) > 0:
+            return redirect('/userlist_au/limbo')
+        else:
+            return redirect('/userlist_au/added')
+    
+    def action(req, action, signup_id):
+        if action == 'delete':
+            # TODO: if user has been added to ldap, etc., remove them don't just delete the signup request
+            # TODO: make it so that deleted signups are just moved somewhere else, so they may be revived using /admin
+            s = Signup.objects.filter(id=int(signup_id))
+            s.delete()
+            return redirect(userlist_au)
+        
+        if action == 'edit':
+            return redirect('/userdetail_au/%s/' % signup_id)
+        
+        return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, signup_id))
+
+    
+    #listtype = 'all'
+    #listtype = 'added'
+    listtype = 'self'
+    
+    headers, num_non_course = utils.get_colheaders()
+    colheaders = []
+    i = 0
+    for colheader in headers:
+        i += 1
+        cbx = None
+        colheaders.append(Ci(colheader, cbx))
+    
+    rows_ids = []
+    ids = []
+    
+    # filter signup object set (and ui state variables message and buttonstate) based on action parameter
+    buttondisplay = ''
+    uploaddisplay = ''
+    if listtype == 'all':
+        signups = utils.get_signups_all()
+        message = 'New signups:'
+    elif listtype == 'added':
+        signups = utils.get_signups_inldap()
+        message = 'Added:'
+        buttondisplay = 'none'
+        uploaddisplay = 'none'
+    elif listtype == 'self':
+        signups = utils.get_signups_self()
+        message = 'Self-signups - edit to fix errors, then re-submit:'
+        uploaddisplay = 'none'
+    else: 
+        raise Exception('signupper.views.userlist_au: undefined action')
+    
+    for s in signups:
+        ids.append(s.id)
+        
+        row = []
+        # THIS
+        use_textbox = not s.is_in_ldap
+        row.append(Ci(s.created.strftime("%Y%m%d")))
+        row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+        row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+        row.append(Ci(s.email, txt=use_textbox, header='email'))
+        row.append(Ci(s.username, txt=use_textbox, header='username'))
+        row.append(Ci(s.password, header='passwd'))
+        
+        # courses columns - new/limbo or added signup state
+        for course in settings.COURSES + settings.COURSES_MANDATORY:
+            if not listtype == 'added' and not s.is_in_moodle:
+                if course in s.courses:
+                    row.append(Ci(course, cbx='checked'))
+                else:
+                    row.append(Ci(course, cbx='unchecked'))
+            else:
+                if course in s.courses:
+                    row.append(Ci('enrolled'))
+                else:
+                    row.append(Ci(''))
+        
+        # buttons
+        if listtype == 'new':
+            #row.append(Ci('edit', btn=True))
+            row.append(Ci('delete', btn=True))
+        
+        # fail string
+        if listtype == 'limbo':
+            row.append(Ci(s.fail_str))
+        
+        rows_ids.append([row, str(s.id)])
+    
+    
+    context = {'next': '/userlist_au-post', 'uploadnext': '/upload_au_post',
+               'ids': ids, 'rows_ids': rows_ids,
+               'colheaders': colheaders, 'buttondisplay': buttondisplay,
+               'uploaddisplay': uploaddisplay}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 

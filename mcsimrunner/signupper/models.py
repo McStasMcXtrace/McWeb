@@ -34,6 +34,36 @@ class Signup(Model):
     
     def __str__(self):
         return "%s" % (self.username)
+    
+    def get_states(self):
+        return ['limbo', 'new', 'new self-signups', 'added', 'deleted', 'disabled']
+    
+    def state(self):
+        '''
+        0 - limbo
+        1 - new
+        2 - new self-signups
+        3 - added
+        4 - deleted
+        5 - disabled
+        '''
+        ldap = self.is_in_ldap
+        moo = self.is_in_moodle
+        slf = self.is_self_signup
+        deltd = self.deleted is not None
+        
+        if not ldap and not moo and not self and not deltd:
+            return 1
+        elif not ldap and not moo and self and not deltd:
+            return 3
+        elif ldap and moo and not deltd:
+            return 3
+        elif not ldap and not moo and deltd:
+            return 4
+        elif not ldap and moo and not deltd:
+            return 5
+        else:
+            return 0
 
 class ContactEntry(Model):
     ''' contact entry and related context info '''
