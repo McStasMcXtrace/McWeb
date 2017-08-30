@@ -55,7 +55,7 @@ class Signup(Model):
         if not ldap and not moo and not self and not deltd:
             return 1
         elif not ldap and not moo and self and not deltd:
-            return 3
+            return 2
         elif ldap and moo and not deltd:
             return 3
         elif not ldap and not moo and deltd:
