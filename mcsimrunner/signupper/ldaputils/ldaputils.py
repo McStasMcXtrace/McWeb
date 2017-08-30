@@ -32,19 +32,19 @@ def listusers(dn, uid=None):
                             stderr=subprocess.PIPE,
                             shell=True)
     com = proc.communicate()
-    print('running: %s' % cmd)
-    print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    print('%s\n' % cmd)
+    #print('std-out: %s' % com[0])
+    #print('std-err: %s' % com[1])
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
     
     for section in sections:
         try:
-            uid = re.match('(\w+),', section).group(1)
-            cn = re.search('cn: (\w+)\n', section).group(1)
-            sn = re.search('sn: (\w+)\n', section).group(1)
-            mail = re.search('mail: ([\w\.\@]+)\n', section).group(1)
+            uid = re.search('(\w+),', section).group(1).strip()
+            cn = re.search('cn: ([\w\s]+)\n', section).group(1).strip()
+            sn = re.search('sn: ([\w\s]+)\n', section).group(1).strip()
+            mail = re.search('mail: ([\w\.\@\-0-9]+)\n', section).group(1).strip()
             
             users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
