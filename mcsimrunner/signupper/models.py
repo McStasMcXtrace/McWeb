@@ -52,9 +52,9 @@ class Signup(Model):
         slf = self.is_self_signup
         deltd = self.deleted is not None
         
-        if not ldap and not moo and not self and not deltd:
+        if not ldap and not moo and not slf and not deltd:
             return 1
-        elif not ldap and not moo and self and not deltd:
+        elif not ldap and not moo and slf and not deltd:
             return 2
         elif ldap and moo and not deltd:
             return 3
