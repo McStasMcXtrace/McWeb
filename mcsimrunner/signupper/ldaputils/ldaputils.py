@@ -91,7 +91,7 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
-        print('running: %s' % cmd)
+        print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
         #print('std-err: %s' % stderr)
         
@@ -123,7 +123,7 @@ def rmuser(dn, admin_password, uid):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
-        print('running: %s' % cmd)
+        print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
         #print('std-err: %s' % stderr)
         
@@ -153,7 +153,7 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
-        print('running: %s' % cmd)
+        print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
         #print('std-err: %s' % stderr)
         
@@ -178,7 +178,7 @@ def initdb(dn, admin_password):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         com = process.communicate()
-        print('running: %s' % cmd)
+        print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % com[0])
         #print('std-err: %s' % com[1])
     finally:
