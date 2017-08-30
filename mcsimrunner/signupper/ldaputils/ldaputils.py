@@ -92,8 +92,8 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         print('running: %s' % cmd)
-        print('std-out: %s' % stdout)
-        print('std-err: %s' % stderr)
+        #print('std-out: %s' % stdout)
+        #print('std-err: %s' % stderr)
         
         if stderr:
             ps = ''
@@ -124,8 +124,8 @@ def rmuser(dn, admin_password, uid):
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         print('running: %s' % cmd)
-        print('std-out: %s' % stdout)
-        print('std-err: %s' % stderr)
+        #print('std-out: %s' % stdout)
+        #print('std-err: %s' % stderr)
         
         if stderr:
             ps = ''
@@ -154,8 +154,8 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         print('running: %s' % cmd)
-        print('std-out: %s' % stdout)
-        print('std-err: %s' % stderr)
+        #print('std-out: %s' % stdout)
+        #print('std-err: %s' % stderr)
         
         if stderr:
             ps = ''
@@ -179,8 +179,8 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % cmd)
-        print('std-out: %s' % com[0])
-        print('std-err: %s' % com[1])
+        #print('std-out: %s' % com[0])
+        #print('std-err: %s' % com[1])
     finally:
         os.remove('_cn_usergroup.ldif')
 
@@ -196,8 +196,8 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % cmd)
-        print('std-out: %s' % com[0])
-        print('std-err: %s' % com[1])
+        #print('std-out: %s' % com[0])
+        #print('std-err: %s' % com[1])
 
     finally:
         os.remove('_ou_users.ldif')
