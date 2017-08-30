@@ -612,6 +612,7 @@ def man_bulk_signup(req, menu, post, base_context):
         elif re.match('add_enroll_', action):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
+                signup.password = utils.get_random_passwd()
                 utils.adduser(signup, LDAP_PW)
                 mu.enroll_user(signup.username, course)
         
