@@ -528,12 +528,12 @@ def superlogin(req):
     return redirect('/manage/')
 
 manage_menu_items = OrderedDict([
+                ('signups' , 'Self-signups'),
                 ('bulk_add' , 'Bulk Add'),
-                ('signups' , 'Signups'),
-                ('users' , 'Users'),
+                ('users' , 'Active Users'),
                 ('limbos' , 'Limbos'),
-                ('deleted' , 'Deleted'),
                 ('disabled' , 'Disabled'),
+                ('deleted' , 'Deleted'),
                 ('pause_a' , '---'),
                 ('templates' , 'Templates'),
                 ('courses' , 'Courses'),
@@ -552,17 +552,17 @@ def manage(req, menu=None, post=None):
     
     idx = manage_menu_items.keys().index(menu)
     if idx == 0:
-        return man_bulk_signup(req, menu, post, base_context)
-    elif idx == 1:
         return man_selfsignups(req, menu, post, base_context)
+    elif idx == 1:
+        return man_bulk_signup(req, menu, post, base_context)
     elif idx == 2:
         return man_users(req, menu, post, base_context)
     elif idx == 3:
         return man_limbos(req, menu, post, base_context)
     elif idx == 4:
-        return man_deleted(req, menu, post, base_context)
-    elif idx == 5:
         return man_disabled(req, menu, post, base_context)
+    elif idx == 5:
+        return man_deleted(req, menu, post, base_context)
     elif idx == 7:
         return man_templates(req, menu, post, base_context)
     elif idx == 8:
