@@ -1,19 +1,12 @@
 {% extends 'man_base.html' %}
 {% block content %}
 
-<div style="margin-left:auto; margin-right:auto; width:600px;">
+<div style="margin-left:auto; margin-right:auto;">
 <form enctype="multipart/form-data" method="POST" action="{{ uploadnext }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
-    <legend>Bulk add and/or enrol users</legend>
-            <p>Upload a csv-file with the format shown below, with a header and one student pr. line.</p>
-            <p>Then click the "Add users" button at the bottom of the page.</p>
-            <p>--- example:</p>
-        <table>
-            <tr><td colspan="2">firstname,lastname,email,username</td></tr>
-            <tr><td colspan="2">John,Doe,johndoe@e-neutrons.org,johndoe</td></tr>
-            <tr><td colspan="2">Jane Else,Hansen,jlh@e-neutrons.org,jlh</td></tr>
-        </table>
+    <legend>Bulk add / enrol users</legend>
+            <p>CSV columns: firstname,lastname,email,username</p>
         <table>
             <tr><td><input type="file" name="up_file"></td></tr>
             <tr><td><input type="submit" value="Upload" style="margin-right:20px;"></td></tr>
@@ -22,45 +15,40 @@
 </form>
 </div>
 
-<fieldset style="margin:auto; width:1000px; display:{{ displaysignups }};">
-    <form enctype="multipart/form-data" method="POST" action="{{ next }}">
-        <input type="hidden" name="ids" value="{{ ids }}">
-        {% csrf_token %}
+
+
+<h3>{{ message }}</h3>
+
+<form enctype="multipart/form-data" method="POST" action="{{ next }}">
+    <input type="hidden" name="ids" value="{{ ids }}">
+    {% csrf_token %}
+    <fieldset style="margin:5px;">
         <table>
             <!-- create headers -->
             <tr>
-            {% for header in colheaders %}
-                <th  style="min-width:70px;"><label>{{ header.data }}</label></td>
-            {% endfor %}
+                <th><input type="checkbox" id="master_cbx" onclick="update_cbxs();"/></td>
+                <th><label>date</label></td>
+                <th style="min-width:220px;"><label>first name</label></td>
+                <th style="min-width:220px;"><label>last name</label></td>
+                <th style="min-width:220px;"><label>email</label></td>
+                <th style="min-width:220px;"><label>username</label></td>
+                <th style="min-width:220px;"><label>password</label></td>
             </tr>
             <!-- create rows -->
             {% for row, id in rows_ids %}
                 <tr>
+                <th><input type="checkbox" class="cbx"/></td>
                 {% for cell in row %}
-                    {% if cell.btn %}
-                    <td style="text-align:center;"><input type="button" name="{{ id }}_{{ cell.data }}" onclick="location.href='/coursemanage/users/delete/{{ id }}';" value="{{ cell.data }}"/></td>
-                    {% elif cell.txt %}
-                    <td style="text-align:left;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.header }}" value="{{ cell.data }}"/></td>
+                    {% if cell.txt %}
+                    <td style="text-align:left;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.idx }}" value="{{ cell.data }}"/></td>
                     {% else %}
-                    <td style="text-align:center;"><label name="{{ id }}_{{ cell.data }}">{{ cell.data }}</label></td>
+                    <td style="text-align:left;"><label>{{ cell.data }}</label></td>
                     {% endif %}
                 {% endfor %}
                 </tr>
             {% endfor %}
         </table>
-        <div>
-            <label><input type="checkbox" name="override_ldap"/> Override LDAP "Already exists"</label><br>
-            <select style="min-width:200px;" name="course_selector">
-                    <option>-- select enrollment course --</option>
-                    {% for t in courses %}
-                    <option value="{{ t }}" name="{{ t }}">{{ t }}</option>
-                    {% endfor %}
-                </select>
-            <input type="submit" value="Add users" style="margin-right:20px;">
-        </div>
-    </form>
-</fieldset>
-<div style="margin-left:auto; margin-right:auto;">
-</div>
+    </fieldset>
+</form>
 
 {% endblock %}

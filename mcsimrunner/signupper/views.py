@@ -517,15 +517,15 @@ def superlogin(req):
     password = form.get('password', '')
     
     if not username or not password:
-        return render(req, 'course_login.html')
+        return render(req, 'man_login.html')
     
     user = authenticate(username=username, password=password)
     if user is None or not user.is_active or not user.is_superuser:
-        return render(req, 'course_login.html')
+        return render(req, 'man_login.html')
     
     login(req, user)
 
-    return redirect('/manage')
+    return redirect('/manage/')
 
 manage_menu_items = OrderedDict([
                 ('bulk_add' , 'Bulk Add'),
@@ -572,117 +572,76 @@ def manage(req, menu=None, post=None):
     else:
         raise Exception("code inconsistence")
 
-
+class CellInfo:
+    def __init__(self, data, idx, cbx=None, txt=None, lbl=None):
+        self.cbx = cbx
+        self.txt = txt
+        self.lbl = lbl
+        if cbx is None and txt is None:
+            self.lbl = True
+        self.data = data
+        self.idx = idx
 def man_users(req, menu, post, base_context):
     '''  '''
-    def post(req):
+    
+    def update_signups(signups, form):
+        ''' updates signup objects from signups, according to form, and saves '''
+        # get course headers 
+        headers, noncourses = utils.get_colheaders()
+        courseheaders = headers[noncourses:]
+        
+        # get and save new configuration for each signup
+        for s in signups:
+            # get checked courses
+            courses = []
+            for course in courseheaders:
+                # NOTE: non-checked checkboxes do not become included in the form submission
+                cbx = form.get('%s_%s' % (str(s.id), course))
+                if cbx:
+                    courses.append(course)
+            s.courses = courses
+            s.save()
+            
+            # get name, email and username fields
+            s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
+            s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
+            s.email = form.get('%s_%s' % (str(s.id), 'email'))
+            s.username = form.get('%s_%s' % (str(s.id), 'username'))
+            s.save()
+
+    if post=='post':
         # get filtered signups and update
         form = req.POST
         ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
         objs = Signup.objects.filter(id__in=ids)
-        utils.update_signups(objs, form)
+        update_signups(objs, form)
         
         # perform the appropriate add-user actions for each signup
         for signup in objs:
             utils.adduser(signup, ldap_password=req.session['ldap_password'])
         
-        # return to the list 
-        if len(utils.get_signups()) > 0:
-            return redirect('/userlist_au/new')
-        elif len(utils.get_signups_limbo()) > 0:
-            return redirect('/userlist_au/limbo')
-        else:
-            return redirect('/userlist_au/added')
+        return redirect("/manage/%s" % menu)
     
-    def action(req, action, signup_id):
-        if action == 'delete':
-            # TODO: if user has been added to ldap, etc., remove them don't just delete the signup request
-            # TODO: make it so that deleted signups are just moved somewhere else, so they may be revived using /admin
-            s = Signup.objects.filter(id=int(signup_id))
-            s.delete()
-            return redirect(userlist_au)
-        
-        if action == 'edit':
-            return redirect('/userdetail_au/%s/' % signup_id)
-        
-        return HttpResponse('error: unknown action \naction=%s, id=%s' % (action, signup_id))
-
-    
-    #listtype = 'all'
-    #listtype = 'added'
-    listtype = 'self'
-    
-    headers, num_non_course = utils.get_colheaders()
-    colheaders = []
-    i = 0
-    for colheader in headers:
-        i += 1
-        cbx = None
-        colheaders.append(Ci(colheader, cbx))
+    # filter signups
+    signups = [s for s in Signup.objects.all() if s.state() == 3]
     
     rows_ids = []
     ids = []
-    
-    # filter signup object set (and ui state variables message and buttonstate) based on action parameter
-    buttondisplay = ''
-    uploaddisplay = ''
-    if listtype == 'all':
-        signups = utils.get_signups_all()
-        message = 'New signups:'
-    elif listtype == 'added':
-        signups = utils.get_signups_inldap()
-        message = 'Added:'
-        buttondisplay = 'none'
-        uploaddisplay = 'none'
-    elif listtype == 'self':
-        signups = utils.get_signups_self()
-        message = 'Self-signups - edit to fix errors, then re-submit:'
-        uploaddisplay = 'none'
-    else: 
-        raise Exception('signupper.views.userlist_au: undefined action')
-    
     for s in signups:
         ids.append(s.id)
-        
         row = []
-        # THIS
-        use_textbox = not s.is_in_ldap
-        row.append(Ci(s.created.strftime("%Y%m%d")))
-        row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
-        row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
-        row.append(Ci(s.email, txt=use_textbox, header='email'))
-        row.append(Ci(s.username, txt=use_textbox, header='username'))
-        row.append(Ci(s.password, header='passwd'))
         
-        # courses columns - new/limbo or added signup state
-        for course in settings.COURSES + settings.COURSES_MANDATORY:
-            if not listtype == 'added' and not s.is_in_moodle:
-                if course in s.courses:
-                    row.append(Ci(course, cbx='checked'))
-                else:
-                    row.append(Ci(course, cbx='unchecked'))
-            else:
-                if course in s.courses:
-                    row.append(Ci('enrolled'))
-                else:
-                    row.append(Ci(''))
-        
-        # buttons
-        if listtype == 'new':
-            #row.append(Ci('edit', btn=True))
-            row.append(Ci('delete', btn=True))
-        
-        # fail string
-        if listtype == 'limbo':
-            row.append(Ci(s.fail_str))
+        row.append(CellInfo(s.created.strftime("%Y%m%d"), 1))
+        row.append(CellInfo(s.firstname, 2))
+        row.append(CellInfo(s.lastname, 3))
+        row.append(CellInfo(s.email, 4))
+        row.append(CellInfo(s.username, 5))
+        row.append(CellInfo(s.password, 6))
         
         rows_ids.append([row, str(s.id)])
     
-    
-    context = {'next': '/userlist_au-post', 'uploadnext': '/upload_au_post',
-               'ids': ids, 'rows_ids': rows_ids,
-               'colheaders': colheaders, 'buttondisplay': buttondisplay,
-               'uploaddisplay': uploaddisplay}
+    context = {'next': 'post', 'uploadnext': 'upload',
+               'ids': ids, 'rows_ids': rows_ids}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 
@@ -788,7 +747,7 @@ def man_bulk_signup(req, menu, post, base_context):
         form = req.POST
         ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
         signups = Signup.objects.filter(id__in=ids)
-        utils.update_signups(signups, form)
+        #utils.update_signups(signups, form)
         
         cs = form['course_selector']
         if re.match('\-\-\sselect', cs):
@@ -810,7 +769,7 @@ def man_bulk_signup(req, menu, post, base_context):
                 req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
         return redirect('/manage/%s' % menu)
     
-    elif post == 'uploadcsv-post':
+    elif post == 'uploadcsv_post':
         if len(req.FILES) > 0:
             try:
                 f = req.FILES['up_file']
@@ -850,14 +809,13 @@ def man_bulk_signup(req, menu, post, base_context):
             row.append(Ci(s.email, txt=use_textbox, header='email'))
             row.append(Ci(s.username, txt=use_textbox, header='username'))
             row.append(Ci(s.password, header='passwd'))
-            row.append(Ci('delete', btn=True))
             
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
     
     context = {'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids,
                'next' : '/manage/%s/post' % menu,
-               'uploadnext' : '/manage/%s/uploadcsv-post' % menu,
+               'uploadnext' : '/manage/%s/uploadcsv_post' % menu,
                'displaysignups' : displaysignups, 'courses' : courses}
     context.update(base_context)
     return render(req, 'man_bulk.html', context)

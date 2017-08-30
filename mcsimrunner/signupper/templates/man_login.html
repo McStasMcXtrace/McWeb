@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head><title>mcweb: course manage login</title></head>
+<body style="margin-left:auto;margin-right:auto;width:600px;">
+    <form method="POST" action="{{ next }}">
+    {% csrf_token %}
+        <fieldset>
+            <table  style='margin-left:auto; margin-right:auto;'>
+                <tr>
+                    <td>Super-username:</td>
+                    <td><input type="text" name="username"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="password"></td>
+                </tr>
+            </table>
+        </fieldset>
+        <fieldset style='margin-top:10px;'>
+            <div style='text-align:right;'>
+                <button type="submit">Login</button>
+            </div>
+        </fieldset>
+    </form>
+</body>
+</html>

@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>mcweb user manage</title>
-    <script type="text/javascript" src="../static/scripts.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/signupper_style.css"/>
 </head>
 <body>
@@ -30,6 +29,14 @@
         var date = new Date();
         document.getElementById('lbl_sngen_tmpl').innerHTML = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
         document.getElementById('field_shortname_tmpl').value = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
+    }
+    var update_cbxs = function()
+    {
+        master = document.getElementById('master_cbx');
+        cbxs = document.getElementsByClassName('cbx');
+        for (var i = 0; i < cbxs.length; i++) {
+            cbxs[i].checked = master.checked;
+        }
     }
 </script>
 

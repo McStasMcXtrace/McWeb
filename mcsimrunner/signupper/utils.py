@@ -153,33 +153,6 @@ def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_on
         
         signup = create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
 
-
-def update_signups(signups, form):
-    ''' updates signup objects from signups, according to form, and saves '''
-    # get course headers 
-    headers, noncourses = get_colheaders()
-    courseheaders = headers[noncourses:]
-    
-    # get and save new configuration for each signup
-    for s in signups:
-        # get checked courses
-        courses = []
-        for course in courseheaders:
-            # NOTE: non-checked checkboxes do not become included in the form submission
-            cbx = form.get('%s_%s' % (str(s.id), course))
-            if cbx:
-                courses.append(course)
-        s.courses = courses
-        s.save()
-        
-        # get name, email and username fields
-        s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
-        s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
-        s.email = form.get('%s_%s' % (str(s.id), 'email'))
-        s.username = form.get('%s_%s' % (str(s.id), 'username'))
-        s.save()
-
-
 def assign_courses(signups, courses):
     ''' adds strings in courses (a list) to each signup in signups (a list) '''
     for s in signups:

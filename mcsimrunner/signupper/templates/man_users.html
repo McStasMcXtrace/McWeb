@@ -10,28 +10,23 @@
         <table>
             <!-- create headers -->
             <tr>
-            {% for header in colheaders %}
-                {% if header.cbx %}
-                <th style="min-width:70px;"><label>{{ header.data }}<input type="checkbox"/></label></td>
-                {% else %}
-                <th  style="min-width:70px;"><label>{{ header.data }}</label></td>
-                {% endif %}
-            {% endfor %}
+                <th><input type="checkbox" id="master_cbx" onclick="update_cbxs();"/></td>
+                <th><label>date</label></td>
+                <th style="min-width:220px;"><label>first name</label></td>
+                <th style="min-width:220px;"><label>last name</label></td>
+                <th style="min-width:220px;"><label>email</label></td>
+                <th style="min-width:220px;"><label>username</label></td>
+                <th style="min-width:220px;"><label>password</label></td>
             </tr>
             <!-- create rows -->
             {% for row, id in rows_ids %}
                 <tr>
+                <td><input type="checkbox" class="cbx"/></td>
                 {% for cell in row %}
-                    {% if cell.cbx == 'unchecked' %}
-                    <td style="text-align:center;"><input type="checkbox" name="{{ id }}_{{ cell.data }}"/></td>
-                    {% elif cell.cbx == 'checked' %}
-                    <td style="text-align:center;"><input type="checkbox" name="{{ id }}_{{ cell.data }}" checked/></td>
-                    {% elif cell.btn %}
-                    <td style="text-align:center;"><input type="button" name="{{ id }}_{{ cell.data }}" onclick="location.href='/userlist_au_action/{{ cell.data }}/{{ id }}';" value="{{ cell.data }}"/></td>
-                    {% elif cell.txt %}
-                    <td style="text-align:left;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.header }}" value="{{ cell.data }}"/></td>
+                    {% if cell.txt %}
+                    <td style="text-align:center;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.idx }}" value="{{ cell.data }}"/></td>
                     {% else %}
-                    <td style="text-align:left;"><label name="{{ id }}_{{ cell.data }}">{{ cell.data }}</label></td>
+                    <td style="text-align:center;"><label>{{ cell.data }}</label></td>
                     {% endif %}
                 {% endfor %}
                 </tr>
