@@ -19,18 +19,14 @@ DEFAULT_CATEGORY_ID = '1'
 MOODLE_RESTORE_JOBS_DIR = '/srv/mcweb/moodle-restore-jobs'
 
 def add_enroll_user(firstname, lastname, username, email, courses_sn_lst):
-    '''
-    add user to moodle and enroll_user in courses in courses_lst
-    '''
+    ''' Add user to moodle and enroll_user in courses in courses_lst '''
     adduser(firstname, lastname, username, email)
     for course in courses_sn_lst:
         enroll_user(username, course)
 
 def create_template(shortname, templatename):
-    '''
-    creates a template
-    '''
-    # get course id and category id for the course matching shortname
+    ''' Creates a template '''
+    # get course and category id
     courses = _course_list()
     course = None
     for c in courses:
@@ -47,67 +43,70 @@ def create_template(shortname, templatename):
     _course_backup(backupname=templatename, course_id=course_id)
     
 def get_courses():
-    '''
-    returns a list of course names for high-level use
-    '''
+    ''' Returns a list of course names for high-level use. '''
     lst = []
     for c in _course_list():
         lst.append(c[1])
     return lst
 
 def create_course_from_template(templatename, shortname, fullname):
-    '''
-    High-level function to create a new course from a template, with the right names.
-    
-    Returns the id of the new course, which can be used to add users.
-    '''
-    # create empty course with the right shortname/fullname
+    ''' High-level function to create a new course from a template, returning the id of the new course. '''
     _course_create(shortname=shortname, fullname=fullname, category_id=DEFAULT_CATEGORY_ID)
     
-    # TODO: check that the course exists, or exit with an error
-
-    # get the course id of the newly created course
+    # get course id of the newly created course
     lst = _course_list()
     id = ''
     for c in lst:
         if shortname == c[1]:
             id = c[0]
     
-    # restore to the newly created course 
-    message = _course_restore_e(backupname=templatename, course_id=id)
+    # TODO: check that the course exists, or exit with an error
     
+    message = _course_restore_e(backupname=templatename, course_id=id)
     return templatename, id, message
 
 def adduser(firstname, lastname, username, email):
-    cmd_adduser = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
-    subprocess.call(cmd_adduser,
-                    cwd=MOODLE_DIR, 
-                    shell=True)
-    
-    # TODO: implement error checking
-
-def enroll_user(username, course_sn, teacher=False):
-    if not teacher:
-        cmd_addtocourse = 'moosh course-enrol -r student -s %s %s' % (course_sn, username)
-    else:
-        cmd_addtocourse = 'moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
-        
-    subprocess.call(cmd_addtocourse, 
-                    cwd=MOODLE_DIR, 
-                    shell=True)
-    
-    # TODO: implement error checking
-
-def _course_list():
-    '''
-    returns: ["courseid","shortname","fullname"]
-    '''
-    proc = subprocess.Popen('moosh course-list', 
+    '''  '''
+    cmd = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
+    proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             cwd=MOODLE_DIR, 
                             shell=True)
     com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
+
+def enroll_user(username, course_sn, teacher=False):
+    '''  '''
+    if not teacher:
+        cmd = 'moosh course-enrol -r student -s %s %s' % (course_sn, username)
+    else:
+        cmd = 'moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
+        
+    proc = subprocess.Popen(cmd, 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR, 
+                            shell=True)
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
+
+def _course_list():
+    ''' returns: ["courseid","shortname","fullname"] '''
+    cmd = 'moosh course-list'
+    proc = subprocess.Popen(cmd, 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR, 
+                            shell=True)
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
     
     unit = '[/\,\.\\\(\)\[\]\{\}\-\w\s]+'
     spat = r'"(%s)","(%s)","(%s)","(%s)","(%s)"' % (unit, unit, unit, unit, unit)
@@ -125,31 +124,46 @@ def _course_list():
     return v_lst[1:]
 
 def get_templates():
+    '''  '''
     for (a, b, files) in os.walk(TEMPLATES_DIR):
         return files
 
 def _course_backup(backupname, course_id):
-    proc = subprocess.Popen('moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)),
+    '''  '''
+    cmd = 'moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
+    proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             cwd=MOODLE_DIR,
                             shell=True)
-    text = proc.communicate()
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
 
 def _course_restore_e(backupname, course_id):
+    '''  '''
     tf = tempfile.NamedTemporaryFile()
     fname = os.path.basename(tf.name) + '.mrjob'
     
     f = open(os.path.join(MOODLE_RESTORE_JOBS_DIR, fname), 'w')
-    f.write('moosh course-restore -e %s %s\n' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id)))
+    cmd = 'moosh course-restore -e %s %s\n' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
+    f.write(cmd)
+    print('writing to worker task: %s' % cmd)
     f.close()
     
     return "running"
 
 def _course_create(shortname, fullname, category_id):
-    proc = subprocess.Popen('moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname),
+    ''' '''
+    cmd = 'moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname)
+    proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             cwd=MOODLE_DIR,
                             shell=True)
-    text = proc.communicate()
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
+

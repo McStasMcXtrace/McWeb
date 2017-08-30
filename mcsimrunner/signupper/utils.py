@@ -50,6 +50,9 @@ def get_colheaders():
         header_cols.append(c)
     return (header_cols, num_non_course)
 
+def get_new_signups():
+    return [s for s in Signup.objects.all() if s.state() == 1 or s.state() == 2]
+
 def get_signups_inldap():
     return Signup.objects.filter(is_in_ldap=True)
 

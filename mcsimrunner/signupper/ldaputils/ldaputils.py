@@ -27,13 +27,16 @@ def listusers(dn, uid=None):
     else:
         cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (dn, uid)
     
-    proc = subprocess.Popen(cmd,
+    proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             shell=True)
-    std_out = proc.communicate()[0]
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % com[1])
     
-    sections = str.split(std_out, 'dn: uid=')
+    sections = str.split(com[0], 'dn: uid=')
     users = []
     
     for section in sections:
@@ -86,8 +89,12 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
         cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,)
+                                   stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
+        print('running: %s' % cmd)
+        print('std-out: %s' % stdout)
+        print('std-err: %s' % stderr)
+        
         if stderr:
             ps = ''
             for c in cmd: ps = '%s %s' % (ps, c)
@@ -114,8 +121,12 @@ def rmuser(dn, admin_password, uid):
         cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_rmuser.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,)
+                                   stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
+        print('running: %s' % cmd)
+        print('std-out: %s' % stdout)
+        print('std-err: %s' % stderr)
+        
         if stderr:
             ps = ''
             for c in cmd: ps = '%s %s' % (ps, c)
@@ -126,37 +137,6 @@ def rmuser(dn, admin_password, uid):
             raise Exception(stderr.rstrip('\n'))
     finally:
         os.remove('_rmuser.ldif')
-
-def find_user(dn, uid):
-    '''
-    Check LDAP db for entries of uid field equal to input.
-    '''
-
-def chpassword(dn, admin_password, uid, current_password, new_password):
-    ''' 
-    This is a change password function. It only works with the admin password.
-    
-    uid: username
-    current_password: the current password of user, identified with uid
-    new_password: the new password
-    '''
-    chpassword = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: userpassword\nuserpassword: %s\n-\nadd: userpassword\nuserpassword: %s' % (uid, dn, current_password, new_password)
-    
-    ldif = open('_chpassword.ldif', 'w')
-    ldif.write(chpassword)
-    ldif.close()
-    try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chpassword.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        (stdout, stderr) = process.communicate()
-        if stderr:
-            ps = ''
-            for c in cmd: ps = '%s %s' % (ps, c)
-            raise Exception(stderr.replace('\n', ''))
-    finally:
-        os.remove('_chpassword.ldif')
 
 def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     '''
@@ -173,6 +153,10 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
+        print('running: %s' % cmd)
+        print('std-out: %s' % stdout)
+        print('std-err: %s' % stderr)
+        
         if stderr:
             ps = ''
             for c in cmd:
@@ -180,9 +164,6 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
             raise Exception(stderr.replace('\n', ''))
     finally:
         os.remove('_chvalue.ldif')
-
-# a very local test:
-# _chfield('dc=risoe,dc=dk', 'secret_admin_pass', 'jaga15', 'userpassword', 'hest1', 'hest2')
 
 def initdb(dn, admin_password):
     ''' inits  the ldap db for mcweb user addition '''
@@ -192,8 +173,14 @@ def initdb(dn, admin_password):
     ldif.write(cn_usergroup)
     ldif.close()
     try:
-        process = subprocess.Popen(['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif'])
-        process.communicate()
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        com = process.communicate()
+        print('running: %s' % cmd)
+        print('std-out: %s' % com[0])
+        print('std-err: %s' % com[1])
     finally:
         os.remove('_cn_usergroup.ldif')
 
@@ -203,7 +190,15 @@ def initdb(dn, admin_password):
     ldif.write(ou_users)
     ldif.close()
     try:
-        process = subprocess.Popen(['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif'])
-        process.communicate()
+        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif']
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        com = process.communicate()
+        print('running: %s' % cmd)
+        print('std-out: %s' % com[0])
+        print('std-err: %s' % com[1])
+
     finally:
         os.remove('_ou_users.ldif')
+

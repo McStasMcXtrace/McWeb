@@ -4,7 +4,7 @@ Send a command to the admin reminding of new signups.
 from django.core.management.base import BaseCommand
 import os
 import subprocess
-from signupper.utils import get_signups
+from signupper.utils import get_new_signups
 from mcweb.settings import MCWEB_ADMIN_EMAIL
 
 class Command(BaseCommand):
@@ -29,7 +29,7 @@ Please note the following:
 2) If you need to edit the signup instances, use the django admin tool.\n'''
         
         # only send admin email if there are "new" signups
-        if len(get_signups()) == 0:
+        if len(get_new_signups()) == 0:
             return
         
         # parse email and addresses, and send admin email, catching errors and clearning up
@@ -43,6 +43,16 @@ Please note the following:
             f = open('_admin_email', 'w') 
             f.write(admin_email)
             f.close()
+            
+            # this, but we need retcode
+            #proc = subprocess.Popen(cmd, 
+            #                        stdout=subprocess.PIPE,
+            #                        stderr=subprocess.PIPE,
+            #                        shell=True)
+            #com = proc.communicate()
+            #print('running: %s' % cmd)
+            #print('std-out: %s' % com[0])
+            #print('std-err: %s' % com[1])
             
             retcode = subprocess.call(cmd, shell=True)
             if retcode != 0:
