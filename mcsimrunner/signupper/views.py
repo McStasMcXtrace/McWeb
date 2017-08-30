@@ -592,8 +592,12 @@ def man_bulk_signup(req, menu, post, base_context):
         objs = Signup.objects.filter(id__in=ids)
         
         # update objs with local data (text boxes)
-        #for signup in objs:
-        #    pass
+        for signup in objs:
+            signup.firstname = form.get('%s_%d' % (str(signup.id), 2))
+            signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
+            signup.email = form.get('%s_%d' % (str(signup.id), 4))
+            signup.username = form.get('%s_%d' % (str(signup.id), 5))
+            signup.save()
         
         # get bulk action
         action = form.get('bulk_actions')
@@ -633,11 +637,6 @@ def man_bulk_signup(req, menu, post, base_context):
     elif post:
         return redirect('/manage/%s' % menu)
     
-    rows_ids = []
-    ids = []
-    
-    courses = mu.get_courses()
-    
     # bulk actions for this view
     bulk_actions = []
     bulk_actions.append('add')
@@ -648,19 +647,20 @@ def man_bulk_signup(req, menu, post, base_context):
     for c in courses:
         bulk_actions.append('add_enroll_%s' % c)
     
-    signups = Signup.objects.filter(is_in_ldap=False)
+    signups = [s for s in Signup.objects.all() if s.state() == 1]
     
+    rows_ids = []
+    ids = []
     if len(signups) > 0:
         for s in signups:
             row = []
-            use_textbox = True
             
-            row.append(Ci(s.created.strftime("%Y%m%d")))
-            row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
-            row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
-            row.append(Ci(s.email, txt=use_textbox, header='email'))
-            row.append(Ci(s.username, txt=use_textbox, header='username'))
-            row.append(Ci(s.password, header='passwd'))
+            row.append(CellInfo(s.created.strftime("%Y%m%d"), 1))
+            row.append(CellInfo(s.firstname, 2, txt=True))
+            row.append(CellInfo(s.lastname, 3, txt=True))
+            row.append(CellInfo(s.email, 4, txt=True))
+            row.append(CellInfo(s.username, 5, txt=True))
+            row.append(CellInfo(s.password, 6))
             
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
