@@ -70,10 +70,13 @@ def get_signups_all():
 def get_signups_self():
     return Signup.objects.filter(is_self_signup=True)
 
-def create_signup(firstname, lastname, email, username, courses_lst, is_self_signup=False):
+def create_save_signup(firstname, lastname, email, username, courses_lst, self_signup):
     ''' most simple way of creating a new signup instance '''
-    signup = Signup(firstname=firstname, lastname=lastname, email=email, username=username, password=get_random_passwd(),
-                    is_self_signup=is_self_signup)
+    signup = Signup(firstname=firstname,
+                    lastname=lastname, email=email,
+                    username=username,
+                    password=get_random_passwd(),
+                    is_self_signup=self_signup)
     signup.courses = courses_lst
     signup.save()
     return signup
@@ -103,9 +106,11 @@ The e-neutrons.org admin team
         f = open('_body', 'w') 
         f.write(body)
         f.close()
+        
         cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
-        retcode = call(cmd, shell=True)
+        retcode = subprocess.call(cmd, shell=True)
         print(cmd)
+        
         if retcode != 0:
             raise Exception('notifyuser mailx retcode: %s' % retcode) 
     finally:
@@ -118,9 +123,11 @@ def notify_contactentry(replyto, text):
         f = open('_contactbody', 'w') 
         f.write(body.encode('utf8'))
         f.close()
+        
         cmd = 'mailx -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
-        retcode = call(cmd, shell=True)
+        retcode = subprocess.call(cmd, shell=True)
         print(cmd)
+        
         if retcode != 0:
             raise Exception('notify_contactentry mail.mailutils retcode: %s' % retcode)
     
@@ -130,14 +137,15 @@ def notify_contactentry(replyto, text):
     finally:
         os.remove('_contactbody')
 
-def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_only=None):
+def pull_csv_signups_todb(file):
     ''' creates unsaved signup instances from a csv file '''
     r = csv.reader(file, delimiter=',')
     firstname_idx = 0
     lastname_idx = 1
     email_idx = 2
     username_idx = 3
-        
+    
+    signups = []
     first_row = True
     for row in r:
         # header line
@@ -150,19 +158,15 @@ def pull_signups_todb(file, courses_all=None, courses_mandatory=None, courses_on
             first_row = False
             continue
         
-        courses = []
-        if not courses_only:
-            # match courses in row
-            for known in courses_all:
-                if known in row:
-                    courses.append(known)
-            if courses_mandatory:
-                courses = courses + courses_mandatory
-        else:
-            # hard-assign to courses_only
-            courses = courses_only
-        
-        signup = create_signup(row[firstname_idx], row[lastname_idx], row[email_idx], row[username_idx], courses)
+        signup = create_save_signup(row[firstname_idx], 
+                                    row[lastname_idx], 
+                                    row[email_idx], 
+                                    row[username_idx], 
+                                    courses_lst=[], 
+                                    self_signup=False)
+        signups.append(signup)
+    
+    return signups
 
 def assign_courses(signups, courses):
     ''' adds strings in courses (a list) to each signup in signups (a list) '''

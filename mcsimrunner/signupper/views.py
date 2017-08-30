@@ -67,7 +67,7 @@ def thanks(req):
     return render(req, 'thanks.html')
 
 def signup_au_get(req):
-    ''' handles signup form submission. Add a new signup instance to the db using utils.create_signup '''
+    ''' handles signup form submission. Add a new signup instance to the db using utils.create_save_signup '''
     form = req.GET
     
     # get static fields
@@ -83,7 +83,7 @@ def signup_au_get(req):
     for c in settings.COURSES_MANDATORY:
         courses.append(c)
     
-    utils.create_signup(firstname, lastname, email, username, courses)
+    utils.create_save_signup(firstname, lastname, email, username, courses)
     
     # get a thank-you message to the user
     return redirect('/thanks/')
@@ -216,7 +216,7 @@ def upload_au_post(req):
         try:
             f = req.FILES['up_file']
             
-            utils.pull_signups_todb(f, COURSES, COURSES_MANDATORY)
+            utils.pull_csv_signups_todb(f, COURSES, COURSES_MANDATORY)
             
         except Exception as e:
             return HttpResponse('Invalid csv file: %s' % e.__str__())
@@ -404,7 +404,7 @@ def courseman_courses_post(req):
         if firstname == '' or email == '':
             req.session['message'] = 'New user creation requires a name and an email.'
             return redirect('/coursemanage/courses')
-        teacher = utils.create_signup(firstname, lastname, email, username, [])
+        teacher = utils.create_save_signup(firstname, lastname, email, username, [])
         utils.adduser(teacher, ldap_password=req.session['ldap_password'])
     
     # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
@@ -465,7 +465,7 @@ def courseman_users_uploadcsv_post(req):
             f = req.FILES['up_file']
             
             # pull csv object to db signup objects 
-            utils.pull_signups_todb(f, courses_only=['hest'])
+            utils.pull_csv_signups_todb(f, courses_only=['hest'])
             
         except Exception as e:
             return HttpResponse('Invalid csv file: %s' % e.__str__())
@@ -604,7 +604,6 @@ def man_bulk_signup(req, menu, post, base_context):
         
         if action == 'add':
             for signup in objs:
-                signup.password = utils.get_random_passwd()
                 utils.adduser(signup, LDAP_PW)
         elif action == 'delete':
             for signup in objs:
@@ -612,7 +611,6 @@ def man_bulk_signup(req, menu, post, base_context):
         elif re.match('add_enroll_', action):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
-                signup.password = utils.get_random_passwd()
                 utils.adduser(signup, LDAP_PW)
                 mu.enroll_user(signup.username, course)
         
@@ -623,7 +621,7 @@ def man_bulk_signup(req, menu, post, base_context):
         req.session['message'] = 'All signups were added succesfully.'
         for signup in objs:
             if signup.fail_str != '':
-                req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
+                req.session['message'] = 'Some signups reported an error - these can be found in the "Limbo" tab.'
         
         return redirect('/manage/%s' % menu)
     
@@ -631,9 +629,9 @@ def man_bulk_signup(req, menu, post, base_context):
         if len(req.FILES) > 0:
             try:
                 f = req.FILES['up_file']
-                utils.pull_signups_todb(f, courses_only=['hest'])
+                utils.pull_csv_signups_todb(f)
             except Exception as e:
-                req.session['message'] = 'Invalid csv file: %s' % e.__str__()
+                req.session['message'] = 'Bulk add processing error: %s' % e.__str__()
         return redirect('/manage/%s' % menu)
 
     elif post:
@@ -761,7 +759,7 @@ def man_disabled(req, menu, post, base_context):
         # get bulk action
         action = form.get('bulk_actions')
         
-        if action == 'restore':
+        if action == 'activate':
             for signup in objs:
                 ldaputils.adduser(MCWEB_LDAP_DN, LDAP_PW, signup.firstname, signup.lastname, signup.username, signup.email, signup.password)
                 signup.is_in_ldap = True
@@ -771,7 +769,7 @@ def man_disabled(req, menu, post, base_context):
     
     # bulk actions for this view
     bulk_actions = []
-    bulk_actions.append('restore')
+    bulk_actions.append('activate')
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 5]
@@ -852,7 +850,7 @@ def man_courses(req, menu, post, base_context):
             if firstname == '' or email == '':
                 req.session['message'] = 'New user creation requires a name and an email.'
                 return redirect("/manage/%s" % menu)
-            teacher = utils.create_signup(firstname, lastname, email, username, [])
+            teacher = utils.create_save_signup(firstname, lastname, email, username, [])
             utils.adduser(teacher, ldap_password=LDAP_PW)
             req.session['message'] = 'New user %s has been created.' % username
         
