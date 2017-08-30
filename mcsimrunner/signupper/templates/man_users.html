@@ -4,9 +4,22 @@
 <h3>{{ message }}</h3>
 
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
+    <fieldset style="margin:10px;">
+        <legend>Actions</legend>
+        <select style="min-width:200px;" name="bulk_actions">
+            <option>-- select bulk action --</option>
+            {% for a in bulk_actions %}
+            <option value="{{ a }}" name="{{ a }}">{{ a }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="submit" value="Submit" style="margin-right:20px;">
+    </fieldset>
+
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
-    <fieldset style="margin:5px;">
+    <fieldset style="margin:10px;">
+        <legend>Users</legend>
         <table>
             <!-- create headers -->
             <tr>
@@ -21,7 +34,7 @@
             <!-- create rows -->
             {% for row, id in rows_ids %}
                 <tr>
-                <td><input type="checkbox" class="cbx"/></td>
+                <td><input type="checkbox" class="cbx" name="{{ id }}_cbx"/></td>
                 {% for cell in row %}
                     {% if cell.txt %}
                     <td style="text-align:center;"><input style="text-align:center;" type="text" name="{{ id }}_{{ cell.idx }}" value="{{ cell.data }}"/></td>

@@ -581,46 +581,134 @@ class CellInfo:
             self.lbl = True
         self.data = data
         self.idx = idx
-def man_users(req, menu, post, base_context):
-    '''  '''
-    
-    def update_signups(signups, form):
-        ''' updates signup objects from signups, according to form, and saves '''
-        # get course headers 
-        headers, noncourses = utils.get_colheaders()
-        courseheaders = headers[noncourses:]
-        
-        # get and save new configuration for each signup
-        for s in signups:
-            # get checked courses
-            courses = []
-            for course in courseheaders:
-                # NOTE: non-checked checkboxes do not become included in the form submission
-                cbx = form.get('%s_%s' % (str(s.id), course))
-                if cbx:
-                    courses.append(course)
-            s.courses = courses
-            s.save()
-            
-            # get name, email and username fields
-            s.firstname = form.get('%s_%s' % (str(s.id), 'firstname'))
-            s.lastname = form.get('%s_%s' % (str(s.id), 'lastname'))
-            s.email = form.get('%s_%s' % (str(s.id), 'email'))
-            s.username = form.get('%s_%s' % (str(s.id), 'username'))
-            s.save()
 
-    if post=='post':
-        # get filtered signups and update
+def man_bulk_signup(req, menu, post, base_context):
+    if post == 'post':
+        
+        # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
         form = req.POST
         ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        ids = [i  for i in ids if form.get('%s_cbx' % i) == 'on']
         objs = Signup.objects.filter(id__in=ids)
-        update_signups(objs, form)
         
-        # perform the appropriate add-user actions for each signup
+        # update objs with local data (text boxes)
+        #for signup in objs:
+        #    pass
+        
+        # get bulk action
+        action = form.get('bulk_actions')
+        
+        if action == 'add':
+            for signup in objs:
+                utils.adduser(signup, LDAP_PW)
+        elif action == 'disable':
+            for signup in objs:
+                ldaputils.rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
+        elif re.match('add_enroll_', action):
+            course = re.match('add_enroll_(.*)', action).group(1)
+            for signup in objs:
+                utils.adduser(signup, LDAP_PW)
+                mu.enroll_user(signup.username, course)
+        
+        #override_ldap = False
+        #if form.get('override_ldap'):
+        #    override_ldap = True
+        
+        req.session['message'] = 'All signups were added succesfully.'
         for signup in objs:
-            utils.adduser(signup, ldap_password=req.session['ldap_password'])
+            if signup.fail_str != '':
+                req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
+        
+        return redirect('/manage/%s' % menu)
+    
+    elif post == 'uploadcsv_post':
+        if len(req.FILES) > 0:
+            try:
+                f = req.FILES['up_file']
+                utils.pull_signups_todb(f, courses_only=['hest'])
+            except Exception as e:
+                req.session['message'] = 'Invalid csv file: %s' % e.__str__()
+        return redirect('/manage/%s' % menu)
+
+    elif post:
+        return redirect('/manage/%s' % menu)
+    
+    rows_ids = []
+    ids = []
+    
+    courses = mu.get_courses()
+    
+    # bulk actions for this view
+    bulk_actions = []
+    bulk_actions.append('add')
+    bulk_actions.append('delete')
+    courses = mu.get_courses()
+    if len(courses) > 0:
+        bulk_actions.append('---')
+    for c in courses:
+        bulk_actions.append('add_enroll_%s' % c)
+    
+    signups = Signup.objects.filter(is_in_ldap=False)
+    
+    if len(signups) > 0:
+        for s in signups:
+            row = []
+            use_textbox = True
+            
+            row.append(Ci(s.created.strftime("%Y%m%d")))
+            row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
+            row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
+            row.append(Ci(s.email, txt=use_textbox, header='email'))
+            row.append(Ci(s.username, txt=use_textbox, header='username'))
+            row.append(Ci(s.password, header='passwd'))
+            
+            rows_ids.append([row, str(s.id)])
+            ids.append(s.id)
+    
+    context = {'next' : '/manage/%s/post' % menu,
+               'uploadnext' : '/manage/%s/uploadcsv_post' % menu,
+               'rows_ids' : rows_ids,
+               'ids' : ids,
+               'courses' : courses,
+               'bulk_actions' : bulk_actions}
+    context.update(base_context)
+    return render(req, 'man_bulk.html', context)
+
+def man_users(req, menu, post, base_context):
+
+    if post=='post':
+        # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        ids = [i  for i in ids if form.get('%s_cbx' % i) == 'on']
+        objs = Signup.objects.filter(id__in=ids)
+        
+        # get bulk action
+        action = form.get('bulk_actions')
+        
+        if action == 'add':
+            for signup in objs:
+                utils.adduser(signup, LDAP_PW)
+        elif action == 'disable':
+            for signup in objs:
+                ldaputils.rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
+        elif re.match('add_enroll_', action):
+            course = re.match('add_enroll_(.*)', action).group(1)
+            for signup in objs:
+                utils.adduser(signup, LDAP_PW)
+                mu.enroll_user(signup.username, course)
         
         return redirect("/manage/%s" % menu)
+    
+    # bulk actions for this view
+    bulk_actions = []
+    bulk_actions.append('add')
+    bulk_actions.append('disable')
+    courses = mu.get_courses()
+    if len(courses) > 0:
+        bulk_actions.append('---')
+    for c in courses:
+        bulk_actions.append('add_enroll_%s' % c)
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 3]
@@ -640,10 +728,12 @@ def man_users(req, menu, post, base_context):
         
         rows_ids.append([row, str(s.id)])
     
-    context = {'next': 'post', 'uploadnext': 'upload',
-               'ids': ids, 'rows_ids': rows_ids}
+    context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
+               'ids': ids, 'rows_ids': rows_ids,
+               'bulk_actions' : bulk_actions}
     context.update(base_context)
     return render(req, 'man_users.html', context)
+
 
 def man_selfsignups(req, menu, post, base_context):
     context = {}
@@ -736,90 +826,6 @@ def man_courses(req, menu, post, base_context):
     context = {'templates' : mu.get_templates(),  'next' : '/manage/%s/post' % menu}
     context.update(base_context)
     return render(req, 'man_courses.html', context)
-
-
-def man_bulk_signup(req, menu, post, base_context):
-    '''  '''
-    if post == 'post':
-        form = req.POST
-        
-        # get filtered signups and update
-        form = req.POST
-        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
-        signups = Signup.objects.filter(id__in=ids)
-        #utils.update_signups(signups, form)
-        
-        cs = form['course_selector']
-        if re.match('\-\-\sselect', cs):
-            req.session['message'] = 'Please select a course.'
-            return redirect('/coursemanage/users')
-        
-        courses = [cs] + COURSES_MANDATORY
-        utils.assign_courses(signups, courses)
-        
-        override_ldap = False
-        if form.get('override_ldap'):
-            override_ldap = True
-        
-        # perform the appropriate add-user actions for each signup
-        req.session['message'] = 'All signups were added succesfully.'
-        for signup in signups:
-            utils.adduser(signup, ldap_password=LDAP_PW, accept_ldap_exists=override_ldap)
-            if signup.fail_str != '':
-                req.session['message'] = 'Some signups reported an error. Use the override checkbox if you think the user already exists in mcweb.'
-        return redirect('/manage/%s' % menu)
-    
-    elif post == 'uploadcsv_post':
-        if len(req.FILES) > 0:
-            try:
-                f = req.FILES['up_file']
-                # pull csv object to db signup objects 
-                utils.pull_signups_todb(f, courses_only=['hest'])
-            except Exception as e:
-                req.session['message'] = 'Invalid csv file: %s' % e.__str__()
-                #return HttpResponse('Invalid csv file: %s' % e.__str__())
-        return redirect('/manage/%s' % menu)
-    
-    elif post == 'delete':
-        s = Signup.objects.filter(id=int(id))
-        s.delete()
-        return redirect('/manage/%s' % menu)
-    
-    elif post: 
-        return redirect('/manage/%s' % menu)
-    
-    colheaders = [Ci('date'), Ci('firstname'), Ci('lastname'), Ci('email'), Ci('username'), Ci('password')]
-    rows_ids = []
-    ids = []
-    
-    courses = mu.get_courses()
-    
-    displaysignups = 'none'
-    signups = Signup.objects.filter(is_in_ldap=False)
-    
-    if len(signups) > 0:
-        displaysignups = ''
-        for s in signups:
-            row = []
-            use_textbox = True
-            
-            row.append(Ci(s.created.strftime("%Y%m%d")))
-            row.append(Ci(s.firstname, txt=use_textbox, header='firstname'))
-            row.append(Ci(s.lastname, txt=use_textbox, header='lastname'))
-            row.append(Ci(s.email, txt=use_textbox, header='email'))
-            row.append(Ci(s.username, txt=use_textbox, header='username'))
-            row.append(Ci(s.password, header='passwd'))
-            
-            rows_ids.append([row, str(s.id)])
-            ids.append(s.id)
-    
-    context = {'colheaders' : colheaders, 'rows_ids' : rows_ids, 'ids' : ids,
-               'next' : '/manage/%s/post' % menu,
-               'uploadnext' : '/manage/%s/uploadcsv_post' % menu,
-               'displaysignups' : displaysignups, 'courses' : courses}
-    context.update(base_context)
-    return render(req, 'man_bulk.html', context)
-
 
 def man_upload(req, menu, post, base_context):
     '''  '''
