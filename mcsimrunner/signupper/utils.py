@@ -2,7 +2,7 @@
 utils for signupper
 '''
 from mcweb import settings
-from subprocess import Popen, PIPE, call
+import subprocess
 from models import Signup
 from datetime import datetime
 import os
@@ -15,13 +15,21 @@ from moodleutils import moodleutils as mu
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
-    try:
-        process = Popen('makepasswd', stdout=PIPE, stderr=PIPE, shell=True)
-        (stdoutdata, stderrdata) = process.communicate()
-        return stdoutdata.strip()
-    except:
-        print 'get_random_passwd() --> Popen("makepasswd") output:\n' + stderrdata
-        raise
+    cmd = 'makepasswd'
+    proc = subprocess.Popen(cmd, 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=True)
+    com = proc.communicate()
+    std_err = com[1]
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    print('std-err: %s' % std_err)
+    
+    if std_err != '':
+        raise Exception('makepasswd says: %s' % std_err)
+    
+    return com[0].strip()
 
 def cols_to_line(cols, delimiter = ','):
     ''' makes a list of strings into a single ;-separated string with a trailing linebreak '''
@@ -198,3 +206,4 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
         s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
         print s.fail_str
         s.save()
+

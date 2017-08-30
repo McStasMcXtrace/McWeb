@@ -604,6 +604,7 @@ def man_bulk_signup(req, menu, post, base_context):
         
         if action == 'add':
             for signup in objs:
+                signup.password = utils.get_random_passwd()
                 utils.adduser(signup, LDAP_PW)
         elif action == 'delete':
             for signup in objs:
