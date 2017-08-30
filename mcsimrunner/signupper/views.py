@@ -605,9 +605,9 @@ def man_bulk_signup(req, menu, post, base_context):
         if action == 'add':
             for signup in objs:
                 utils.adduser(signup, LDAP_PW)
-        elif action == 'disable':
+        elif action == 'delete':
             for signup in objs:
-                ldaputils.rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
+                signup.delete()
         elif re.match('add_enroll_', action):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
@@ -686,29 +686,26 @@ def man_users(req, menu, post, base_context):
         # get bulk action
         action = form.get('bulk_actions')
         
-        if action == 'add':
-            for signup in objs:
-                utils.adduser(signup, LDAP_PW)
-        elif action == 'disable':
+        if action == 'disable':
             for signup in objs:
                 ldaputils.rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
-        elif re.match('add_enroll_', action):
-            course = re.match('add_enroll_(.*)', action).group(1)
+                signup.is_in_ldap = False
+                signup.save()
+        elif re.match('enroll_', action):
+            course = re.match('enroll_(.*)', action).group(1)
             for signup in objs:
-                utils.adduser(signup, LDAP_PW)
                 mu.enroll_user(signup.username, course)
         
         return redirect("/manage/%s" % menu)
     
     # bulk actions for this view
     bulk_actions = []
-    bulk_actions.append('add')
     bulk_actions.append('disable')
     courses = mu.get_courses()
     if len(courses) > 0:
         bulk_actions.append('---')
     for c in courses:
-        bulk_actions.append('add_enroll_%s' % c)
+        bulk_actions.append('enroll_%s' % c)
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 3]
@@ -751,7 +748,50 @@ def man_deleted(req, menu, post, base_context):
     return render(req, 'man_deleted.html', context)
 
 def man_disabled(req, menu, post, base_context):
-    context = {}
+    '''  '''
+    if post=='post':
+        # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        ids = [i  for i in ids if form.get('%s_cbx' % i) == 'on']
+        objs = Signup.objects.filter(id__in=ids)
+        
+        # get bulk action
+        action = form.get('bulk_actions')
+        
+        if action == 'restore':
+            for signup in objs:
+                ldaputils.adduser(MCWEB_LDAP_DN, LDAP_PW, signup.firstname, signup.lastname, signup.username, signup.email, signup.password)
+                signup.is_in_ldap = True
+                signup.save()
+        
+        return redirect("/manage/%s" % menu)
+    
+    # bulk actions for this view
+    bulk_actions = []
+    bulk_actions.append('restore')
+    
+    # filter signups
+    signups = [s for s in Signup.objects.all() if s.state() == 5]
+    
+    rows_ids = []
+    ids = []
+    for s in signups:
+        ids.append(s.id)
+        row = []
+        
+        row.append(CellInfo(s.created.strftime("%Y%m%d"), 1))
+        row.append(CellInfo(s.firstname, 2))
+        row.append(CellInfo(s.lastname, 3))
+        row.append(CellInfo(s.email, 4))
+        row.append(CellInfo(s.username, 5))
+        row.append(CellInfo(s.password, 6))
+        
+        rows_ids.append([row, str(s.id)])
+    
+    context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
+               'ids': ids, 'rows_ids': rows_ids,
+               'bulk_actions' : bulk_actions}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 
@@ -820,6 +860,7 @@ def man_courses(req, menu, post, base_context):
         req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
         
         return redirect("/manage/%s" % menu)
+    
     elif post:
         return redirect("/manage/%s" % menu)
     
