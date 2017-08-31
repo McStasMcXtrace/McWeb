@@ -22,7 +22,7 @@ class Signup(Model):
     is_in_moodle = BooleanField(default=False)
     is_self_signup = BooleanField(default=False)
     
-    fail_str = CharField(max_length=1000, default='')
+    fail_str = CharField(max_length=1000, blank=True)
     
     courses_str = CharField(max_length=1000)
     @property
