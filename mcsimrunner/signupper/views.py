@@ -692,6 +692,7 @@ def man_users(req, menu, post, base_context):
             for signup in objs:
                 ldaputils.rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
                 signup.is_in_ldap = False
+                signup.password = ''
                 signup.save()
         elif re.match('enroll_', action):
             course = re.match('enroll_(.*)', action).group(1)
@@ -763,6 +764,7 @@ def man_disabled(req, menu, post, base_context):
         
         if action == 'activate':
             for signup in objs:
+                signup.password = utils.get_random_passwd()
                 ldaputils.adduser(MCWEB_LDAP_DN, LDAP_PW, signup.firstname, signup.lastname, signup.username, signup.email, signup.password)
                 signup.is_in_ldap = True
                 signup.save()
