@@ -58,6 +58,7 @@ def addsignup(signup):
     ''' signup-specific proxy to the function adduser, and saves '''
     try:
         adduser(MCWEB_LDAP_DN, LDAP_PW, cn=signup.firstname, sn=signup.lastname, uid=signup.username, email=signup.email, pw=signup.password)
+        signup.is_in_ldap = True
     except AlreadyExistsException as e:
         existing_email = listusers(uid=signup.username)[0].mail
         if existing_email == signup.email: 
@@ -109,13 +110,9 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
-        #print('std-out: %s' % stdout)
         if stderr != '': 
             print('std-err: %s' % stderr)
             errmsg = stderr.rstrip('\n')
-            ps = ''
-            for c in cmd:
-                ps = '%s %s' % (ps, c)
             if "ldap_add: Already exists" in errmsg:
                 raise AlreadyExistsException(errmsg)
             else:
@@ -141,7 +138,6 @@ def rmuser(dn, admin_password, uid):
                                    stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
-        #print('std-out: %s' % stdout)
         if stderr:
             print('std-err: %s' % stderr)
             ps = ''

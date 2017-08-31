@@ -26,7 +26,7 @@ import re
 
 import utils
 from mcweb import settings
-from mcweb.settings import MCWEB_LDAP_DN, COURSES, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
+from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
 from models import Signup, ContactEntry
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
@@ -583,6 +583,73 @@ class CellInfo:
         self.data = data
         self.idx = idx
 
+def man_selfsignups(req, menu, post, base_context):
+    if post == 'post':
+        # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        ids = [i  for i in ids if form.get('%s_cbx' % i) == 'on']
+        objs = Signup.objects.filter(id__in=ids)
+        
+        # update objs with local data (text boxes)
+        for signup in objs:
+            signup.firstname = form.get('%s_%d' % (str(signup.id), 2))
+            signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
+            signup.email = form.get('%s_%d' % (str(signup.id), 4))
+            signup.username = form.get('%s_%d' % (str(signup.id), 5))
+            signup.save()
+        
+        # get bulk action
+        action = form.get('bulk_actions')
+        
+        if action == 'add_enrol':
+            for signup in objs:
+                signup.courses = COURSES_MANDATORY
+                utils.adduser(signup)
+                #for course in COURSES_MANDATORY:
+                #    mu.enroll_user(signup.username, course)
+                req.session['message'] = 'Selected signups were added and enroled into all demo courses.'
+        elif action == 'delete':
+            for signup in objs:
+                signup.delete()
+            req.session['message'] = 'Selected entries were deleted.'
+        
+        return redirect('/manage/%s' % menu)
+    
+    elif post:
+        return redirect('/manage/%s' % menu)
+    
+    # bulk actions for this view
+    bulk_actions = []
+    bulk_actions.append('add_enrol')
+    bulk_actions.append('delete')
+    
+    signups = [s for s in Signup.objects.all() if s.state() == 2]
+    
+    rows_ids = []
+    ids = []
+    if len(signups) > 0:
+        for s in signups:
+            row = []
+            
+            row.append(CellInfo(s.created.strftime("%Y%m%d"), 1))
+            row.append(CellInfo(s.firstname, 2, txt=True))
+            row.append(CellInfo(s.lastname, 3, txt=True))
+            row.append(CellInfo(s.email, 4, txt=True))
+            row.append(CellInfo(s.username, 5, txt=True))
+            row.append(CellInfo(s.password, 6))
+            
+            rows_ids.append([row, str(s.id)])
+            ids.append(s.id)
+    
+    context = {'next' : '/manage/%s/post' % menu,
+               'rows_ids' : rows_ids,
+               'ids' : ids,
+               'bulk_actions' : bulk_actions,
+               'demo_courses_string' : ', '.join(COURSES_MANDATORY)}
+    context.update(base_context)
+    return render(req, 'man_selfsignups.html', context)
+
 def man_bulk_signup(req, menu, post, base_context):
     if post == 'post':
         # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
@@ -725,12 +792,6 @@ def man_users(req, menu, post, base_context):
     context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
                'ids': ids, 'rows_ids': rows_ids,
                'bulk_actions' : bulk_actions}
-    context.update(base_context)
-    return render(req, 'man_users.html', context)
-
-
-def man_selfsignups(req, menu, post, base_context):
-    context = {}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 
@@ -929,59 +990,3 @@ def man_upload(req, menu, post, base_context):
     context.update(base_context)
     return render(req, 'man_upload.html', context)
 
-
-####################################################
-#                  Deprecated                      #
-####################################################
-
-
-#@deprecated
-def signup(req):
-    ''' displays the signup form '''
-    return render(req, 'signup.html', {'courses': settings.COURSES})
-
-#@deprecated
-def signup_get(req):
-    ''' signup form GET parsing, and append the signup line to file new_signups.csv '''
-    csv = 'new_signups.csv'
-    
-    # and the form
-    form = req.GET
-    
-    # get static fields from the form
-    firstname = form.get('firstname')
-    lastname = form.get('lastname')
-    username = form.get('username')
-    email = form.get('email')
-    password = utils.get_random_passwd()
-    description = '0' # used for an email notification flag
-    auth = 'ldap'
-    cols = [firstname, lastname, username, email, password, description, auth]
-    
-    # get dynamic fields from the form
-    for c in settings.COURSES:
-        cols.append(form.get(c) or '')
-    for c in settings.COURSES_MANDATORY:
-        cols.append(c)
-    
-    # create the header line - an empty string if the file exists
-    header_line = ""
-    if not os.path.exists(csv):
-        header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
-        i = 0
-        for c in settings.COURSES:
-            i += 1
-            header_cols.append('course%s' % i)
-        for c in settings.COURSES_MANDATORY:
-            i += 1
-            header_cols.append('course%s' % i)
-        header_line = utils.cols_to_line(header_cols)
-    
-    # write to file
-    with open(csv, 'a') as f:
-        f.write(header_line)
-        f.write(utils.cols_to_line(cols))
-        f.close()
-    
-    # get a thank-you message to the user
-    return redirect('/thanks/')
