@@ -534,7 +534,7 @@ manage_menu_items = OrderedDict([
                 ('users' , 'Active Users'),
                 ('limbos' , 'Limbos'),
                 ('disabled' , 'Disabled'),
-                ('deleted' , 'Deleted'),
+                #('deleted' , 'Deleted'),
                 ('pause_a' , '---'),
                 ('templates' , 'Templates'),
                 ('courses' , 'Courses'),
@@ -562,13 +562,13 @@ def manage(req, menu=None, post=None):
         return man_limbos(req, menu, post, base_context)
     elif idx == 4:
         return man_disabled(req, menu, post, base_context)
-    elif idx == 5:
-        return man_deleted(req, menu, post, base_context)
-    elif idx == 7:
+    #elif idx == 5:
+    #    return man_deleted(req, menu, post, base_context)
+    elif idx == 6:
         return man_templates(req, menu, post, base_context)
-    elif idx == 8:
+    elif idx == 7:
         return man_courses(req, menu, post, base_context)
-    elif idx == 10:
+    elif idx == 9:
         return man_upload(req, menu, post, base_context)
     else:
         raise Exception("code inconsistence")
