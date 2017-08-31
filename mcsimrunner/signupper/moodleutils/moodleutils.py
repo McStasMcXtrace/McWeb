@@ -167,3 +167,34 @@ def _course_create(shortname, fullname, category_id):
     print('std-out: %s' % com[0])
     print('std-err: %s' % com[1])
 
+def synchronize(signups):
+    ''' attempt to sync is_in_moodle signup field to the moodle db '''
+    cmd = 'moosh user-list'
+    proc = subprocess.Popen(cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR,
+                            shell=True)
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    print('std-out: %s' % com[0])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
+    
+    text = com[0]
+    lines = text.splitlines()
+    moodle_uids = []
+    for l in lines: 
+        try:
+            pat = '([\w\@\-\.]+)\s\([0-9]+\)'
+            uid = re.match(pat, l).group(1)
+            moodle_uids.append(uid)
+        except:
+            raise Exception('Please improve moodleutils.syncronize regex "%s" with line "%s".' % (pat, l))
+    
+    subset = [s for s in signups if s.username in moodle_uids]
+    for s in subset: s.is_in_moodle = True
+    disjoint = [s for s in signups if s not in subset]
+    for s in disjoint: s.is_in_moodle = False
+    for s in signups: s.save()
+
