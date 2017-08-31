@@ -76,7 +76,8 @@ def adduser(firstname, lastname, username, email):
     com = proc.communicate()
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
 
 def enroll_user(username, course_sn, teacher=False):
     '''  '''
@@ -93,7 +94,8 @@ def enroll_user(username, course_sn, teacher=False):
     com = proc.communicate()
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
 
 def _course_list():
     ''' returns: ["courseid","shortname","fullname"] '''
@@ -106,7 +108,8 @@ def _course_list():
     com = proc.communicate()
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
     
     unit = '[/\,\.\\\(\)\[\]\{\}\-\w\s]+'
     spat = r'"(%s)","(%s)","(%s)","(%s)","(%s)"' % (unit, unit, unit, unit, unit)
@@ -139,7 +142,8 @@ def _course_backup(backupname, course_id):
     com = proc.communicate()
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
 
 def _course_restore_e(backupname, course_id):
     '''  '''
@@ -165,7 +169,8 @@ def _course_create(shortname, fullname, category_id):
     com = proc.communicate()
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % com[1])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
 
 def synchronize(signups):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''

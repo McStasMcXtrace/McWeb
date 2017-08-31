@@ -18,6 +18,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.validators import validate_email
+from django.utils import timezone
 
 import ast
 import os
@@ -603,8 +604,8 @@ def man_bulk_signup(req, menu, post, base_context):
         
         if action == 'add':
             for signup in objs:
-                utils.adduser(signup, LDAP_PW)
-                req.session['message'] = 'Selected signups were added succesfully.'
+                utils.adduser(signup)
+                req.session['message'] = 'Selected signups were added.'
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -612,18 +613,9 @@ def man_bulk_signup(req, menu, post, base_context):
         elif re.match('add_enroll_', action):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
-                utils.adduser(signup, LDAP_PW)
+                utils.adduser(signup)
                 mu.enroll_user(signup.username, course)
-            req.session['message'] = 'Selected signups were added succesfully.'
-
-        
-        #override_ldap = False
-        #if form.get('override_ldap'):
-        #    override_ldap = True
-        
-        for signup in objs:
-            if signup.fail_str != '':
-                req.session['message'] = 'Some signups reported an error - these may be found in the "Limbo" tab.'
+            req.session['message'] = 'Selected signups were added and enroled.'
         
         return redirect('/manage/%s' % menu)
     
@@ -694,11 +686,13 @@ def man_users(req, menu, post, base_context):
                 signup.is_in_ldap = False
                 signup.password = ''
                 signup.save()
+                req.session['message'] = 'Selected signups were disabled.'
         elif re.match('enroll_', action):
             course = re.match('enroll_(.*)', action).group(1)
             for signup in objs:
                 mu.enroll_user(signup.username, course)
-        
+                req.session['message'] = 'Selected signups were enroled.'
+                
         return redirect("/manage/%s" % menu)
     
     # bulk actions for this view
@@ -762,18 +756,19 @@ def man_disabled(req, menu, post, base_context):
         # get bulk action
         action = form.get('bulk_actions')
         
-        if action == 'activate':
+        if action == 'activate_and_notify':
             for signup in objs:
                 signup.password = utils.get_random_passwd()
-                ldaputils.adduser(MCWEB_LDAP_DN, LDAP_PW, signup.firstname, signup.lastname, signup.username, signup.email, signup.password)
-                signup.is_in_ldap = True
-                signup.save()
+                ldaputils.addsignup(signup)
+                utils.notify_signup(signup)
+                
+            req.session['message'] = 'Selected signups were re-activated and notified.'
         
         return redirect("/manage/%s" % menu)
     
     # bulk actions for this view
     bulk_actions = []
-    bulk_actions.append('activate')
+    bulk_actions.append('activate_and_notify')
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 5]
@@ -798,7 +793,6 @@ def man_disabled(req, menu, post, base_context):
                'bulk_actions' : bulk_actions}
     context.update(base_context)
     return render(req, 'man_users.html', context)
-
 
 def man_templates(req, menu, post, base_context):
     '''  '''

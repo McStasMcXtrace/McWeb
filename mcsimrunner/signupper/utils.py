@@ -24,9 +24,8 @@ def get_random_passwd():
     std_err = com[1]
     print('running: %s' % cmd)
     print('std-out: %s' % com[0])
-    print('std-err: %s' % std_err)
-    
     if std_err != '':
+        print('std-err: %s' % std_err)
         raise Exception('makepasswd says: %s' % std_err)
     
     return com[0].strip()
@@ -85,8 +84,17 @@ def gettodaystr():
     ''' this string is part of the filename of csv files '''
     return datetime.now().strftime("%Y%m%d")
 
+def notify_signup(signup):
+    ''' signup-specific proxy to the notifyuser function, also saves '''
+    try:
+        notifyuser(signup.firstname + ' ' + signup.lastname, signup.username, signup.email, signup.password)
+        signup.notified = timezone.now
+    except Exception as e:
+        signup.fail_str = signup.fail_str + ', notifyuser: %s' % str(e)
+    signup.save()
+
 def notifyuser(fullname, username, email, password):
-    ''' send an account creattion notification email to user '''
+    ''' send an account creation notification email to user '''
     body = '''
 Dear %s
 
@@ -95,7 +103,7 @@ You have been added to the http://e-neutrons.org e-Learning system.
 username: %s
 password: %s
 
-To change your password, please visit http://www.e-neutrons.org/ssp/
+To change your password, please visit http://www.e-neutrons.org/ssp
 
 Best,
 
@@ -137,9 +145,9 @@ def notify_contactentry(replyto, text):
     finally:
         os.remove('_contactbody')
 
-def pull_csv_signups_todb(file):
+def pull_csv_signups_todb(f):
     ''' creates unsaved signup instances from a csv file '''
-    r = csv.reader(file, delimiter=',')
+    r = csv.reader(f, delimiter=',')
     firstname_idx = 0
     lastname_idx = 1
     email_idx = 2
@@ -148,8 +156,6 @@ def pull_csv_signups_todb(file):
     signups = []
     first_row = True
     for row in r:
-        # header line
-        print(row)
         if first_row:
             firstname_idx = row.index('firstname')
             lastname_idx = row.index('lastname')
@@ -173,7 +179,7 @@ def assign_courses(signups, courses):
     for s in signups:
         s.courses = s.courses + courses
 
-def adduser(signup, ldap_password, accept_ldap_exists=False):
+def adduser(signup):
     ''' 
     Adds signup to ldap and moodle, and enrolls to the selected moodle courses.
     
@@ -183,16 +189,7 @@ def adduser(signup, ldap_password, accept_ldap_exists=False):
     try:
         # try add to ldap
         if not s.is_in_ldap:
-            try:
-                ldaputils.adduser(MCWEB_LDAP_DN, ldap_password, s.firstname, s.lastname, s.username, s.email, s.password)
-                s.is_in_ldap = True
-                s.save()
-            except Exception as e:
-                if not accept_ldap_exists:
-                    raise e
-                m = re.search(r'Already exists', e.__str__())
-                if not m:
-                    raise e
+            ldaputils.addsignup(signup)
         
         # try add to moodle
         if not s.is_in_moodle:

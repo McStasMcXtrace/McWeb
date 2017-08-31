@@ -4,6 +4,7 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess
 import re
+from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW
 
 class LdapUserEntry:
     ''' record contents of list returned by listusers()'''
@@ -15,7 +16,7 @@ class LdapUserEntry:
     def __str__(self):
         return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
 
-def listusers(dn, uid=None):
+def listusers(dn=MCWEB_LDAP_DN, uid=None):
     '''
     List and return all user entries
     
@@ -34,7 +35,8 @@ def listusers(dn, uid=None):
     com = proc.communicate()
     print('%s\n' % cmd)
     #print('std-out: %s' % com[0])
-    #print('std-err: %s' % com[1])
+    if com[1] != '': 
+        print('std-err: %s' % com[1])
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
@@ -51,6 +53,21 @@ def listusers(dn, uid=None):
             continue
     
     return users
+
+def addsignup(signup):
+    ''' signup-specific proxy to the function adduser, and saves '''
+    try:
+        adduser(MCWEB_LDAP_DN, LDAP_PW, cn=signup.firstname, sn=signup.lastname, uid=signup.username, email=signup.email, pw=signup.password)
+    except AlreadyExistsException as e:
+        existing_email = listusers(uid=signup.username)[0].mail
+        if existing_email == signup.email: 
+            # here we assume that this is the same user
+            signup.is_in_ldap = True
+        else:
+            signup.fail_str = signup.fail_str + ', ldapadduser: ' + str(e)
+    signup.save()
+
+class AlreadyExistsException(Exception): pass
 
 def adduser(dn, admin_password, cn, sn, uid, email, pw):
     ''' 
@@ -93,16 +110,16 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
-        #print('std-err: %s' % stderr)
-        
-        if stderr:
+        if stderr != '': 
+            print('std-err: %s' % stderr)
+            errmsg = stderr.rstrip('\n')
             ps = ''
-            for c in cmd: ps = '%s %s' % (ps, c)
-            debug = False
-            if debug:
-                print('"%s" returned an error:' % ps.strip())
-                print(stderr.rstrip('\n'))
-            raise Exception(stderr.rstrip('\n'))
+            for c in cmd:
+                ps = '%s %s' % (ps, c)
+            if "ldap_add: Already exists" in errmsg:
+                raise AlreadyExistsException(errmsg)
+            else:
+                raise Exception(errmsg)
     finally:
         os.remove('_uid_user.ldif')
     
@@ -125,15 +142,11 @@ def rmuser(dn, admin_password, uid):
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
-        #print('std-err: %s' % stderr)
-        
         if stderr:
+            print('std-err: %s' % stderr)
             ps = ''
-            for c in cmd: ps = '%s %s' % (ps, c)
-            debug = False
-            if debug:
-                print('"%s" returned an error:' % ps.strip())
-                print(stderr.rstrip('\n'))
+            for c in cmd:
+                ps = '%s %s' % (ps, c)
             raise Exception(stderr.rstrip('\n'))
     finally:
         os.remove('_rmuser.ldif')
@@ -155,9 +168,9 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
-        #print('std-err: %s' % stderr)
         
         if stderr:
+            print('std-err: %s' % stderr)
             ps = ''
             for c in cmd:
                 ps = '%s %s' % (ps, c)
@@ -180,10 +193,11 @@ def initdb(dn, admin_password):
         com = process.communicate()
         print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % com[0])
-        #print('std-err: %s' % com[1])
+        if com[1] != '':
+            print('std-err: %s' % com[1])
     finally:
         os.remove('_cn_usergroup.ldif')
-
+    
     # add ou_users
     ou_users = 'dn: ou=users,%s\nobjectClass: organizationalUnit\nobjectClass: top\nou: users\n' % dn
     ldif = open('_ou_users.ldif', 'a')
@@ -197,8 +211,9 @@ def initdb(dn, admin_password):
         com = process.communicate()
         print('running: %s' % cmd)
         #print('std-out: %s' % com[0])
-        #print('std-err: %s' % com[1])
-
+        if com[1] != '':
+            print('std-err: %s' % com[1])
+    
     finally:
         os.remove('_ou_users.ldif')
 
