@@ -584,7 +584,6 @@ class CellInfo:
 
 def man_bulk_signup(req, menu, post, base_context):
     if post == 'post':
-        
         # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
         form = req.POST
         ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
@@ -605,23 +604,26 @@ def man_bulk_signup(req, menu, post, base_context):
         if action == 'add':
             for signup in objs:
                 utils.adduser(signup, LDAP_PW)
+                req.session['message'] = 'Selected signups were added succesfully.'
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
+            req.session['message'] = 'Selected signups were deleted.'
         elif re.match('add_enroll_', action):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
                 utils.adduser(signup, LDAP_PW)
                 mu.enroll_user(signup.username, course)
+            req.session['message'] = 'Selected signups were added succesfully.'
+
         
         #override_ldap = False
         #if form.get('override_ldap'):
         #    override_ldap = True
         
-        req.session['message'] = 'All signups were added succesfully.'
         for signup in objs:
             if signup.fail_str != '':
-                req.session['message'] = 'Some signups reported an error - these can be found in the "Limbo" tab.'
+                req.session['message'] = 'Some signups reported an error - these may be found in the "Limbo" tab.'
         
         return redirect('/manage/%s' % menu)
     
