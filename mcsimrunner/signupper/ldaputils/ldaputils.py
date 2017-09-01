@@ -5,6 +5,8 @@ import os
 import subprocess
 import re
 from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW
+from signupper.models import Signup
+from django.utils import timezone
 
 class LdapUserEntry:
     ''' record contents of list returned by listusers()'''
@@ -55,18 +57,43 @@ def listusers(dn=MCWEB_LDAP_DN, uid=None):
     return users
 
 def addsignup(signup):
-    ''' signup-specific proxy to the function adduser, and saves '''
+    '''
+    Add signup to ldap proxy. This function is "LDAP already exists"-safe.
+    WARNING: returns the "actual" signup object, arg may be deleted.
+    '''
     try:
         adduser(MCWEB_LDAP_DN, LDAP_PW, cn=signup.firstname, sn=signup.lastname, uid=signup.username, email=signup.email, pw=signup.password)
         signup.is_in_ldap = True
+        signup.save()
     except AlreadyExistsException as e:
         existing_email = listusers(uid=signup.username)[0].mail
         if existing_email == signup.email: 
             # here we assume that this is the same user
-            signup.is_in_ldap = True
+            
+            # fetch existing signup with the same name
+            username_qs = Signup.objects.filter(username=signup.username)
+            old_qs = username_qs.filter(is_in_ldap=True)
+            if len(old_qs) > 1:
+                raise Exception("ldaputils.addsignup: Signup db may need a cleanup.")
+            elif len(old_qs) == 1:
+                old = old_qs[0]
+                # update new entry with ldap info and extra
+                signup.fail_str = old.fail_str + ', last created: %s' % old.created.strftime("%Y%m%d")
+                ldap_info = listusers(MCWEB_LDAP_DN, signup.username)[0]
+                signup.firstname = ldap_info.cn
+                signup.lastname = ldap_info.sn
+                # only real guess of a password we have is the original
+                signup.pasword = old.password
+                signup.is_in_ldap = True
+                signup.save()
+                # we have to remove an entry to avoid duplicates, and someone else may save Signup since this responsibility is unclear
+                old.delete()
+            else:
+                # if it does not exist:
+                signup.is_in_ldap = True
         else:
             signup.fail_str = signup.fail_str + ', ldapadduser: ' + str(e)
-    signup.save()
+            raise Exception("username %s is taken" % signup.username)
 
 class AlreadyExistsException(Exception): pass
 
