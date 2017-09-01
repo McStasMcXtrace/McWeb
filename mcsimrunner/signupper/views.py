@@ -603,12 +603,15 @@ def man_selfsignups(req, menu, post, base_context):
         action = form.get('bulk_actions')
         
         if action == 'add_enrol':
+            err_flag = False
             for signup in objs:
                 signup.courses = COURSES_MANDATORY
                 utils.adduser(signup)
-                #for course in COURSES_MANDATORY:
-                #    mu.enroll_user(signup.username, course)
-                req.session['message'] = 'Selected signups were added and enroled into all demo courses.'
+                if signup.state() != 3:
+                    req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
+                    err_flag = True
+            if not err_flag:
+                req.session['message'] = 'Signups were added.'
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -670,9 +673,15 @@ def man_bulk_signup(req, menu, post, base_context):
         action = form.get('bulk_actions')
         
         if action == 'add':
+            err_flag = False
             for signup in objs:
                 utils.adduser(signup)
+                if signup.state() != 3:
+                    req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
+                    err_flag = True
+            if not err_flag:
                 req.session['message'] = 'Selected signups were added.'
+        
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -796,14 +805,66 @@ def man_users(req, menu, post, base_context):
     return render(req, 'man_users.html', context)
 
 def man_limbos(req, menu, post, base_context):
-    context = {}
+    '''  '''
+    if post=='post':
+        # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
+        form = req.POST
+        ids = ast.literal_eval(form.get('ids')) # conv. str repr. of lst. to lst.
+        ids = [i  for i in ids if form.get('%s_cbx' % i) == 'on']
+        objs = Signup.objects.filter(id__in=ids)
+        
+        # update objs with local data (text boxes)
+        for signup in objs:
+            signup.firstname = form.get('%s_%d' % (str(signup.id), 2))
+            signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
+            signup.email = form.get('%s_%d' % (str(signup.id), 4))
+            signup.username = form.get('%s_%d' % (str(signup.id), 5))
+            signup.save()
+        
+        # get bulk action
+        action = form.get('bulk_actions')
+        
+        if action == 'add':
+            for signup in objs:
+                utils.adduser(signup)
+                
+            req.session['message'] = 'Signups were attempted re-added, and were notified if this went well.'
+        elif action == 'delete':
+            for signup in objs:
+                signup.delete()
+            req.session['message'] = 'Signups were deleted.'
+        
+        
+        return redirect("/manage/%s" % menu)
+    
+    # bulk actions for this view
+    bulk_actions = []
+    bulk_actions.append('add')
+    bulk_actions.append('delete')
+    
+    # filter signups
+    signups = [s for s in Signup.objects.all() if s.state() == 0]
+    
+    rows_ids = []
+    ids = []
+    for s in signups:
+        ids.append(s.id)
+        row = []
+        
+        row.append(CellInfo(s.created.strftime("%Y%m%d"), 1))
+        row.append(CellInfo(s.firstname, 2))
+        row.append(CellInfo(s.lastname, 3))
+        row.append(CellInfo(s.email, 4))
+        row.append(CellInfo(s.username, 5))
+        row.append(CellInfo(s.password, 6))
+        
+        rows_ids.append([row, str(s.id)])
+    
+    context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
+               'ids': ids, 'rows_ids': rows_ids,
+               'bulk_actions' : bulk_actions}
     context.update(base_context)
-    return render(req, 'man_limbos.html', context)
-
-def man_deleted(req, menu, post, base_context):
-    context = {}
-    context.update(base_context)
-    return render(req, 'man_deleted.html', context)
+    return render(req, 'man_users.html', context)
 
 def man_disabled(req, menu, post, base_context):
     '''  '''
@@ -854,6 +915,11 @@ def man_disabled(req, menu, post, base_context):
                'bulk_actions' : bulk_actions}
     context.update(base_context)
     return render(req, 'man_users.html', context)
+
+def man_deleted(req, menu, post, base_context):
+    context = {}
+    context.update(base_context)
+    return render(req, 'man_deleted.html', context)
 
 def man_templates(req, menu, post, base_context):
     '''  '''

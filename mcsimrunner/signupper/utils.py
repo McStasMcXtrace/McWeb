@@ -35,26 +35,6 @@ def cols_to_line(cols, delimiter = ','):
         line = "%s%s%s" % (line, c, delimiter)
     return line.rstrip("%s" % delimiter) + "\n"
 
-def get_colheaders_moodle():
-    ''' Returns a list of the standard signup column headers. The field "description" is used for deciding if an email has been sent '''
-    header_cols = ["firstname", "lastname", "username", "email", "password", "description", "auth"]
-    num_non_course = 7
-    for i in range(len(settings.COURSES)):
-        header_cols.append('course%s' % i)
-    for i in range(len(settings.COURSES_MANDATORY)):
-        header_cols.append('course%s' % i)
-    return (header_cols, num_non_course)
-
-def get_colheaders():
-    ''' returns a list of the standard signup column headers used for display on the web-based add users interface '''
-    header_cols = ['date', 'firstname', 'lastname', 'email', 'username', 'passwd']
-    num_non_course = 5
-    for c in settings.COURSES:
-        header_cols.append(c)
-    for c in settings.COURSES_MANDATORY:
-        header_cols.append(c)
-    return (header_cols, num_non_course)
-
 def get_new_signups():
     return [s for s in Signup.objects.all() if s.state() == 1 or s.state() == 2]
 
@@ -167,11 +147,7 @@ def assign_courses(signups, courses):
         s.courses = s.courses + courses
 
 def adduser(signup):
-    ''' 
-    Adds signup to ldap and moodle, and enrolls to the selected moodle courses.
-    
-    accept_ldap_exists : if True, accept ldap error "Already exists", but is_in_ldap property is untouched.
-    '''
+    ''' Adds signup to ldap and moodle, and enrolls to the selected moodle courses. Updates signup state. '''
     s = signup
     try:
         # try add to ldap
@@ -184,8 +160,8 @@ def adduser(signup):
             s.is_in_moodle = True
             s.save()
         
-        # try notify user
-        if not s.notified:
+        # try notify user if it is clearly added
+        if s.is_in_ldap and s.is_in_moodle and not s.notified:
             notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
             s.notified = timezone.now()
             s.save()
