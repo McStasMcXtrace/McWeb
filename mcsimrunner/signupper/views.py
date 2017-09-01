@@ -107,10 +107,10 @@ manage_menu_items = OrderedDict([
                 ('disabled' , 'Disabled'),
                 #('deleted' , 'Deleted'),
                 ('pause_a' , '---'),
-                ('templates' , 'Templates'),
-                ('courses' , 'Courses'),
+                ('templates' , 'Templates/Backups'),
+                ('courses' , 'Course Creation'),
                 ('pause_b' , '---'),
-                ('upload' , 'Upload')])
+                ('upload' , 'Upload files for simulation')])
     
 @user_passes_test(lambda u: u.is_superuser)
 def manage(req, menu=None, post=None):
