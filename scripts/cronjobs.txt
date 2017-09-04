@@ -20,4 +20,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Half-hourly reset of the demo00 account in moodle
 0,30 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_demo00_account.sh > /dev/null
 # Weekly backups of all Moodle data
-0 3 * * 1 /srv/mcweb/McWeb/scripts/moodle_fullbackup.sh > /srv/mcweb/McWeb/mcsimulator/static/backupstatus.html
+0 3 * * 1 /srv/mcweb/McWeb/scripts/moodle_fullbackup.sh > /srv/mcweb/McWeb/mcsimrunner/static/backupstatus.html
