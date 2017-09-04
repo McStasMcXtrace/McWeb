@@ -62,6 +62,7 @@ mkdir -p /srv/moodledata/repository
 mkdir -p /srv/moodledata/repository/uploads
 mkdir -p /srv/mcweb/moodle-course-templates
 mkdir -p /srv/mcweb/moodle-restore-jobs
+mkdir -p /srv/mcweb/moodle-fullbackups
 sudo chown -R www-data:www-data /srv/mcweb /var/www/ /srv/moodledata 
 # Directory for Moodle filesystem access, group right www-data 
 sudo chmod g+w /srv/moodledata/repository/uploads
