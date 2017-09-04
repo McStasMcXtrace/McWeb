@@ -22,9 +22,12 @@ MBZDIR="/srv/mcweb/moodle-course-templates"
 MOODLEDATA="/srv/moodledata"
 MOOSHDIR="/srv/mcweb/moosh"
 BACKUPDIR="/srv/mcweb/moodle-fullbackups"
-
-echo FULL moodle backup set being created $YEAR / $MONTH / $DAY
-echo
+echo \<html\>
+echo \<head\>
+echo \</head\>
+echo \<body\>
+echo \<h1\>FULL moodle backup set being created $YEAR / $MONTH / $DAY\</h1\>
+echo \<pre\>
 
 cd $MOODLEDIR
 DBUSER=`grep dbuser config.php | cut -f2 -d\'`
@@ -93,3 +96,6 @@ if [ -d $BACKUPDIR/$LASTMONTHYEAR/$LASTMONTH ]; then
 else
     echo No backups from last month it seems...
 fi
+echo \</pre\>
+echo \</body\>
+echo \</html\>
