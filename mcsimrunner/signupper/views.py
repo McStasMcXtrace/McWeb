@@ -546,7 +546,9 @@ def man_courses(req, menu, post, base_context):
             if firstname == '' or email == '':
                 req.session['message'] = 'New user creation requires a name and an email.'
                 return redirect("/manage/%s" % menu)
-            teacher = utils.create_save_signup(firstname, lastname, email, username, [])
+            teacher = Signup(firstname, lastname, email, username, utils.get_random_passwd(), courses=[])
+            teacher.save()
+            
             utils.adduser(teacher, ldap_password=LDAP_PW)
             req.session['message'] = 'New user %s has been created.' % username
         

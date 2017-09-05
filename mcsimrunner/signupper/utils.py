@@ -47,18 +47,6 @@ def get_signups_all():
 def get_signups_self():
     return Signup.objects.filter(is_self_signup=True)
 
-def create_save_signup(firstname, lastname, email, username, courses_lst, self_signup):
-    ''' most simple way of creating a new signup instance '''
-    signup = Signup(firstname=firstname,
-                    lastname=lastname,
-                    email=email,
-                    username=username,
-                    password=get_random_passwd(),
-                    is_self_signup=self_signup)
-    signup.courses = courses_lst
-    signup.save()
-    return signup
-
 def gettodaystr():
     ''' this string is part of the filename of csv files '''
     return datetime.now().strftime("%Y%m%d")
@@ -134,9 +122,8 @@ def pull_csv_signups_todb(f):
     signups = []
     for l in lines:
         words = l.split(',')
-        signup = create_save_signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3],
-                                    courses_lst=[],
-                                    self_signup=False)
+        signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], password=get_random_passwd(), courses=[])
+        signup.save()
         signups.append(signup)
     
     return signups
