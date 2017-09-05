@@ -55,7 +55,7 @@ def notify_signup(signup):
     ''' signup-specific proxy to the notifyuser function, also saves '''
     try:
         notifyuser(signup.firstname + ' ' + signup.lastname, signup.username, signup.email, signup.password)
-        signup.notified = timezone.now
+        signup.notified = timezone.now()
     except Exception as e:
         signup.fail_str = signup.fail_str + ', notifyuser: %s' % str(e)
     signup.save()
