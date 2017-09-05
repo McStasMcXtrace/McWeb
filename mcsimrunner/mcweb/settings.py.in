@@ -63,9 +63,11 @@ COURSES_MANDATORY = [
 DEFAULT_GROUP = 'intro-ns'
 DEFAULT_INSTR = 'SANSsimple'
 
-
 # moodle install dir for signupper
 MOODLE_DIR = '/srv/mcweb/moodle'
+
+# mcweb site url
+MCWEB_NOTIFY_EMAIL_URL = 'http://e-neutrons.org'
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
 FILE_UPLOAD_PW = '@UPLOADPW@'

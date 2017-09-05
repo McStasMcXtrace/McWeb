@@ -10,6 +10,7 @@ import re
 from django.utils import timezone
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
+from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -65,7 +66,7 @@ def notifyuser(fullname, username, email, password):
     body = '''
 Dear %s
 
-You have been added to the http://e-neutrons.org e-Learning system.
+You have been added to the %s e-Learning system.
 
 username: %s
 password: %s
@@ -75,7 +76,7 @@ To change your password, please visit http://www.e-neutrons.org/ssp
 Best,
 
 The e-neutrons.org admin team
-    ''' % (fullname, username, password)
+    ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password)
     
     try:
         f = open('_body', 'w') 
