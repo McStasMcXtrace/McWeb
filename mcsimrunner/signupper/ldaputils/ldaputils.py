@@ -83,7 +83,8 @@ def addsignup(signup):
                 signup.firstname = ldap_info.cn
                 signup.lastname = ldap_info.sn
                 # only real guess of a password we have is the original
-                signup.pasword = old.password
+                signup.password = old.password
+                signup.notified = old.notified
                 signup.is_in_ldap = True
                 signup.save()
                 # we have to remove an entry to avoid duplicates, and someone else may save Signup since this responsibility is unclear
