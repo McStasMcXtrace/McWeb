@@ -31,6 +31,7 @@ from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
 from collections import OrderedDict
 
+
 ####################################################
 #                  Demo site                       #
 ####################################################
@@ -106,7 +107,6 @@ def contact(req):
 
     except Exception as e:
         return render(req, 'contact.html', {'message' : 'Fail: %s' % e.message})
-
 
 
 ##############################################################
@@ -208,13 +208,16 @@ def man_selfsignups(req, menu, post, base_context):
         if action == 'add_enrol':
             err_flag = False
             for signup in objs:
-                signup.courses = COURSES_MANDATORY
                 utils.adduser(signup)
+                for course in signup.courses:
+                    error_or_None = mu.enroll_user(signup.username, course)
+                    if error_or_None:
+                        signup.fail_str = signup.fail_str + ' ' + error_or_None
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
             if not err_flag:
-                req.session['message'] = 'Signups were added.'
+                req.session['message'] = 'Signups were added and enroled.'
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -293,8 +296,15 @@ def man_bulk_signup(req, menu, post, base_context):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
                 utils.adduser(signup)
-                mu.enroll_user(signup.username, course)
-            req.session['message'] = 'Selected signups were added and enroled.'
+                error_or_None = mu.enroll_user(signup.username, course)
+                if error_or_None:
+                    signup.fail_str = signup.fail_str + ' ' + error_or_None
+                    signup.save()
+                if signup.state() != 3:
+                    req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
+                    err_flag = True
+            if not err_flag:
+                req.session['message'] = 'Selected signups were added and enroled.'
         
         return redirect('/manage/%s' % menu)
     
@@ -368,8 +378,15 @@ def man_users(req, menu, post, base_context):
                 req.session['message'] = 'Selected signups were disabled.'
         elif re.match('enroll_', action):
             course = re.match('enroll_(.*)', action).group(1)
+            err_flag = False
             for signup in objs:
-                mu.enroll_user(signup.username, course)
+                error_or_None = mu.enroll_user(signup.username, course)
+                if error_or_None:
+                    signup.fail_str = signup.fail_str + ' ' + error_or_None
+                if signup.state() != 3:
+                    req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
+                    err_flag = True
+            if not err_flag:
                 req.session['message'] = 'Selected signups were enroled.'
                 
         return redirect("/manage/%s" % menu)
@@ -584,9 +601,11 @@ def man_courses(req, menu, post, base_context):
             utils.adduser(teacher, ldap_password=LDAP_PW)
             req.session['message'] = 'New user %s has been created.' % username
         
-        # TODO: implement error handling for this case, if the user doesn't exist and no info was provided
-        mu.enroll_user(username=username, course_sn=shortname, teacher=True)
-        
+        error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+        if error_or_None:
+            signup.fail_str = signup.fail_str + ' ' + error_or_None
+            raise Exception('Teacher could not be added: %s') % error_or_None
+            
         req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
         
         return redirect("/manage/%s" % menu)

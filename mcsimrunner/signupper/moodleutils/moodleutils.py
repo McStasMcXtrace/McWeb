@@ -96,6 +96,7 @@ def enroll_user(username, course_sn, teacher=False):
     print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
+        return com[1]
 
 def _course_list():
     ''' returns: ["courseid","shortname","fullname"] '''
