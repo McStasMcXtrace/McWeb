@@ -4,17 +4,19 @@ Based on SimRun model. Updates django db and is implemented as a django command.
 Outputs comprehensive messages to stdout, which can be increased to include
 mcrun, mcdisplay and mcplot stdout and stderr.
 '''
-from django.core.management.base import BaseCommand
-from django.utils import timezone
-from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, MCRUN
-import mcweb.settings as settings
 import subprocess
 import os
 import time
 import tarfile
 import threading
 import logging
+import re
+
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from simrunner.models import SimRun
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, MCRUN
+import mcweb.settings as settings
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -174,11 +176,20 @@ def mcdisplay_webgl(simrun, pout=False):
     dirname = 'mcdisplay'
     instr = '%s.instr' % simrun.instr_displayname
 
-    cmd = '%s --default --nobrowse --ncount=300 --dirname=%s %s' % (settings.MCDISPLAY_WEBGL, dirname, instr)
+    params_str_lst = []
+    for p in simrun.params:
+        # scan sweep special case - use last scanpoint
+        m = re.search(',\s*([0-9\.]+)', p[1])
+        if m:
+            p[1] = m.group(1)
+        params_str_lst.append('%s=%s' % (p[0], p[1]))
+    params_str = ' '.join(params_str_lst)
+    cmd = '%s --nobrowse --ncount=300 --dirname=%s %s %s' % (settings.MCDISPLAY_WEBGL, dirname, instr, params_str)
+    
     # TODO: inplement --inspect, --first, --last
     
     # run mcdisplay
-    logging.info('mcdisplay: %s' % cmd)
+    logging.info('display: %s' % cmd)
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -201,7 +212,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         
         cmd = '%s -png --multi %s -n1 ' % (settings.MCDISPLAY, instr)
         vrmlcmd = '%s --format=VRML %s -n1 ' % (settings.MCDISPLAY, instr)
-
+        
         for p in simrun.params:
             s = str(p[1])
             # support for scan sweeps; if a param contains comma, get str before (mcdisplay dont like comma)
@@ -210,7 +221,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
                 s = s.split(',')[0]  
             cmd = cmd + ' %s=%s' % (p[0], s)
             vrmlcmd = vrmlcmd + ' %s=%s' % (p[0], s)
-            
+        
         # start mcdisplay process, wait
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
@@ -260,7 +271,7 @@ def mcrun(simrun, print_mcrun_output=False):
     for p in simrun.params:
         runstr = runstr + ' ' + p[0] + '=' + p[1]
     
-    logging.info('simrun (%s)...' % runstr)
+    logging.info('running: %s...' % runstr)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
