@@ -293,6 +293,7 @@ def man_bulk_signup(req, menu, post, base_context):
                 signup.delete()
             req.session['message'] = 'Selected signups were deleted.'
         elif re.match('add_enroll_', action):
+            err_flag = False
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
                 utils.adduser(signup)
