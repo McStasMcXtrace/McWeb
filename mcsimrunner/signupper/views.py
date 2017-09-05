@@ -597,7 +597,7 @@ def man_courses(req, menu, post, base_context):
             users = ldaputils.listusers(uid=username)
             if len(users) != 0:
                 t = users[0]
-                req.session['message'] = 'This user already exists with "%s %s, %s", please clear the name and email fields.' % (t.firstname, t.lastname, t.email)
+                req.session['message'] = 'This user already exists with "%s %s, %s", please clear the name and email fields.' % (t.cn, t.sn, t.mail)
                 return redirect("/manage/%s" % menu)
             
             if firstname == '' or email == '':
