@@ -593,8 +593,8 @@ def man_courses(req, menu, post, base_context):
             req.session['message'] = 'Please assign a teacher for the course.'
             return redirect("/manage/%s" % menu)
         
+        users = ldaputils.listusers(uid=username)
         if firstname != '' or email != '':
-            users = ldaputils.listusers(uid=username)
             if len(users) != 0:
                 t = users[0]
                 req.session['message'] = 'User %s already exists with "%s %s, %s", please clear the name and email fields.' % (username, t.cn, t.sn, t.mail)
@@ -607,11 +607,17 @@ def man_courses(req, menu, post, base_context):
             teacher.save()
             
             utils.adduser(teacher)
+            error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+            
             req.session['message'] = 'New user %s has been created.' % username
+        elif username == users[0].uid:
+            error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+        else:
+            raise Exception("man_courses: this should not have happened")
         
-        error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+        
         if error_or_None:
-            signup.fail_str = signup.fail_str + ' ' + error_or_None
+            teacher.fail_str = teacher.fail_str + ' ' + error_or_None
             raise Exception('Teacher could not be added: %s') % error_or_None
             
         req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
