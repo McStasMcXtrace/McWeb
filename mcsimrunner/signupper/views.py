@@ -610,10 +610,12 @@ def man_courses(req, menu, post, base_context):
             error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
             
             req.session['message'] = 'New user %s has been created.' % username
-        elif username == users[0].uid:
+        elif len(users) and username == users[0].uid:
             error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
         else:
-            raise Exception("man_courses: this should not have happened")
+            # username does not exist, but user did not enter name etc.
+            req.session['message'] = 'Please enter the name and email of the teacher of this course.'
+            return redirect("/manage/%s" % menu)
         
         
         if error_or_None:
