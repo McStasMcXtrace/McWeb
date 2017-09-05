@@ -588,18 +588,25 @@ def man_courses(req, menu, post, base_context):
         lastname = form['tbx_lastname']
         email = form['tbx_email']
         
+        # double-check that a user has been selected
         if username == '':
             req.session['message'] = 'Please assign a teacher for the course.'
             return redirect("/manage/%s" % menu)
         
         if firstname != '' or email != '':
+            users = ldaputils.listusers(uid=username)
+            if len(users) != 0:
+                t = users[0]
+                req.session['message'] = 'This user already exists with "%s %s, %s", please clear the name and email fields.' % (t.firstname, t.lastname, t.email)
+                return redirect("/manage/%s" % menu)
+            
             if firstname == '' or email == '':
                 req.session['message'] = 'New user creation requires a name and an email.'
                 return redirect("/manage/%s" % menu)
-            teacher = Signup(firstname, lastname, email, username, utils.get_random_passwd(), courses=[])
+            teacher = Signup(username=username, firstname=firstname, lastname=lastname, email=email, password=utils.get_random_passwd(), courses=[shortname])
             teacher.save()
             
-            utils.adduser(teacher, ldap_password=LDAP_PW)
+            utils.adduser(teacher)
             req.session['message'] = 'New user %s has been created.' % username
         
         error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
