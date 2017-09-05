@@ -184,7 +184,7 @@ def mcdisplay_webgl(simrun, pout=False):
             p[1] = m.group(1)
         params_str_lst.append('%s=%s' % (p[0], p[1]))
     params_str = ' '.join(params_str_lst)
-    cmd = '%s --nobrowse --ncount=300 --dirname=%s %s %s' % (settings.MCDISPLAY_WEBGL, dirname, instr, params_str)
+    cmd = '%s %s %s --nobrowse --dir=%s' % (settings.MCDISPLAY_WEBGL, instr, params_str, dirname)
     
     # TODO: inplement --inspect, --first, --last
     
