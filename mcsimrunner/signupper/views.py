@@ -31,17 +31,49 @@ from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
 from collections import OrderedDict
 
+####################################################
+#                  Demo site                       #
+####################################################
 
 def num_signups(req):
     ''' count the total number of signup instances and return this number '''
     num = len(Signup.objects.all())
     return HttpResponse('Status: %d registered users' % num)
 
+def signup(req):
+    ''' signup form to be embedded into the wordpress demo site '''
+    return render(req, 'signup.html')
 
-####################################################
-#                  Contact form                    #
-####################################################
+def thanks(req):
+    ''' displays a simple "thanks for signing up" page '''
+    return render(req, 'thanks.html')
 
+def signup_get(req):
+    ''' handles signup form submissions '''
+    form = req.GET
+    
+    # get static fields
+    firstname = form.get('firstname')
+    lastname = form.get('lastname')
+    username = form.get('username')
+    email = form.get('email')
+    
+    # get a "username is taken" message to the user
+    users = ldaputils.listusers(uid=username)
+    if len(users) != 0:
+        return HttpResponse('Username %s already exists. Please choose another username and try again.' % username)
+    
+    signup = Signup(username=username,
+                    firstname=firstname,
+                    lastname=lastname,
+                    email=email,
+                    password=utils.get_random_passwd(),
+                    courses=COURSES_MANDATORY)
+    signup.is_self_signup = True
+    signup.save()
+    
+    # get a thank-you message to the user
+    return redirect('/thanks/')
 
 def contact(req):
     ''' contact form rendering and submission '''
@@ -77,8 +109,8 @@ def contact(req):
 
 
 
-###############################################################
-#                  New management module                      #
+##############################################################
+#                     Management module                      #
 ##############################################################
 
 def superlogin(req):
