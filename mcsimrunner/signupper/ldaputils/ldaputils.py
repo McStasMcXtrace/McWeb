@@ -241,15 +241,27 @@ def initdb(dn, admin_password):
     finally:
         os.remove('_ou_users.ldif')
 
-def synchronize(signups, dn):
+def synchronize(signups, dry=False):
     ''' sync signup field is_in_ldap to the ldap db '''
-    ldap_uids =  [u.uid for u in listusers(dn)]
+    ldap_uids =  [u.uid for u in listusers(MCWEB_LDAP_DN)]
     
     subset = [s for s in signups if s.username in ldap_uids]
-    for s in subset: s.is_in_ldap = True
-    
     disjoint = [s for s in signups if s not in subset]
-    for s in disjoint: s.is_in_ldap = False
-    
-    [s.save() for s in signups]
+
+    if not dry:
+        for s in subset: s.is_in_ldap = True
+        for s in disjoint: s.is_in_ldap = False
+        [s.save() for s in signups]
+    else:
+        print('')
+        print("ldap uids:")
+        print('')
+        for u in ldap_uids:
+            print(u)
+        
+        print('')
+        print('matching subset:')
+        print('')
+        for u in subset:
+            print(u)
 
