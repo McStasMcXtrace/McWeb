@@ -67,19 +67,11 @@ DEFAULT_INSTR = 'SANSsimple'
 MOODLE_DIR = '/srv/mcweb/moodle'
 
 # mcweb site url
-<<<<<<< HEAD
 MCWEB_NOTIFY_EMAIL_URL = 'http://@SERVERNAME@'
 # manage module url
 MCWEB_ADMIN_EMAIL_URL = 'http://@SERVERNAME@/superlogin'
 # self-service password url
 MCWEB_SSP_URL = 'http://@SERVERNAME@/ssp'
-=======
-MCWEB_NOTIFY_EMAIL_URL = 'http://e-neutrons.org'
-# manage module url
-MCWEB_ADMIN_EMAIL_URL = 'http://sim.e-neutrons.org/superlogin'
-# self-service password url
-MCWEB_SSP_URL = 'http://e-neutrons.org/ssp'
->>>>>>> 50e1e55... maintenance email url setting
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
 FILE_UPLOAD_PW = '@UPLOADPW@'
