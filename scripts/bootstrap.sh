@@ -77,11 +77,16 @@ sudo -u www-data bash mcvenv_finishup
 
 sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
 
+# Pick and pull the STABLE branch
+cd McWeb
+sudo -u www-data git checkout MCWEB_STABLE_2.0
+sudo -u www-data git pull
+
 # Moodle
 cd /srv/mcweb
 sudo -u www-data git clone https://github.com/moodle/moodle.git
 cd moodle
-sudo -u www-data git checkout MOODLE_33_STABLE
+sudo -u www-data git checkout `cat ../McWeb/scripts/MOODLE_PREFERRED_VERSION `
 cd /srv/mcweb
 sudo -u www-data cp McWeb/bootstrap_data/moodle/* /srv/mcweb/moodle-course-templates/
 
