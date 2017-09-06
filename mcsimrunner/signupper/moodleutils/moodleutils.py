@@ -175,7 +175,7 @@ def _course_create(shortname, fullname, category_id):
 
 def synchronize(signups, dry=False):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''
-    cmd = 'moosh user-list'
+    cmd = 'moosh user-list "id > 0"'
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -183,9 +183,10 @@ def synchronize(signups, dry=False):
                             shell=True)
     com = proc.communicate()
     print('running: %s' % cmd)
-    print('std-out: %s' % com[0])
+    #print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
+        raise Exception('Calling: moosh user-list "id > 0"')
     
     text = com[0]
     lines = text.splitlines()
