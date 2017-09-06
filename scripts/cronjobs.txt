@@ -24,4 +24,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 3 * * 1 /srv/mcweb/McWeb/scripts/moodle_fullbackup.sh > /srv/mcweb/McWeb/mcsimrunner/static/backup_status.html
 #
 #
-0 4 * * 1 /srv/mcweb/McWeb/scripts/moodle_pullfromgit.sh > /dev/null
+0 4 * * 1 /srv/mcweb/McWeb/scripts/moodle_pullfromgit.sh > /srv/mcweb/McWeb/mcsimrunner/static/moodle_status.html
