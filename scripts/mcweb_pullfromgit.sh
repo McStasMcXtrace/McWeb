@@ -2,6 +2,8 @@
 #
 # Script to "auto-update" mcweb installations against "current stable"
 
+. /srv/mcweb/mcvenv/bin/activate
+
 cd /srv/mcweb/McWeb
 
 echo "<html>"
