@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 import os
 import subprocess
 from signupper.utils import get_new_signups
-from mcweb.settings import MCWEB_ADMIN_EMAIL
+from mcweb.settings import MCWEB_ADMIN_EMAIL, MCWEB_ADMIN_EMAIL_URL
 
 class Command(BaseCommand):
     ''' remind admin comman '''
@@ -20,13 +20,13 @@ class Command(BaseCommand):
         
         admin_email = '''Hello admin,
 
-There are new signups. Please visit http://sim.e-neutrons.org/login_au to perform the listed admin tasks.
+There are new signups. Please visit %s to perform the listed admin tasks.
 
 At the login screen, you must enter the credentials of a django super-user account, as well as the ldap password.
 
 Please note the following:
 1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at http://www.e-neutrons.org/moodle/ .
-2) If you need to edit the signup instances, use the django admin tool.\n'''
+2) If you need to edit the signup instances, use the django admin tool.\n''' % MCWEB_ADMIN_EMAIL_URL
         
         # only send admin email if there are "new" signups
         if len(get_new_signups()) == 0:

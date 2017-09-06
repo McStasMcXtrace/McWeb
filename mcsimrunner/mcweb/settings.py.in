@@ -68,6 +68,10 @@ MOODLE_DIR = '/srv/mcweb/moodle'
 
 # mcweb site url
 MCWEB_NOTIFY_EMAIL_URL = 'http://e-neutrons.org'
+# manage module url
+MCWEB_ADMIN_EMAIL_URL = 'http://sim.e-neutrons.org/superlogin'
+# self-service password url
+MCWEB_SSP_URL = 'http://e-neutrons.org/ssp'
 
 # used by uploader, NOTE: must not be empty (in which case the uploader will not work)
 FILE_UPLOAD_PW = '@UPLOADPW@'
