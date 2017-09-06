@@ -23,5 +23,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Weekly backups of all Moodle data
 0 3 * * 1 /srv/mcweb/McWeb/scripts/moodle_fullbackup.sh > /srv/mcweb/McWeb/mcsimrunner/static/backup_status.html
 #
+# Weekly pull from mcweb repo
+30 3 * * 1 /srv/mcweb/McWeb/scripts/mcweb_pullfromgit.sh > /srv/mcweb/McWeb/mcsimrunner/static/mcweb_status.html
 #
+# Weekly pull from moodle repo
 0 4 * * 1 /srv/mcweb/McWeb/scripts/moodle_pullfromgit.sh > /srv/mcweb/McWeb/mcsimrunner/static/moodle_status.html
