@@ -134,6 +134,8 @@ IPADDR=`ip addr show | grep inet\ | cut -f 2 -d\t | cut -f 1 -d/ |grep -v 127 | 
 SERVERNAME=`hostname`
 export IPADDR
 export SERVERNAME
+# Increase search limit to 50000 in ldap:
+ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /srv/mcweb/McWeb/scripts/changesize.ldif
 
 echo -n Please enter your Django upload password and press [ENTER]:
 read UPLOADPW
