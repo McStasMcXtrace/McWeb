@@ -24,7 +24,7 @@ class Signup(Model):
     
     fail_str = CharField(max_length=1000, blank=True)
     
-    courses_str = CharField(max_length=1000)
+    courses_str = CharField(max_length=1000, default='[]')
     @property
     def courses(self):
         return json.loads(self.courses_str)
