@@ -6,6 +6,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('state', nargs='?', type=str, help='new value')
+        parser.add_argument('--verbose', action='store_true', dest='verbose', default=False, help='Display entries.')
 
     def handle(self, *args, **options):
         state = options['state']
@@ -13,7 +14,8 @@ class Command(BaseCommand):
         for state in states:
             signups = Signup.objects.all()
             subset = [s for s in signups if s.state() == state]
-            print("-- %s signups in state %s:" % (len(subset), state))
-            for s in subset:
-                print("%s" % s.username)
+            print("-- %s signups in state %s --" % (len(subset), state))
+            if options['verbose']:
+                for s in subset:
+                    print("%s" % s.username)
         
