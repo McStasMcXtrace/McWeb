@@ -236,6 +236,7 @@ def man_selfsignups(req, menu, post, base_context):
     bulk_actions.append('delete')
     
     signups = [s for s in Signup.objects.all() if s.state() == 2]
+    entries_str = '(%d entries)' % len(signups)
     
     rows_ids = []
     ids = []
@@ -257,7 +258,8 @@ def man_selfsignups(req, menu, post, base_context):
                'rows_ids' : rows_ids,
                'ids' : ids,
                'bulk_actions' : bulk_actions,
-               'demo_courses_string' : ', '.join(COURSES_MANDATORY)}
+               'demo_courses_string' : ', '.join(COURSES_MANDATORY),
+               'entries_str': entries_str}
     context.update(base_context)
     return render(req, 'man_selfsignups.html', context)
 
@@ -334,6 +336,7 @@ def man_bulk_signup(req, menu, post, base_context):
         bulk_actions.append('add_enroll_%s' % c)
     
     signups = [s for s in Signup.objects.all() if s.state() == 1]
+    entries_str = '(%d entries)' % len(signups)
     
     rows_ids = []
     ids = []
@@ -356,7 +359,8 @@ def man_bulk_signup(req, menu, post, base_context):
                'rows_ids' : rows_ids,
                'ids' : ids,
                'courses' : courses,
-               'bulk_actions' : bulk_actions}
+               'bulk_actions' : bulk_actions,
+               'entries_str': entries_str}
     context.update(base_context)
     return render(req, 'man_bulk.html', context)
 
@@ -405,6 +409,7 @@ def man_users(req, menu, post, base_context):
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 3]
+    entries_str = '(%d entries)' % len(signups)
     
     rows_ids = []
     ids = []
@@ -423,7 +428,8 @@ def man_users(req, menu, post, base_context):
     
     context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
                'ids': ids, 'rows_ids': rows_ids,
-               'bulk_actions' : bulk_actions}
+               'bulk_actions' : bulk_actions,
+               'entries_str': entries_str}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 
@@ -467,6 +473,7 @@ def man_limbos(req, menu, post, base_context):
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 0]
+    entries_str = '(%d entries)' % len(signups)
     
     rows_ids = []
     ids = []
@@ -485,7 +492,8 @@ def man_limbos(req, menu, post, base_context):
     
     context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
                'ids': ids, 'rows_ids': rows_ids,
-               'bulk_actions' : bulk_actions}
+               'bulk_actions' : bulk_actions,
+               'entries_str': entries_str}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 
@@ -517,6 +525,7 @@ def man_disabled(req, menu, post, base_context):
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 5]
+    entries_str = '(%d entries)' % len(signups)
     
     rows_ids = []
     ids = []
@@ -535,7 +544,8 @@ def man_disabled(req, menu, post, base_context):
     
     context = {'next': '/manage/%s/post' % menu, 'uploadnext': '/manage/%s/upload' % menu,
                'ids': ids, 'rows_ids': rows_ids,
-               'bulk_actions' : bulk_actions}
+               'bulk_actions' : bulk_actions,
+               'entries_str': entries_str}
     context.update(base_context)
     return render(req, 'man_users.html', context)
 

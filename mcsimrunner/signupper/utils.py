@@ -148,7 +148,7 @@ def adduser(signup):
             s.is_in_moodle = True
             s.save()
         
-        # try notify user if it is clearly added
+        # try notify user
         if s.is_in_ldap and s.is_in_moodle and not s.notified:
             notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
             s.notified = timezone.now()
