@@ -8,18 +8,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--dry', action='store_true', dest='dry', default=False, help='Do not change the django db.')
-    
+        parser.add_argument('--verbose', action='store_true', dest='verbose', default=False, help='Display entries.')
+
     def handle(self, *args, **options):
         signups = Signup.objects.all()
         dry = True if options['dry'] else False
+        verbose = True if options['verbose'] else False
         
-        ldap_sync(signups, dry)
+        ldap_sync(signups, dry, verbose)
         if dry:
             print("\nldap sync complete (dryrun)\n")
         else:
             print("\nldap sync complete\n")
         
-        moodle_sync(signups, dry)
+        moodle_sync(signups, dry, verbose)
         if dry:
             print("moodle sync complete (dryrun)\n")
         else:

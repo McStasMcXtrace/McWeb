@@ -246,7 +246,7 @@ def initdb(dn, admin_password):
     finally:
         os.remove('_ou_users.ldif')
 
-def synchronize(signups, dry=False):
+def synchronize(signups, dry=False, verbose=False):
     ''' sync signup field is_in_ldap to the ldap db '''
     ldap_uids =  [u.uid for u in listusers()]
     
@@ -259,14 +259,16 @@ def synchronize(signups, dry=False):
         [s.save() for s in signups]
     else:
         print('')
-        print("%d ldap uids:" % len(ldap_uids))
+        print("-- %d ldap uids --" % len(ldap_uids))
         print('')
-        for u in ldap_uids:
-            print(u)
+        if verbose:
+            for u in ldap_uids:
+                print(u)
         
         print('')
-        print('%d matches with local:' % len(subset))
+        print('-- %d matches with local --' % len(subset))
         print('')
-        for u in subset:
-            print(u)
+        if verbose:
+            for u in subset:
+                print(u)
 
