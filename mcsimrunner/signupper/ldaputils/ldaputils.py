@@ -257,18 +257,16 @@ def synchronize(signups, dry=False, verbose=False):
         for s in subset: s.is_in_ldap = True
         for s in disjoint: s.is_in_ldap = False
         [s.save() for s in signups]
-    else:
-        print('')
-        print("-- %d ldap uids --" % len(ldap_uids))
-        print('')
-        if verbose:
-            for u in ldap_uids:
-                print(u)
-        
-        print('')
-        print('-- %d matches with local --' % len(subset))
-        print('')
-        if verbose:
-            for u in subset:
-                print(u)
-
+    print('')
+    print("-- %d ldap uids --" % len(ldap_uids))
+    print('')
+    if verbose:
+        for u in ldap_uids:
+            print(u)
+    
+    print('')
+    print('-- %d matches with local --' % len(subset))
+    print('')
+    if verbose:
+        for u in subset:
+            print(u)

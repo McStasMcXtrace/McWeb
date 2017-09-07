@@ -206,17 +206,17 @@ def synchronize(signups, dry=False, verbose=False):
         for s in subset: s.is_in_moodle = True
         for s in disjoint: s.is_in_moodle = False
         for s in signups: s.save()
-    else:
-        print('')
-        print("-- %d moodle uids --" % len(moodle_uids))
-        print('')
-        if verbose:
-            for u in moodle_uids:
-                print(u)
-        
-        print('')
-        print('-- %d matches with local --' % len(subset))
-        print('')
-        if verbose:
-            for u in subset:
-                print(u)
+
+    print('')
+    print("-- %d moodle uids --" % len(moodle_uids))
+    print('')
+    if verbose:
+        for u in moodle_uids:
+            print(u)
+    
+    print('')
+    print('-- %d matches with local --' % len(subset))
+    print('')
+    if verbose:
+        for u in subset:
+            print(u)
