@@ -31,7 +31,7 @@
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
-        <legend>Signups</legend>
+        <legend>Signups {{ entries_str }}</legend>
         <table>
             <!-- create headers -->
             <tr>

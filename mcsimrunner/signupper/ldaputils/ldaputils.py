@@ -18,7 +18,7 @@ class LdapUserEntry:
     def __str__(self):
         return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
 
-def listusers(dn=MCWEB_LDAP_DN, uid=None):
+def listusers(uid=None):
     '''
     List and return all user entries
     
@@ -26,9 +26,9 @@ def listusers(dn=MCWEB_LDAP_DN, uid=None):
     Always returns a list, this will be of length all_users, 1 or 0 in the cases listed above.
     '''
     if not uid:
-        cmd = 'ldapsearch -x -b "ou=users,%s"' % dn
+        cmd = 'ldapsearch -x -b "ou=users,%s"' % MCWEB_LDAP_DN
     else:
-        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (dn, uid)
+        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (MCWEB_LDAP_DN, uid)
     
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
@@ -42,18 +42,23 @@ def listusers(dn=MCWEB_LDAP_DN, uid=None):
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
-    
+
+    def resafe(pat, string, default):
+        m = re.search(pat, string)
+        if m:
+            return m.group(1).strip()
+        else:
+            return default
+
     for section in sections:
         try:
             uid = re.search('(\w+),', section).group(1).strip()
-            cn = re.search('cn: ([\w\s]+)\n', section).group(1).strip()
-            sn = re.search('sn: ([\w\s]+)\n', section).group(1).strip()
-            mail = re.search('mail: ([\w\.\@\-0-9]+)\n', section).group(1).strip()
-            
+            cn = resafe('cn: ([\w\s]+)\n', section, 'NOCNFOUND')
+            sn = resafe('sn: ([\w\s]+)\n', section, 'NOSNFOUND')
+            mail = resafe('mail: ([\w\.\@\-0-9]+)\n', section, 'NOMAILFOUND')
             users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
-            continue
-    
+            print('regex error')
     return users
 
 def addsignup(signup):
@@ -241,15 +246,29 @@ def initdb(dn, admin_password):
     finally:
         os.remove('_ou_users.ldif')
 
-def synchronize(signups, dn):
+def synchronize(signups, dry=False, verbose=False):
     ''' sync signup field is_in_ldap to the ldap db '''
-    ldap_uids =  [u.uid for u in listusers(dn)]
+    ldap_uids =  [u.uid for u in listusers()]
     
     subset = [s for s in signups if s.username in ldap_uids]
-    for s in subset: s.is_in_ldap = True
-    
     disjoint = [s for s in signups if s not in subset]
-    for s in disjoint: s.is_in_ldap = False
-    
-    [s.save() for s in signups]
+
+    if not dry:
+        for s in subset: s.is_in_ldap = True
+        for s in disjoint: s.is_in_ldap = False
+        [s.save() for s in signups]
+    else:
+        print('')
+        print("-- %d ldap uids --" % len(ldap_uids))
+        print('')
+        if verbose:
+            for u in ldap_uids:
+                print(u)
+        
+        print('')
+        print('-- %d matches with local --' % len(subset))
+        print('')
+        if verbose:
+            for u in subset:
+                print(u)
 

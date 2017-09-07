@@ -173,9 +173,9 @@ def _course_create(shortname, fullname, category_id):
     if com[1] != '':
         print('std-err: %s' % com[1])
 
-def synchronize(signups):
+def synchronize(signups, dry=False, verbose=False):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''
-    cmd = 'moosh user-list'
+    cmd = 'moosh user-list "id > 0"'
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -183,9 +183,10 @@ def synchronize(signups):
                             shell=True)
     com = proc.communicate()
     print('running: %s' % cmd)
-    print('std-out: %s' % com[0])
+    #print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
+        raise Exception('Calling: moosh user-list "id > 0"')
     
     text = com[0]
     lines = text.splitlines()
@@ -199,8 +200,23 @@ def synchronize(signups):
             raise Exception('Please improve moodleutils.syncronize regex "%s" with line "%s".' % (pat, l))
     
     subset = [s for s in signups if s.username in moodle_uids]
-    for s in subset: s.is_in_moodle = True
     disjoint = [s for s in signups if s not in subset]
-    for s in disjoint: s.is_in_moodle = False
-    for s in signups: s.save()
-
+    
+    if not dry:
+        for s in subset: s.is_in_moodle = True
+        for s in disjoint: s.is_in_moodle = False
+        for s in signups: s.save()
+    else:
+        print('')
+        print("-- %d moodle uids --" % len(moodle_uids))
+        print('')
+        if verbose:
+            for u in moodle_uids:
+                print(u)
+        
+        print('')
+        print('-- %d matches with local --' % len(subset))
+        print('')
+        if verbose:
+            for u in subset:
+                print(u)
