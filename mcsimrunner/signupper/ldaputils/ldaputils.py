@@ -18,7 +18,7 @@ class LdapUserEntry:
     def __str__(self):
         return 'uid: %s\ncn: %s\nsn: %s\nmail: %s\n' % (self.uid, self.cn, self.sn, self.mail)
 
-def listusers(dn=MCWEB_LDAP_DN, uid=None):
+def listusers(uid=None):
     '''
     List and return all user entries
     
@@ -26,9 +26,9 @@ def listusers(dn=MCWEB_LDAP_DN, uid=None):
     Always returns a list, this will be of length all_users, 1 or 0 in the cases listed above.
     '''
     if not uid:
-        cmd = 'ldapsearch -x -b "ou=users,%s"' % dn
+        cmd = 'ldapsearch -x -b "ou=users,%s"' % MCWEB_LDAP_DN
     else:
-        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (dn, uid)
+        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (MCWEB_LDAP_DN, uid)
     
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
@@ -243,7 +243,7 @@ def initdb(dn, admin_password):
 
 def synchronize(signups, dry=False):
     ''' sync signup field is_in_ldap to the ldap db '''
-    ldap_uids =  [u.uid for u in listusers(MCWEB_LDAP_DN)]
+    ldap_uids =  [u.uid for u in listusers()]
     
     subset = [s for s in signups if s.username in ldap_uids]
     disjoint = [s for s in signups if s not in subset]
