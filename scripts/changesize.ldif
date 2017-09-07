@@ -1,0 +1,4 @@
+dn: cn=config
+changetype: modify
+replace: olcSizeLimit
+olcSizeLimit: size.soft=1000 size.hard=50000

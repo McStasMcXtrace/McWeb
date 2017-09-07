@@ -208,14 +208,13 @@ def synchronize(signups, dry=False):
         for s in signups: s.save()
     else:
         print('')
-        print("moodle uids:")
+        print("%d moodle uids:" % len(moodle_uids))
         print('')
         for u in moodle_uids:
             print(u)
         
         print('')
-        print('matching subset:')
+        print('%d matches with local:' % len(subset))
         print('')
         for u in subset:
             print(u)
-

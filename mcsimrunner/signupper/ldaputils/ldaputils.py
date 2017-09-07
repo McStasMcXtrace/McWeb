@@ -42,18 +42,23 @@ def listusers(uid=None):
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
-    
+
+    def resafe(pat, string, default):
+        m = re.search(pat, string)
+        if m:
+            return m.group(1).strip()
+        else:
+            return default
+
     for section in sections:
         try:
             uid = re.search('(\w+),', section).group(1).strip()
-            cn = re.search('cn: ([\w\s]+)\n', section).group(1).strip()
-            sn = re.search('sn: ([\w\s]+)\n', section).group(1).strip()
-            mail = re.search('mail: ([\w\.\@\-0-9]+)\n', section).group(1).strip()
-            
+            cn = resafe('cn: ([\w\s]+)\n', section, 'NOCNFOUND')
+            sn = resafe('sn: ([\w\s]+)\n', section, 'NOSNFOUND')
+            mail = resafe('mail: ([\w\.\@\-0-9]+)\n', section, 'NOMAILFOUND')
             users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
-            continue
-    
+            print('regex error')
     return users
 
 def addsignup(signup):
@@ -254,13 +259,13 @@ def synchronize(signups, dry=False):
         [s.save() for s in signups]
     else:
         print('')
-        print("ldap uids:")
+        print("%d ldap uids:" % len(ldap_uids))
         print('')
         for u in ldap_uids:
             print(u)
         
         print('')
-        print('matching subset:')
+        print('%d matches with local:' % len(subset))
         print('')
         for u in subset:
             print(u)

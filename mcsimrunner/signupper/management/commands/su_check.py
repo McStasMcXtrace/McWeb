@@ -29,10 +29,14 @@ class Command(BaseCommand):
                 emails.append(email)
             else:
                 p_emails.append('%s, %s' % (uid, email))
-        
-        print('-- username doubles --')
+
+        print('')
+        print('-- %d username doubles --' % len(p_uids))
+        print('')
         for p in p_uids:
             print(p)
-        print('-- email doubles --')
+        print('')
+        print('-- %d email doubles --' % len(p_emails))
+        print('')
         for p in p_emails:
             print(p)

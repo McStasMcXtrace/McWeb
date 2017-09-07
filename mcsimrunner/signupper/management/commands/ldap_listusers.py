@@ -11,5 +11,8 @@ class Command(BaseCommand):
         users = listusers(options['uid'])
         if len(users)==0:
             print('user entry for uid="%s" not found' % options['uid'])
+        print('')
+        print('-- %s ldap users detected:' % len(users))
+        print('')
         for u in users:
             print(u)
