@@ -2,10 +2,7 @@ from django.core.management.base import BaseCommand
 from signupper.models import Signup
 
 class Command(BaseCommand):
-    help = 'Check signup entries for potential problems such as username/email doubles.'
-
-    #def add_arguments(self, parser):
-    #    parser.add_argument('--fix', action='store_true', dest='dry', default=False, help='Try to fix things.')
+    help = 'Purges all doubles according to an aggressive procedure detailed in the code.'
 
     def handle(self, *args, **options):
         
