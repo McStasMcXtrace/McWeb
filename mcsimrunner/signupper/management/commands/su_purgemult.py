@@ -39,38 +39,4 @@ class Command(BaseCommand):
             while len(mimics) > 1:
                 mimics[-1].delete()
                 mimics.pop(-1)
-        
-        
-        '''
-        uids = []
-        emails = []
-        p_uids = []
-        p_emails = []
-        
-        for s in signups:
-            uid = s.username 
-            email = s.email
-            
-            if not uid in uids:
-                uids.append(uid)
-            else:
-                p_uids.append('%s, %s' % (uid, email))
-            
-            if not email in emails:
-                emails.append(email)
-            else:
-                p_emails.append('%s, %s' % (uid, email))
 
-        print('')
-        print('-- %d username doubles --' % len(p_uids))
-        print('')
-        for p in p_uids:
-            print(p)
-        print('')
-        print('-- %d email doubles --' % len(p_emails))
-        print('')
-        for p in p_emails:
-            print(p)
-        '''
-        
-        
