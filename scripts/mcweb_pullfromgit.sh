@@ -13,7 +13,7 @@ echo "</head>"
 echo "<body>"
 echo "<h1>McWeb update process:</h1>"
 echo "<pre>"
-git checkout MCWEB_STABLE_2.0
+git status
 git pull
 git status
 echo "</pre>"
@@ -21,5 +21,8 @@ echo "<h1>Apply migrations</h1>"
 echo "<pre>"
 cd /srv/mcweb/McWeb/mcsimrunner/
 ./manage.py migrate
+echo "<h1>Restart uwsgi</h1>"
+echo "<pre>"
+sudo /etc/init.d/uwsgi_mcweb restart
 echo "</pre>"
 echo "</body>"

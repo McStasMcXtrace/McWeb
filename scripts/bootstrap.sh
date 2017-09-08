@@ -145,6 +145,10 @@ echo -n Please enter desired simulator MPI cores pr. sim job press [ENTER]:
 read MPICORES
 export MPICORES
 
+# Allow www-data to restart uwsgi
+echo >> /etc/sudoers
+echo "# Allow www-data to restart uwsgi_mcweb service" >> /etc/sudoers
+echo "www-data ALL = NOPASSWD: /etc/init.d/uwsgi_mcweb" >> /etc/sudoers
 
 # Last setup of uwsgi etc
 echo Resuming setup...
