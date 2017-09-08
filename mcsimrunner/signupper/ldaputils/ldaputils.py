@@ -53,9 +53,9 @@ def listusers(uid=None):
     for section in sections:
         try:
             uid = re.search('(\w+),', section).group(1).strip()
-            cn = resafe('cn: ([\w\s]+)\n', section, 'NOCNFOUND')
-            sn = resafe('sn: ([\w\s]+)\n', section, 'NOSNFOUND')
-            mail = resafe('mail: ([\w\.\@\-0-9]+)\n', section, 'NOMAILFOUND')
+            cn = re.search('cn: ([\w\s]+)\n', section).group(1).strip()
+            sn = re.search('sn: ([\w\s]+)\n', section).group(1).strip()
+            mail = re.search('mail: ([\w\.\@\-0-9]+)\n', section).group(1).strip()
             users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
             print('regex error')
@@ -84,7 +84,7 @@ def addsignup(signup):
                 old = old_qs[0]
                 # update new entry with ldap info and extra
                 signup.fail_str = old.fail_str + ', last created: %s' % old.created.strftime("%Y%m%d")
-                ldap_info = listusers(MCWEB_LDAP_DN, signup.username)[0]
+                ldap_info = listusers(signup.username)[0]
                 signup.firstname = ldap_info.cn
                 signup.lastname = ldap_info.sn
                 # only real guess of a password we have is the original
