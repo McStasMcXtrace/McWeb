@@ -67,7 +67,7 @@ def create_course_from_template(templatename, shortname, fullname):
 
 def adduser(firstname, lastname, username, email):
     '''  '''
-    cmd = 'moosh user-create --auth=ldap --firstname=%s --lastname=%s --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
+    cmd = 'moosh user-create --auth=ldap --firstname="%s" --lastname="%s" --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
