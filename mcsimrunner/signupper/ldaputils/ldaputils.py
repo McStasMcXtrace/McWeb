@@ -36,9 +36,11 @@ def listusers(uid=None):
                             shell=True)
     com = proc.communicate()
     print('%s\n' % cmd)
-    #print('std-out: %s' % com[0])
+    if com[0] != '': 
+        print('std-out: %s' % com[0])
     if com[1] != '': 
         print('std-err: %s' % com[1])
+        raise Exception(com[1])
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
@@ -221,9 +223,11 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % ' '.join(cmd))
-        #print('std-out: %s' % com[0])
+        if com[0] != '':
+            print('std-out: %s' % com[0])
         if com[1] != '':
             print('std-err: %s' % com[1])
+            raise Exception(com[1])
     finally:
         os.remove('_cn_usergroup.ldif')
     
@@ -239,7 +243,8 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % cmd)
-        #print('std-out: %s' % com[0])
+        if com[0] != '':
+            print('std-out: %s' % com[0])
         if com[1] != '':
             print('std-err: %s' % com[1])
     
