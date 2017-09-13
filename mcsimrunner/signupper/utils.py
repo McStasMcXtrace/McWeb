@@ -201,11 +201,11 @@ def create_template(shortname, templatename):
 def get_course_id(shortname):
     ''' returns the course id of the given course identified by shortname, or None if this does not exist '''
     course_id = None
-    courses = get_courses()
+    courses = mu.course_list()
     for c in courses:
         if shortname == c[1] and not course_id:
             course_id = c[0]
-        elif course_id:
+        elif shortname == c[1]:
             raise Exception("something is terribly wrong in moodle")
     
     return course_id
@@ -224,3 +224,7 @@ def create_course_from_template(templatename, shortname, fullname):
     else:
         return 'could not get new course id'
 
+def get_signup(username):
+    qs = Signup.objects.filter(username=username)
+    if len(qs) == 1:
+        return qs[0]

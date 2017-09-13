@@ -212,9 +212,7 @@ def man_selfsignups(req, menu, post, base_context):
             for signup in objs:
                 utils.adduser(signup)
                 for course in signup.courses:
-                    error_or_None = utils.enroluser(signup, course)
-                    if error_or_None:
-                        signup.fail_str = signup.fail_str + ' ' + error_or_None
+                    utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -301,10 +299,7 @@ def man_bulk_signup(req, menu, post, base_context):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
                 utils.adduser(signup)
-                error_or_None = utils.enroluser(signup, course)
-                if error_or_None:
-                    signup.fail_str = signup.fail_str + ' ' + error_or_None
-                    signup.save()
+                utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -365,7 +360,7 @@ def man_bulk_signup(req, menu, post, base_context):
     return render(req, 'man_bulk.html', context)
 
 def man_users(req, menu, post, base_context):
-
+    ''' active users view '''
     if post=='post':
         # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
         form = req.POST
@@ -387,9 +382,7 @@ def man_users(req, menu, post, base_context):
             course = re.match('enroll_(.*)', action).group(1)
             err_flag = False
             for signup in objs:
-                error_or_None = utils.enroluser(signup.username, course)
-                if error_or_None:
-                    signup.fail_str = signup.fail_str + ' ' + error_or_None
+                utils.enroluser(signup.username, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -563,7 +556,7 @@ def man_templates(req, menu, post, base_context):
         m = re.match('\-\-\sselect\sfrom', shortname)
         if tmplname != '' and not m:
             ct_message = utils.create_template(shortname, tmplname)
-            req.session['message'] = 'Template %s created from %s with message "%s".' % (tmplname, shortname, ct_message)
+            req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
@@ -590,8 +583,7 @@ def man_courses(req, menu, post, base_context):
         
         m = re.match('\-\-\sselect\sfrom', shortname)
         if site != '' and shortname != '' and title != '' and not m:
-            (a, b, status) = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-            req.session['message'] = 'Course creation with message "%s".' % status
+            pass
         else:
             req.session['message'] = 'Please select a proper template and a course name.'
             return redirect("/manage/%s" % menu)
@@ -624,13 +616,18 @@ def man_courses(req, menu, post, base_context):
             
             req.session['message'] = 'New user %s has been created.' % username
         elif len(users) and username == users[0].uid:
+            teacher = utils.get_signup(username)
+            if not teacher:
+                raise Exception("ldap and signup dbs out of sync, could not proceed")
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
         else:
             # username does not exist, but user did not enter name etc.
             req.session['message'] = 'Please enter the name and email of the teacher of this course.'
             return redirect("/manage/%s" % menu)
         
-        req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
+        # perform restore job
+        status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+        req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
         
         return redirect("/manage/%s" % menu)
     

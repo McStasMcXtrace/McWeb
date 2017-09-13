@@ -118,7 +118,7 @@ def course_restore_e(backupname, course_id):
     print('writing to worker task: %s' % cmd)
     f.close()
     
-    return "running"
+    return "restoring contents in the background..."
 
 def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
     ''' '''
