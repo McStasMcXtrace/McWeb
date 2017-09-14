@@ -144,7 +144,7 @@ def adduser(signup):
         
         # try add to moodle
         if not s.is_in_moodle:
-            mu.add_enroll_user(s.firstname, s.lastname, s.username, s.email, s.courses)
+            mu.add_enrol_user(s.firstname, s.lastname, s.username, s.email, s.courses)
             s.is_in_moodle = True
             s.save()
         
@@ -159,3 +159,72 @@ def adduser(signup):
         print s.fail_str
         s.save()
 
+def enroluser(signup, course_sn, teacher=False):
+    ''' safe proxy function to moodleutils.enroluser which appends to the signup fail-string '''
+    try:
+        mu.enrol_user(signup.username, course_sn, teacher)
+    except Exception as e:
+        signup.fail_str = '%s\n%s' % (signup.fail_str, e.__str__())
+        signup.save()
+
+def get_courses():
+    ''' safe proxy call to moodleutils.course_list '''
+    try:
+        lst = []
+        for c in mu.course_list():
+            lst.append(c[1])
+        return lst
+    except:
+        return []
+
+def get_templates():
+    ''' walks files on disk in the directory which is supposed to hold course templates '''
+    for (a, b, files) in os.walk(mu.TEMPLATES_DIR):
+        return files
+
+def create_template(shortname, templatename):
+    ''' safe proxy to moodleutils.course_backup '''
+    course_id = get_course_id(shortname)
+    if not course_id:
+        return 'no course of that shortname'
+    
+    # check that template name is unique
+    tmplts = get_templates()
+    if templatename in tmplts:
+        return "utils.create_template: Template names must be unique."
+    
+    # create the template
+    mu.course_backup(backupname=templatename, course_id=course_id)
+    
+    return 'success.'
+
+def get_course_id(shortname):
+    ''' returns the course id of the given course identified by shortname, or None if this does not exist '''
+    course_id = None
+    courses = mu.course_list()
+    for c in courses:
+        if shortname == c[1] and not course_id:
+            course_id = c[0]
+        elif shortname == c[1]:
+            raise Exception("something is terribly wrong in moodle")
+    
+    return course_id
+
+def create_course_from_template(templatename, shortname, fullname):
+    ''' high-level function to create a new course from a template, returning the id of the new course. Does not call restore for already-existing courses '''
+    course_id = get_course_id(shortname)
+    if not course_id:
+        mu.course_create(shortname=shortname, fullname=fullname)
+        course_id = get_course_id(shortname)
+    else:
+        return 'course id already exists'
+    
+    if course_id:
+        return mu.course_restore_e(backupname=templatename, course_id=course_id)
+    else:
+        return 'could not get new course id'
+
+def get_signup(username):
+    qs = Signup.objects.filter(username=username)
+    if len(qs) == 1:
+        return qs[0]

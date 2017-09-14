@@ -36,9 +36,11 @@ def listusers(uid=None):
                             shell=True)
     com = proc.communicate()
     print('%s\n' % cmd)
-    #print('std-out: %s' % com[0])
+    if com[0] != '': 
+        print('std-out: %s' % com[0])
     if com[1] != '': 
         print('std-err: %s' % com[1])
+        raise Exception(com[1])
     
     sections = str.split(com[0], 'dn: uid=')
     users = []
@@ -53,9 +55,9 @@ def listusers(uid=None):
     for section in sections:
         try:
             uid = re.search('(\w+),', section).group(1).strip()
-            cn = resafe('cn: ([\w\s]+)\n', section, 'NOCNFOUND')
-            sn = resafe('sn: ([\w\s]+)\n', section, 'NOSNFOUND')
-            mail = resafe('mail: ([\w\.\@\-0-9]+)\n', section, 'NOMAILFOUND')
+            cn = re.search('cn: ([\w\s]+)\n', section).group(1).strip()
+            sn = re.search('sn: ([\w\s]+)\n', section).group(1).strip()
+            mail = re.search('mail: ([\w\.\@\-0-9]+)\n', section).group(1).strip()
             users.append(LdapUserEntry(uid, cn, sn, mail))
         except:
             print('regex error')
@@ -84,7 +86,7 @@ def addsignup(signup):
                 old = old_qs[0]
                 # update new entry with ldap info and extra
                 signup.fail_str = old.fail_str + ', last created: %s' % old.created.strftime("%Y%m%d")
-                ldap_info = listusers(MCWEB_LDAP_DN, signup.username)[0]
+                ldap_info = listusers(signup.username)[0]
                 signup.firstname = ldap_info.cn
                 signup.lastname = ldap_info.sn
                 # only real guess of a password we have is the original
@@ -221,9 +223,11 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % ' '.join(cmd))
-        #print('std-out: %s' % com[0])
+        if com[0] != '':
+            print('std-out: %s' % com[0])
         if com[1] != '':
             print('std-err: %s' % com[1])
+            raise Exception(com[1])
     finally:
         os.remove('_cn_usergroup.ldif')
     
@@ -239,7 +243,8 @@ def initdb(dn, admin_password):
                                    stderr=subprocess.PIPE)
         com = process.communicate()
         print('running: %s' % cmd)
-        #print('std-out: %s' % com[0])
+        if com[0] != '':
+            print('std-out: %s' % com[0])
         if com[1] != '':
             print('std-err: %s' % com[1])
     
@@ -257,18 +262,16 @@ def synchronize(signups, dry=False, verbose=False):
         for s in subset: s.is_in_ldap = True
         for s in disjoint: s.is_in_ldap = False
         [s.save() for s in signups]
-    else:
-        print('')
-        print("-- %d ldap uids --" % len(ldap_uids))
-        print('')
-        if verbose:
-            for u in ldap_uids:
-                print(u)
-        
-        print('')
-        print('-- %d matches with local --' % len(subset))
-        print('')
-        if verbose:
-            for u in subset:
-                print(u)
-
+    print('')
+    print("-- %d ldap uids --" % len(ldap_uids))
+    print('')
+    if verbose:
+        for u in ldap_uids:
+            print(u)
+    
+    print('')
+    print('-- %d matches with local --' % len(subset))
+    print('')
+    if verbose:
+        for u in subset:
+            print(u)

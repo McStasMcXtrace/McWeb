@@ -28,7 +28,7 @@ import utils
 from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
 from models import ContactEntry
 from ldaputils import ldaputils
-from moodleutils import moodleutils as mu
+#from moodleutils import moodleutils as mu
 from collections import OrderedDict
 
 
@@ -212,9 +212,7 @@ def man_selfsignups(req, menu, post, base_context):
             for signup in objs:
                 utils.adduser(signup)
                 for course in signup.courses:
-                    error_or_None = mu.enroll_user(signup.username, course)
-                    if error_or_None:
-                        signup.fail_str = signup.fail_str + ' ' + error_or_None
+                    utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -301,10 +299,7 @@ def man_bulk_signup(req, menu, post, base_context):
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
                 utils.adduser(signup)
-                error_or_None = mu.enroll_user(signup.username, course)
-                if error_or_None:
-                    signup.fail_str = signup.fail_str + ' ' + error_or_None
-                    signup.save()
+                utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -329,7 +324,7 @@ def man_bulk_signup(req, menu, post, base_context):
     bulk_actions = []
     bulk_actions.append('add')
     bulk_actions.append('delete')
-    courses = mu.get_courses()
+    courses = utils.get_courses()
     if len(courses) > 0:
         bulk_actions.append('---')
     for c in courses:
@@ -365,7 +360,7 @@ def man_bulk_signup(req, menu, post, base_context):
     return render(req, 'man_bulk.html', context)
 
 def man_users(req, menu, post, base_context):
-
+    ''' active users view '''
     if post=='post':
         # get filtered signups depending on the hidden field "ids" as well as list selection (checkboxes following a naming convention)
         form = req.POST
@@ -387,9 +382,7 @@ def man_users(req, menu, post, base_context):
             course = re.match('enroll_(.*)', action).group(1)
             err_flag = False
             for signup in objs:
-                error_or_None = mu.enroll_user(signup.username, course)
-                if error_or_None:
-                    signup.fail_str = signup.fail_str + ' ' + error_or_None
+                utils.enroluser(signup.username, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -401,7 +394,7 @@ def man_users(req, menu, post, base_context):
     # bulk actions for this view
     bulk_actions = []
     bulk_actions.append('disable')
-    courses = mu.get_courses()
+    courses = utils.get_courses()
     if len(courses) > 0:
         bulk_actions.append('---')
     for c in courses:
@@ -562,16 +555,16 @@ def man_templates(req, menu, post, base_context):
         tmplname =  form['field_shortname_tmpl']
         m = re.match('\-\-\sselect\sfrom', shortname)
         if tmplname != '' and not m:
-            mu.create_template(shortname, tmplname)
-            req.session['message'] = 'Template %s created from %s.' % (tmplname, shortname)
+            ct_message = utils.create_template(shortname, tmplname)
+            req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
     elif post:
         return redirect("/manage/%s" % menu)
     
-    courses = mu.get_courses()
-    templates = mu.get_templates()
+    courses = utils.get_courses()
+    templates = utils.get_templates()
     
     context = {'courses' : courses, 'templates' : templates, 'next' : '/manage/%s/post' % menu}
     context.update(base_context)
@@ -590,7 +583,7 @@ def man_courses(req, menu, post, base_context):
         
         m = re.match('\-\-\sselect\sfrom', shortname)
         if site != '' and shortname != '' and title != '' and not m:
-            (backupname, courseid, status) = mu.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            pass
         else:
             req.session['message'] = 'Please select a proper template and a course name.'
             return redirect("/manage/%s" % menu)
@@ -619,29 +612,29 @@ def man_courses(req, menu, post, base_context):
             teacher.save()
             
             utils.adduser(teacher)
-            error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+            utils.enroluser(teacher, course_sn=shortname, teacher=True)
             
             req.session['message'] = 'New user %s has been created.' % username
         elif len(users) and username == users[0].uid:
-            error_or_None = mu.enroll_user(username=username, course_sn=shortname, teacher=True)
+            teacher = utils.get_signup(username)
+            if not teacher:
+                raise Exception("ldap and signup dbs out of sync, could not proceed")
+            utils.enroluser(teacher, course_sn=shortname, teacher=True)
         else:
             # username does not exist, but user did not enter name etc.
             req.session['message'] = 'Please enter the name and email of the teacher of this course.'
             return redirect("/manage/%s" % menu)
         
-        
-        if error_or_None:
-            teacher.fail_str = teacher.fail_str + ' ' + error_or_None
-            raise Exception('Teacher could not be added: %s') % error_or_None
-            
-        req.session['message'] = '\n'.join([req.session['message'], 'Course %s created with teacher %s. Restoring contents in the background...' % (shortname, username)])
+        # perform restore job
+        status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+        req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
         
         return redirect("/manage/%s" % menu)
     
     elif post:
         return redirect("/manage/%s" % menu)
     
-    context = {'templates' : mu.get_templates(),  'next' : '/manage/%s/post' % menu}
+    context = {'templates' : utils.get_templates(),  'next' : '/manage/%s/post' % menu}
     context.update(base_context)
     return render(req, 'man_courses.html', context)
 
