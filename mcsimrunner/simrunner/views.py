@@ -128,7 +128,7 @@ def instrument_post(req):
     group_name = form.get('group_name')
     instr_displayname = form.get('instr_displayname')
     
-    neutrons = form.get('neutrons')
+    neutrons = int(float(form.get('neutrons')))
     scanpoints = form.get('scanpoints')
     seed = form.get('seed')
     
