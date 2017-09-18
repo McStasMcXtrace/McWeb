@@ -210,7 +210,7 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     try:
         instr = '%s.instr' % simrun.instr_displayname
         
-        cmd = '%s -png --multi %s -n1 ' % (settings.MCDISPLAY, instr)
+        cmd = '%s -png %s -n1 ' % (settings.MCDISPLAY, instr)
         vrmlcmd = '%s --format=VRML %s -n1 ' % (settings.MCDISPLAY, instr)
         
         for p in simrun.params:
