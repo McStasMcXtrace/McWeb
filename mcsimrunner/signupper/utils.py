@@ -225,6 +225,54 @@ def create_course_from_template(templatename, shortname, fullname):
         return 'could not get new course id'
 
 def get_signup(username):
+    ''' a simple db search filter '''
     qs = Signup.objects.filter(username=username)
     if len(qs) == 1:
         return qs[0]
+
+def purgeuser(signup):
+    ''' removes the user from ldap and moodle, marking signup instance as deleted '''
+    ldap_e = None
+    if signup.is_in_ldap:
+        try:
+            ldaputils.rmsignup(signup.username)
+            signup.is_in_ldap = False
+            signup.save()
+        except Exception as e:
+            ldap_e = e
+            return 'Error during ldaputils.rmsignup: %s' % e.__str__()
+    
+    moodle_e = None
+    if signup.is_in_moodle:
+        try:
+            mu.rmsignup(signup)
+            signup.is_in_moodle = False
+            signup.save()
+        except Exception as e:
+            moodle_e = e
+            return 'Error during moodleutils.rmsignup: %s' % e.__str__()
+    
+    if ldap_e and moodle_e:
+        raise Exception('%s\n%s' % (ldap_e.__str__(), moodle_e.__str__()))
+    elif ldap_e:
+        raise ldap_e
+    elif moodle_e:
+        raise moodle_e
+    
+    signup.deleted = timezone.now()
+    signup.save()
+    return 'The given user was purged from moodle and ldap.'
+
+def purgeusers(signups):
+    ''' list-based proxy for purgeuser, which also handles errors smoothly '''
+    errors = []
+    for signup in signups: 
+        try:
+            purgeuser(signup)
+        except Exception as e:
+            errors.append(e.__str__())
+    if len(errors) > 0:
+        return 'Errors were encountered for some signups: \n'.join(errors)
+    else:
+        return 'purge successful'
+

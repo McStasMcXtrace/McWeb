@@ -509,12 +509,16 @@ def man_disabled(req, menu, post, base_context):
                 utils.notify_signup(signup)
                 
             req.session['message'] = 'Selected signups were re-activated and notified.'
+        elif action == 'purge':
+            message = utils.purgeusers(objs)
+            req.session['message'] = 'Selected signups were attempted purged, with message "".' % message
         
         return redirect("/manage/%s" % menu)
     
     # bulk actions for this view
     bulk_actions = []
     bulk_actions.append('activate_and_notify')
+    bulk_actions.append('purge')
     
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 5]

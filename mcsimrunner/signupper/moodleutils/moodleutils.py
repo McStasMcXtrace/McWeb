@@ -134,6 +134,7 @@ def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
         print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
+        # TODO: add an exception and exception-handling to the higher-up layer
 
 def synchronize(signups, dry=False, verbose=False):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''
@@ -183,3 +184,20 @@ def synchronize(signups, dry=False, verbose=False):
     if verbose:
         for u in subset:
             print(u)
+
+def rmsignup(signup):
+    ''' removes the user associated with the given signup from moodle '''
+    cmd = 'moosh user-delete %s' % signup.username
+    proc = subprocess.Popen(cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=MOODLE_DIR,
+                            shell=True)
+    com = proc.communicate()
+    print('running: %s' % cmd)
+    if com[0] != '':
+        print('std-out: %s' % com[0])
+    if com[1] != '':
+        print('std-err: %s' % com[1])
+        raise Exception(com[1])
+

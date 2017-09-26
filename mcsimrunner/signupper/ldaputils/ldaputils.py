@@ -154,7 +154,11 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
                 raise Exception(errmsg)
     finally:
         os.remove('_uid_user.ldif')
-    
+
+def rmsignup(signup):
+    ''' proxy for rmuser '''
+    rmuser(MCWEB_LDAP_DN, LDAP_PW, signup.username)
+
 def rmuser(dn, admin_password, uid):
     ''' 
     Removes a user given by uid from the mcweb-configured LDAP database. 
