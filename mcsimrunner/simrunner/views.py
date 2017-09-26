@@ -15,6 +15,9 @@ from mcweb.settings import DEFAULT_GROUP, DEFAULT_INSTR
 @xframe_options_exempt
 
 def home(req):
+    nxt = req.GET.get('next', None)
+    if nxt:
+        req.session['next'] = nxt
     return render(req, template_name='login.html')
 
 def login_post(req):
@@ -27,12 +30,16 @@ def login_post(req):
         return redirect(home)
     
     login(req, user)
-
-    # TODO: enable default group and instrument on user object
-    default_group = DEFAULT_GROUP
-    default_instr = DEFAULT_INSTR
     
-    return redirect('instrument', group_name=default_group, instr_name=default_instr)
+    nxt = req.session.get('next', None)
+    if nxt:
+        req.session.pop('next', None)
+        return redirect(nxt)
+    
+    group = DEFAULT_GROUP
+    instr = DEFAULT_INSTR
+    
+    return redirect('instrument', group_name=group, instr_name=instr)
 
 def logout_user(req):
     logout(req)
