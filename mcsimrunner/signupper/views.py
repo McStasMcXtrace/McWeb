@@ -619,19 +619,23 @@ def man_courses(req, menu, post, base_context):
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
             
             req.session['message'] = 'New user %s has been created.' % username
-        elif len(users) and username == users[0].uid:
+        elif len(users) > 0 and username == users[0].uid:
             teacher = utils.get_signup(username)
             if not teacher:
-                raise Exception("ldap and signup dbs out of sync, could not proceed")
+                req.session['message'] = 'WARNING: ldap and signup db data inconsistence of teacher, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t.cn, t.sn, t.mail)
+                t_data = users[0]
+                t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail)
+                t.save()
+                teacher = t
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
         else:
             # username does not exist, but user did not enter name etc.
-            req.session['message'] = 'Please enter the name and email of the teacher of this course.'
+            req.session['message'] = 'Username "%s" not found. Please enter the name and email of the teacher of this course, and a new user will be created.' % username
             return redirect("/manage/%s" % menu)
         
         # perform restore job
         status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-        req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
+        req.session['message'] = req.session['message'] + '\n' + 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
         
         return redirect("/manage/%s" % menu)
     
