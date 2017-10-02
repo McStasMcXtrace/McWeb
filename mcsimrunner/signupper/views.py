@@ -604,13 +604,19 @@ def man_courses(req, menu, post, base_context):
         
         users = ldaputils.listusers(uid=username)
         if firstname != '' or email != '':
+            # sanity check for existence, do not proceed
             if len(users) != 0:
                 t = users[0]
                 req.session['message'] = 'User %s already exists with "%s %s, %s", please clear the name and email fields.' % (username, t.cn, t.sn, t.mail)
                 return redirect("/manage/%s" % menu)
             
+            # course create (before teach assignment) and schedule course restore job
+            status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
+
+            # assign a teacher
             if firstname == '' or email == '':
-                req.session['message'] = 'New user creation requires a name and an email.'
+                req.session['message'] = req.session['message'] + '\n ' + 'New user creation requires a name and an email.'
                 return redirect("/manage/%s" % menu)
             teacher = Signup(username=username, firstname=firstname, lastname=lastname, email=email, password=utils.get_random_passwd(), courses=[shortname])
             teacher.save()
@@ -618,24 +624,26 @@ def man_courses(req, menu, post, base_context):
             utils.adduser(teacher)
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
             
-            req.session['message'] = 'New user %s has been created.' % username
+            req.session['message'] = req.session['message'] + '\n ' + 'New user %s has been created.' % username
         elif len(users) > 0 and username == users[0].uid:
+            # course create (before teacher assignment) and schedule course restore job
+            status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
+            
+            # assign teacher
             teacher = utils.get_signup(username)
             if not teacher:
-                req.session['message'] = 'WARNING: ldap and signup db data inconsistence of teacher, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t.cn, t.sn, t.mail)
                 t_data = users[0]
-                t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail)
+                t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail, is_in_ldap=True)
                 t.save()
+                utils.adduser(signup)
                 teacher = t
+                req.session['message'] = req.session['message'] + '\n ' + 'WARNING: ldap and signup db data inconsistence, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t.cn, t.sn, t.mail)
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
         else:
             # username does not exist, but user did not enter name etc.
             req.session['message'] = 'Username "%s" not found. Please enter the name and email of the teacher of this course, and a new user will be created.' % username
             return redirect("/manage/%s" % menu)
-        
-        # perform restore job
-        status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-        req.session['message'] = req.session['message'] + '\n' + 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
         
         return redirect("/manage/%s" % menu)
     
