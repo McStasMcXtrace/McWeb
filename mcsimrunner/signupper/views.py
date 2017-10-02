@@ -632,9 +632,9 @@ def man_courses(req, menu, post, base_context):
                 t_data = users[0]
                 t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail, is_in_ldap=True)
                 t.save()
-                utils.adduser(signup)
+                utils.adduser(t)
                 teacher = t
-                req.session['message'] = req.session['message'] + '\n ' + 'WARNING: ldap and signup db data inconsistence, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t.cn, t.sn, t.mail)
+                req.session['message'] = req.session['message'] + '\n ' + 'WARNING: ldap and signup db data inconsistence, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t_data.cn, t_data.sn, t_data.mail)
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
         else:
             # username does not exist, but user did not enter name etc.
