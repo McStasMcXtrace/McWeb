@@ -382,7 +382,7 @@ def man_users(req, menu, post, base_context):
             course = re.match('enroll_(.*)', action).group(1)
             err_flag = False
             for signup in objs:
-                utils.enroluser(signup.username, course)
+                utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
