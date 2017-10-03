@@ -271,6 +271,14 @@ def mcrun(simrun, print_mcrun_output=False):
     for p in simrun.params:
         runstr = runstr + ' ' + p[0] + '=' + p[1]
     
+    # create empty stdout.txt and stderr.txt files
+    f = open('%s/stdout.txt' % simrun.data_folder, 'w')
+    f.write("no stdout data for: %s" % runstr)
+    f.close()
+    f = open('%s/stderr.txt' % simrun.data_folder, 'w')
+    f.write("no stderr data for: %s" % runstr)
+    f.close()
+    
     logging.info('running: %s...' % runstr)
     process = subprocess.Popen(runstr,
                                stdout=subprocess.PIPE,
