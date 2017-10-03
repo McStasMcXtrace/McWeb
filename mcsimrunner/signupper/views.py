@@ -450,12 +450,14 @@ def man_limbos(req, menu, post, base_context):
             for signup in objs:
                 utils.adduser(signup)
                 
-            req.session['message'] = 'Signups were attempted re-added, and were notified if this went well.'
+            req.session['message'] = 'Signups were attempted re-added and notified.'
         elif action == 'delete':
             for signup in objs:
-                signup.delete()
-            req.session['message'] = 'Signups were deleted.'
-        
+                try:
+                    signup.delete()
+                except Exception as e:
+                    req.session['message'] = req.session['message'] + 'Error: %s.' % e.__str__()
+            req.session['message'] = req.session['message'] + 'Signups were deleted.'
         
         return redirect("/manage/%s" % menu)
     
