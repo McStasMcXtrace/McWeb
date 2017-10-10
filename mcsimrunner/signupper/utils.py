@@ -6,7 +6,6 @@ import subprocess
 from models import Signup
 from datetime import datetime
 import os
-import re
 from django.utils import timezone
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
@@ -67,14 +66,14 @@ def notifyuser(fullname, username, email, password, courses):
     courses_text = ''
     if len(courses) > 0:
         allcourses = mu.course_list()
-        courses_info = [c for c in allcourses if c[1] in courses]
-        # id, shortname, fullname
         
+        # id, shortname, fullname
+        courses_info = [c for c in allcourses if c[1] in courses]
         
         courses_text = '\nYou have been enroled in the following courses:\n'
         for c in courses_info:
             courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_EMAIL_URL, c[0])
-        courses_text = courses_text + '\n\n'
+        courses_text = courses_text + '\n'
     
     body = '''
 Dear %s
@@ -153,7 +152,7 @@ def adduser(signup):
     try:
         # try add to ldap
         if not s.is_in_ldap:
-            ldaputils.addsignup(signup)
+            ldaputils.addsignup(s)
         
         # try add to moodle
         if not s.is_in_moodle:
@@ -182,6 +181,7 @@ def enroluser(signup, course_sn, teacher=False):
 
 def get_courses():
     ''' safe proxy call to moodleutils.course_list '''
+    return ['dummy']
     try:
         lst = []
         for c in mu.course_list():

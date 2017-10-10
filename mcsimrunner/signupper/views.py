@@ -61,17 +61,24 @@ def signup_get(req):
     username = form.get('username')
     email = form.get('email')
     
+    country = form['country']
+    inst_tpe = form['inst_type']
+    res_int = form['research_interest']
+    
     # get a "username is taken" message to the user
     users = ldaputils.listusers(uid=username)
     if len(users) != 0:
         return HttpResponse('Username %s already exists. Please choose another username and try again.' % username)
     
     signup = Signup(username=username,
-                    firstname=firstname,
-                    lastname=lastname,
-                    email=email,
-                    password=utils.get_random_passwd(),
-                    courses=COURSES_MANDATORY)
+                    firstname = firstname,
+                    lastname = lastname,
+                    email = email,
+                    password = utils.get_random_passwd(),
+                    country = country,
+                    institution_type = inst_tpe,
+                    research_interest = res_int,
+                    courses = COURSES_MANDATORY)
     signup.is_self_signup = True
     signup.save()
     
@@ -210,14 +217,14 @@ def man_selfsignups(req, menu, post, base_context):
         if action == 'add_enrol':
             err_flag = False
             for signup in objs:
-                for course in signup.courses:
-                    signup.courses.append(course)
+                signup.courses = COURSES_MANDATORY
                 utils.adduser(signup)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
             if not err_flag:
                 req.session['message'] = 'Signups were added and enroled.'
+        
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -294,11 +301,13 @@ def man_bulk_signup(req, menu, post, base_context):
             for signup in objs:
                 signup.delete()
             req.session['message'] = 'Selected signups were deleted.'
+        
         elif re.match('add_enroll_', action):
             err_flag = False
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
-                signup.courses.append(course)
+                signup.courses = [course]
+                signup.save()
                 utils.adduser(signup)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
