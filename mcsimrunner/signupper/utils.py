@@ -10,7 +10,7 @@ import re
 from django.utils import timezone
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
-from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_SSP_URL
+from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_NOTIFY_ROOT_URL, MCWEB_SSP_URL
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -70,11 +70,10 @@ def notifyuser(fullname, username, email, password, courses):
         courses_info = [c for c in allcourses if c[1] in courses]
         # id, shortname, fullname
         
-        
-        courses_text = '\nYou have been enroled in the following courses:\n'
+        courses_text = '\nYou have been enroled in the following courses:'
         for c in courses_info:
-            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_EMAIL_URL, c[0])
-        courses_text = courses_text + '\n\n'
+            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_ROOT_URL, c[0])
+        courses_text = courses_text + '\n'
     
     body = '''
 Dear %s
