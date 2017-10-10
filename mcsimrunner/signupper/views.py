@@ -210,9 +210,9 @@ def man_selfsignups(req, menu, post, base_context):
         if action == 'add_enrol':
             err_flag = False
             for signup in objs:
-                utils.adduser(signup)
                 for course in signup.courses:
-                    utils.enroluser(signup, course)
+                    signup.courses.append(course)
+                utils.adduser(signup)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
@@ -298,8 +298,8 @@ def man_bulk_signup(req, menu, post, base_context):
             err_flag = False
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
+                signup.courses.append(course)
                 utils.adduser(signup)
-                utils.enroluser(signup, course)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True

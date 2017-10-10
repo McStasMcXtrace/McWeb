@@ -61,8 +61,21 @@ def notify_signup(signup):
         signup.fail_str = signup.fail_str + ', notifyuser: %s' % str(e)
     signup.save()
 
-def notifyuser(fullname, username, email, password):
+def notifyuser(fullname, username, email, password, courses):
     ''' send an account creation notification email to user '''
+    
+    courses_text = ''
+    if len(courses) > 0:
+        allcourses = mu.course_list()
+        courses_info = [c for c in allcourses if c[1] in courses]
+        # id, shortname, fullname
+        
+        
+        courses_text = '\nYou have been enroled in the following courses:\n'
+        for c in courses_info:
+            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_EMAIL_URL, c[0])
+        courses_text = courses_text + '\n\n'
+    
     body = '''
 Dear %s
 
@@ -72,11 +85,11 @@ username: %s
 password: %s
 
 To change your password, please visit %s
-
+%s
 Best,
 
 The e-neutrons.org admin team
-    ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password, MCWEB_SSP_URL)
+    ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password, MCWEB_SSP_URL, courses_text)
     
     try:
         f = open('_body', 'w') 
@@ -150,7 +163,7 @@ def adduser(signup):
         
         # try notify user
         if s.is_in_ldap and s.is_in_moodle and not s.notified:
-            notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password)
+            notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password, courses=s.courses)
             s.notified = timezone.now()
             s.save()
         
