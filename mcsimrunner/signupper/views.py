@@ -210,14 +210,14 @@ def man_selfsignups(req, menu, post, base_context):
         if action == 'add_enrol':
             err_flag = False
             for signup in objs:
-                for course in signup.courses:
-                    signup.courses.append(course)
+                signup.courses = COURSES_MANDATORY
                 utils.adduser(signup)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
                     err_flag = True
             if not err_flag:
                 req.session['message'] = 'Signups were added and enroled.'
+        
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -294,11 +294,12 @@ def man_bulk_signup(req, menu, post, base_context):
             for signup in objs:
                 signup.delete()
             req.session['message'] = 'Selected signups were deleted.'
+        
         elif re.match('add_enroll_', action):
             err_flag = False
             course = re.match('add_enroll_(.*)', action).group(1)
             for signup in objs:
-                signup.courses.append(course)
+                signup.courses = [course]
                 utils.adduser(signup)
                 if signup.state() != 3:
                     req.session['message'] = 'Some signups reported an error, e.g. %s' % signup.fail_str
