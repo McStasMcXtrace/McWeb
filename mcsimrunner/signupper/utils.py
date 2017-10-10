@@ -135,7 +135,14 @@ def pull_csv_signups_todb(f):
     signups = []
     for l in lines:
         words = l.split(',')
-        signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], password=get_random_passwd(), courses=[])
+        
+        if len(words) == 4:
+            signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], password=get_random_passwd(), courses=[])
+        elif len(words) == 7:
+            signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], country=words[4], institution_type=words[5], research_interest=words[6], password=get_random_passwd(), courses=[])
+        else:
+            raise Exception("invalid csv contents")
+        
         signup.save()
         signups.append(signup)
 
