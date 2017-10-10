@@ -8,7 +8,7 @@ import subprocess
 import os, errno
 import shutil
 from simrunner.models import InstrGroup, Instrument
-from mcweb.settings import MCRUN
+from mcweb.settings import MCRUN, MXRUN
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
@@ -71,8 +71,16 @@ def get_group_instrs(basedir):
 
 def get_instr_params(instr_grp, instr_file):
     ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
+
+    MCCODE = MCRUN
     
-    cmd = MCRUN + ' --mpi=1 ' + instr_file + " --info"
+    # Check if this is McStas or McXtrace by a simple 
+    for line in open(instr_file):
+        if re.search('mcxtrace', line, re.IGNORECASE):
+            MCCODE = MXRUN
+            break
+    
+    cmd = MCCODE + ' --mpi=1 ' + instr_file + " --info"
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
