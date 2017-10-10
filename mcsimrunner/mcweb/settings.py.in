@@ -70,6 +70,7 @@ MOODLE_DIR = '/srv/mcweb/moodle'
 MCWEB_NOTIFY_EMAIL_URL = 'http://@SERVERNAME@'
 # manage module url
 MCWEB_ADMIN_EMAIL_URL = 'http://@SERVERNAME@/superlogin'
+MCWEB_NOTIFY_ROOT_URL = 'https://@SERVERNAME@/'
 # self-service password url
 MCWEB_SSP_URL = 'http://@SERVERNAME@/ssp'
 

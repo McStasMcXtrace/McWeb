@@ -16,7 +16,7 @@ apt-get update
 cd $STARTDIR
 
 # Base packages for McCode + MPI
-apt-get -y install mcstas-suite-perl mcstas-suite-python openmpi-bin libopenmpi-dev
+apt-get -y install mcstas-suite-perl mcstas-suite-python mcxtrace-suite-perl mcxtrace-suite-python openmpi-bin libopenmpi-dev
 
 # MySQL
 echo "deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7" > /etc/apt/sources.list.d/mysql.list
