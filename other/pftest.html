@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<head>
+  <script src="d3.v4.min.js"></script>
+  <script src="pftest.js"></script>
+  <style>
+  .active {
+    stroke: #000;
+    stroke-width: 2px;
+  }
+  </style>
+</head>
+<body>
+
+<div id="wrapper" style="width: 800px; margin: auto;">
+
+<div id="svg_container" style="width: 790px; margin: auto;"></div>
+
+
+<script>
+onChange = function() {
+  let label = document.getElementById("nodeName").value;
+  pushNodeLabel(label);
+}
+
+</script>
+
+<div id="controls">
+  <fieldset>
+    Enter tag & Click: 
+    <input type="text" id="nodeName" onChange="onChange();"></input>
+  </fieldset>
+</div>
+</div>
+
+<script>
+  clearTbxCB = function() {
+    document.getElementById("nodeName").value = '';
+  }
+  run();
+</script>
+
+</body>
+</html>
