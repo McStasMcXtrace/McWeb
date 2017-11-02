@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 import subprocess
 import os, errno
 import shutil
+import datetime
 from simrunner.models import InstrGroup, Instrument
 from mcweb.settings import MCRUN
 
@@ -128,6 +129,7 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
         print "<pre>\n"
+        print datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y")
         print 'collecting instruments one depth in sim/...'
         
         # error log
