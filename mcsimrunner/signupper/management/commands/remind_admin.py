@@ -17,21 +17,27 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         ''' Command impl. '''
+
+        signups = get_new_signups()
         
         admin_email = '''Hello admin,
 
-There are new signups. Please visit %s to perform the listed admin tasks.
+There are %i new signups. Please visit %s to perform the listed admin tasks.
 
 At the login screen, you must enter the credentials of a django super-user account, as well as the ldap password.
 
 Please note the following:
 1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at http://www.e-neutrons.org/moodle/ .
-2) If you need to edit the signup instances, use the django admin tool.\n''' % MCWEB_ADMIN_EMAIL_URL
+2) If you need to edit the signup instances, use the django admin tool.\n\nFull list of signup mail adresses is:\n''' % (len(signups), MCWEB_ADMIN_EMAIL_URL)
+
         
         # only send admin email if there are "new" signups
-        if len(get_new_signups()) == 0:
+        if len(signups) == 0:
             return
-        
+        else:
+            for signup in signups:
+                admin_email = '''%s\n%s''' % (admin_email, signup.email)
+                
         # parse email and addresses, and send admin email, catching errors and clearning up
         try:
             email_addrses = MCWEB_ADMIN_EMAIL
