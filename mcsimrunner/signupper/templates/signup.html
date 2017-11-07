@@ -7,6 +7,8 @@
             <tr><td><label>Last Name: </label></td><td><input type="text" name="lastname"></td></tr>
             <tr><td><label>Email: </label></td><td><input type="text" name="email"></td></tr>
             <tr><td><label>Requested username: </label></td><td><input type="text" name="username"></td></tr>
+            {% for c in courses %}
+            <tr><td></td><td><input type="checkbox" name="{{ c }}" value="{{ c }}">{{ c }}</td></tr>{% endfor %}
 
             <tr><td><label>Institution type: </label></td><td><select name="inst_type">
               <option value="EDU">Educational</option>
@@ -266,9 +268,7 @@
               <option value="ZM">Zambia</option>
               <option value="ZW">Zimbabwe</option>
             </select></td></tr>
-
-            <tr><td><label>Research interest: </label></td><td><input type="text" name="research_interest"></td></tr>
-
+            <tr><td><label>Research interest: </label></td><td><input type="text" name="description"></td></tr>
             <tr><td></td><td><input type="submit"></td></tr>
 
 </ul>

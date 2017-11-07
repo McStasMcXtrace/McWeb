@@ -63,6 +63,7 @@ def notify_signup(signup):
 def notifyuser(fullname, username, email, password, courses):
     ''' send an account creation notification email to user '''
 
+
     courses_text = ''
     if len(courses) > 0:
         allcourses = mu.course_list()
@@ -135,17 +136,30 @@ def pull_csv_signups_todb(f):
     signups = []
     for l in lines:
         words = l.split(',')
-        
         if len(words) == 4:
-            signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], password=get_random_passwd(), courses=[])
+            signup = Signup(firstname=words[0],
+                            lastname=words[1],
+                            email=words[2],
+                            username=words[3],
+                            password=get_random_passwd(),
+                            courses=[])
+            signup.save()
+            signups.append(signup)
         elif len(words) == 7:
-            signup = Signup(firstname=words[0], lastname=words[1], email=words[2], username=words[3], country=words[4], institution_type=words[5], research_interest=words[6], password=get_random_passwd(), courses=[])
+            signup = Signup(firstname=words[0],
+                            lastname=words[1],
+                            email=words[2],
+                            username=words[3],
+                            password=get_random_passwd(),
+                            institution = words[4],
+                            country = words[5],
+                            description = words[6],
+                            courses=[])
+            signup.save()
+            signups.append(signup)
         else:
-            raise Exception("invalid csv contents")
-        
-        signup.save()
-        signups.append(signup)
-
+            raise Exception("bulk enroll csv must have 4 or 7 columns (of which all or some can be empty)")
+    
     return signups
 
 def assign_courses(signups, courses):

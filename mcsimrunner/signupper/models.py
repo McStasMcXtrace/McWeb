@@ -14,9 +14,9 @@ class Signup(Model):
     email = CharField(max_length=200)
     password = CharField(max_length=200)
     
-    country = CharField(max_length=200, default='')
-    institution_type = CharField(max_length=200, default='')
-    research_interest = CharField(max_length=200, default='')
+    institution = CharField(max_length=200, blank=True)
+    country = CharField(max_length=200, blank=True)
+    description = CharField(max_length=200, blank=True)
     
     created = DateTimeField('Submitted', default=timezone.now)
     notified = DateTimeField('Notified', blank=True, null=True)
