@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='signup',
             name='description',
-            field=models.CharField(max_length=200, blank=True),
+            field=models.CharField(max_length=1000, blank=True),
         ),
         migrations.AddField(
             model_name='signup',
-            name='institution',
+            name='institution_tpe',
             field=models.CharField(max_length=200, blank=True),
         ),
     ]

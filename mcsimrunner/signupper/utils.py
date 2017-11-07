@@ -151,7 +151,7 @@ def pull_csv_signups_todb(f):
                             email=words[2],
                             username=words[3],
                             password=get_random_passwd(),
-                            institution = words[4],
+                            institution_tpe = words[4],
                             country = words[5],
                             description = words[6],
                             courses=[])
