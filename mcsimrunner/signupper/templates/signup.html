@@ -7,6 +7,9 @@
             <tr><td><label>Last Name: </label></td><td><input type="text" name="lastname"></td></tr>
             <tr><td><label>Email: </label></td><td><input type="text" name="email"></td></tr>
             <tr><td><label>Requested username: </label></td><td><input type="text" name="username"></td></tr>
+            <tr><td><label>Institution: </label></td><td><input type="text" name="institution"></td></tr>
+            <tr><td><label>Country: </label></td><td><input type="text" name="country"></td></tr>
+            <tr><td><label>Description: </label></td><td><input type="text" name="description"></td></tr>
             {% for c in courses %}
             <tr><td></td><td><input type="checkbox" name="{{ c }}" value="{{ c }}">{{ c }}</td></tr>{% endfor %}
             <tr><td></td><td><input type="submit"></td></tr>

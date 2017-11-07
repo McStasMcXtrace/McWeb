@@ -60,6 +60,9 @@ def signup_get(req):
     lastname = form.get('lastname')
     username = form.get('username')
     email = form.get('email')
+    institution = form.get('institution')
+    country = form.get('country')
+    description = form.get('description')
 
     # get a "username is taken" message to the user
     users = ldaputils.listusers(uid=username)
@@ -71,6 +74,9 @@ def signup_get(req):
                     lastname=lastname,
                     email=email,
                     password=utils.get_random_passwd(),
+                    institution=institution,
+                    country=country,
+                    description=description,
                     courses=COURSES_MANDATORY)
     signup.is_self_signup = True
     signup.save()
@@ -202,6 +208,9 @@ def man_selfsignups(req, menu, post, base_context):
             signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
             signup.email = form.get('%s_%d' % (str(signup.id), 4))
             signup.username = form.get('%s_%d' % (str(signup.id), 5))
+            signup.institution = form.get('%s_%d' % (str(signup.id), 7))
+            signup.country = form.get('%s_%d' % (str(signup.id), 8))
+            signup.description = form.get('%s_%d' % (str(signup.id), 9))
             signup.save()
 
         # get bulk action
@@ -248,6 +257,9 @@ def man_selfsignups(req, menu, post, base_context):
             row.append(CellInfo(s.email, 4, txt=True))
             row.append(CellInfo(s.username, 5, txt=True))
             row.append(CellInfo(s.password, 6))
+            row.append(CellInfo(s.institution, 7, txt=True))
+            row.append(CellInfo(s.country, 8, txt=True))
+            row.append(CellInfo(s.description, 9, txt=True))
 
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
@@ -275,6 +287,9 @@ def man_bulk_signup(req, menu, post, base_context):
             signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
             signup.email = form.get('%s_%d' % (str(signup.id), 4))
             signup.username = form.get('%s_%d' % (str(signup.id), 5))
+            signup.institution = form.get('%s_%d' % (str(signup.id), 7))
+            signup.country = form.get('%s_%d' % (str(signup.id), 8))
+            signup.description = form.get('%s_%d' % (str(signup.id), 9))
             signup.save()
 
         # get bulk action
@@ -346,6 +361,9 @@ def man_bulk_signup(req, menu, post, base_context):
             row.append(CellInfo(s.email, 4, txt=True))
             row.append(CellInfo(s.username, 5, txt=True))
             row.append(CellInfo(s.password, 6))
+            row.append(CellInfo(s.institution, 7, txt=True))
+            row.append(CellInfo(s.country, 8, txt=True))
+            row.append(CellInfo(s.description, 9, txt=True))
 
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
@@ -417,6 +435,9 @@ def man_users(req, menu, post, base_context):
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
         row.append(CellInfo(s.password, 6))
+        row.append(CellInfo(s.institution, 7))
+        row.append(CellInfo(s.country, 8))
+        row.append(CellInfo(s.description, 9))
 
         rows_ids.append([row, str(s.id)])
 
@@ -481,6 +502,9 @@ def man_limbos(req, menu, post, base_context):
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
         row.append(CellInfo(s.password, 6))
+        row.append(CellInfo(s.institution, 7))
+        row.append(CellInfo(s.country, 8))
+        row.append(CellInfo(s.description, 9))
 
         rows_ids.append([row, str(s.id)])
 
@@ -533,6 +557,9 @@ def man_disabled(req, menu, post, base_context):
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
         row.append(CellInfo(s.password, 6))
+        row.append(CellInfo(s.institution, 7))
+        row.append(CellInfo(s.country, 8))
+        row.append(CellInfo(s.description, 9))
 
         rows_ids.append([row, str(s.id)])
 
