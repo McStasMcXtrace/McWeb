@@ -14,6 +14,10 @@ class Signup(Model):
     email = CharField(max_length=200)
     password = CharField(max_length=200)
     
+    institution = CharField(max_length=200, blank=True)
+    country = CharField(max_length=200, blank=True)
+    description = CharField(max_length=200, blank=True)
+    
     created = DateTimeField('Submitted', default=timezone.now)
     notified = DateTimeField('Notified', blank=True, null=True)
     deleted = DateTimeField('Deleted', blank=True, null=True)
