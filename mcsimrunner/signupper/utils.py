@@ -6,7 +6,6 @@ import subprocess
 from models import Signup
 from datetime import datetime
 import os
-import re
 from django.utils import timezone
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
@@ -15,7 +14,7 @@ from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_NOTIFY_ROOT_URL, MCWEB_
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
     cmd = 'mktemp -u XXXXXXXX'
-    proc = subprocess.Popen(cmd, 
+    proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             shell=True)
@@ -26,7 +25,7 @@ def get_random_passwd():
     if std_err != '':
         print('std-err: %s' % std_err)
         raise Exception('makepasswd says: %s' % std_err)
-    
+
     return com[0].strip()
 
 def cols_to_line(cols, delimiter = ','):
@@ -63,18 +62,20 @@ def notify_signup(signup):
 
 def notifyuser(fullname, username, email, password, courses):
     ''' send an account creation notification email to user '''
-    
+
+
     courses_text = ''
     if len(courses) > 0:
         allcourses = mu.course_list()
-        courses_info = [c for c in allcourses if c[1] in courses]
+
         # id, shortname, fullname
-        
-        courses_text = '\nYou have been enroled in the following courses:'
+        courses_info = [c for c in allcourses if c[1] in courses]
+
+        courses_text = '\nYou have been enroled in the following courses:\n'
         for c in courses_info:
-            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_ROOT_URL, c[0])
+            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_EMAIL_URL, c[0])
         courses_text = courses_text + '\n'
-    
+
     body = '''
 Dear %s
 
@@ -89,39 +90,39 @@ Best,
 
 The e-neutrons.org admin team
     ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password, MCWEB_SSP_URL, courses_text)
-    
+
     try:
-        f = open('_body', 'w') 
+        f = open('_body', 'w')
         f.write(body)
         f.close()
-        
+
         cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
-        
+
         if retcode != 0:
-            raise Exception('notifyuser mailx retcode: %s' % retcode) 
+            raise Exception('notifyuser mailx retcode: %s' % retcode)
     finally:
         os.remove('_body')
 
 def notify_contactentry(replyto, text):
     ''' send a new contact entry notification to mcweb admin '''
-    body = text    
+    body = text
     try:
-        f = open('_contactbody', 'w') 
+        f = open('_contactbody', 'w')
         f.write(body.encode('utf8'))
         f.close()
-        
+
         cmd = 'mailx -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
-        
+
         if retcode != 0:
             raise Exception('notify_contactentry mail.mailutils retcode: %s' % retcode)
-    
+
     except Exception as e:
         raise Exception('notify_contactentry: %s' % e.message)
-    
+
     finally:
         os.remove('_contactbody')
 
@@ -130,7 +131,7 @@ def pull_csv_signups_todb(f):
     # read data
     text = ''.join(f.chunks())
     lines = text.splitlines()[1:]
-    
+
     # generate signups
     signups = []
     for l in lines:
@@ -172,20 +173,20 @@ def adduser(signup):
     try:
         # try add to ldap
         if not s.is_in_ldap:
-            ldaputils.addsignup(signup)
-        
+            ldaputils.addsignup(s)
+
         # try add to moodle
         if not s.is_in_moodle:
             mu.add_enrol_user(s.firstname, s.lastname, s.username, s.email, s.courses)
             s.is_in_moodle = True
             s.save()
-        
+
         # try notify user
         if s.is_in_ldap and s.is_in_moodle and not s.notified:
             notifyuser(s.firstname + ' ' + s.lastname, s.username, s.email, s.password, courses=s.courses)
             s.notified = timezone.now()
             s.save()
-        
+
     except Exception as e:
         s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
         print s.fail_str
@@ -201,6 +202,7 @@ def enroluser(signup, course_sn, teacher=False):
 
 def get_courses():
     ''' safe proxy call to moodleutils.course_list '''
+    return ['dummy']
     try:
         lst = []
         for c in mu.course_list():
@@ -219,15 +221,15 @@ def create_template(shortname, templatename):
     course_id = get_course_id(shortname)
     if not course_id:
         return 'no course of that shortname'
-    
+
     # check that template name is unique
     tmplts = get_templates()
     if templatename in tmplts:
         return "utils.create_template: Template names must be unique."
-    
+
     # create the template
     mu.course_backup(backupname=templatename, course_id=course_id)
-    
+
     return 'success.'
 
 def get_course_id(shortname):
@@ -239,7 +241,7 @@ def get_course_id(shortname):
             course_id = c[0]
         elif shortname == c[1]:
             raise Exception("something is terribly wrong in moodle")
-    
+
     return course_id
 
 def create_course_from_template(templatename, shortname, fullname):
@@ -250,13 +252,60 @@ def create_course_from_template(templatename, shortname, fullname):
         course_id = get_course_id(shortname)
     else:
         return 'course id already exists'
-    
+
     if course_id:
         return mu.course_restore_e(backupname=templatename, course_id=course_id)
     else:
         return 'could not get new course id'
 
 def get_signup(username):
+    ''' a simple db search filter '''
     qs = Signup.objects.filter(username=username)
     if len(qs) == 1:
         return qs[0]
+
+def purgeuser(signup):
+    ''' removes the user from ldap and moodle, marking signup instance as deleted '''
+    ldap_e = None
+    if signup.is_in_ldap:
+        try:
+            ldaputils.rmsignup(signup.username)
+            signup.is_in_ldap = False
+            signup.save()
+        except Exception as e:
+            ldap_e = e
+            return 'Error during ldaputils.rmsignup: %s' % e.__str__()
+
+    moodle_e = None
+    if signup.is_in_moodle:
+        try:
+            mu.rmsignup(signup)
+            signup.is_in_moodle = False
+            signup.save()
+        except Exception as e:
+            moodle_e = e
+            return 'Error during moodleutils.rmsignup: %s' % e.__str__()
+
+    if ldap_e and moodle_e:
+        raise Exception('%s\n%s' % (ldap_e.__str__(), moodle_e.__str__()))
+    elif ldap_e:
+        raise ldap_e
+    elif moodle_e:
+        raise moodle_e
+
+    signup.deleted = timezone.now()
+    signup.save()
+    return 'The given user was purged from moodle and ldap.'
+
+def purgeusers(signups):
+    ''' list-based proxy for purgeuser, which also handles errors smoothly '''
+    errors = []
+    for signup in signups:
+        try:
+            purgeuser(signup)
+        except Exception as e:
+            errors.append(e.__str__())
+    if len(errors) > 0:
+        return 'Errors were encountered for some signups: \n'.join(errors)
+    else:
+        return 'purge successful'

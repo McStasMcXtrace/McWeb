@@ -226,7 +226,7 @@ def man_selfsignups(req, menu, post, base_context):
                     err_flag = True
             if not err_flag:
                 req.session['message'] = 'Signups were added and enroled.'
-        
+
         elif action == 'delete':
             for signup in objs:
                 signup.delete()
@@ -309,7 +309,7 @@ def man_bulk_signup(req, menu, post, base_context):
             for signup in objs:
                 signup.delete()
             req.session['message'] = 'Selected signups were deleted.'
-        
+
         elif re.match('add_enroll_', action):
             err_flag = False
             course = re.match('add_enroll_(.*)', action).group(1)
@@ -472,12 +472,14 @@ def man_limbos(req, menu, post, base_context):
             for signup in objs:
                 utils.adduser(signup)
 
-            req.session['message'] = 'Signups were attempted re-added, and were notified if this went well.'
+            req.session['message'] = 'Signups were attempted re-added and notified.'
         elif action == 'delete':
             for signup in objs:
-                signup.delete()
-            req.session['message'] = 'Signups were deleted.'
-
+                try:
+                    signup.delete()
+                except Exception as e:
+                    req.session['message'] = req.session['message'] + 'Error: %s.' % e.__str__()
+            req.session['message'] = req.session['message'] + 'Signups were deleted.'
 
         return redirect("/manage/%s" % menu)
 
@@ -534,12 +536,16 @@ def man_disabled(req, menu, post, base_context):
                 utils.notify_signup(signup)
 
             req.session['message'] = 'Selected signups were re-activated and notified.'
+        elif action == 'purge':
+            message = utils.purgeusers(objs)
+            req.session['message'] = 'Selected signups were attempted purged, with message "".' % message
 
         return redirect("/manage/%s" % menu)
 
     # bulk actions for this view
     bulk_actions = []
     bulk_actions.append('activate_and_notify')
+    bulk_actions.append('purge')
 
     # filter signups
     signups = [s for s in Signup.objects.all() if s.state() == 5]
