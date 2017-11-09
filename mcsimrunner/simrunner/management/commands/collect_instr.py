@@ -72,7 +72,9 @@ def get_group_instrs(basedir):
 
 def get_instr_params(instr_grp, instr_file):
     ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
-
+    
+    
+    '''
     MCCODE = MCRUN
     
     # Check if this is McStas or McXtrace by a simple 
@@ -82,6 +84,9 @@ def get_instr_params(instr_grp, instr_file):
             break
     
     cmd = MCCODE + ' --mpi=1 ' + instr_file + " --info"
+    '''
+
+    cmd = MCRUN + ' --mpi=1 ' + instr_file + " --info"
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
