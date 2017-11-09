@@ -110,9 +110,6 @@ def instrument(req, group_name, instr_name=None, menu=False):
     
     grpinstr_style = "display:none;"
     instr_urlbit = "instrument"
-    if menu:
-        grpinstr_style = ""
-        instr_urlbit = "instrument-menu"
     
     # collect properties
     group_names = map(lambda g: g.name, InstrGroup.objects.all())
