@@ -37,6 +37,7 @@ AUTHENTICATION_BACKENDS = (
 MPI_PR_WORKER=@MPICORES@
 
 MCRUN = 'mcrun.pl'
+MXRUN = 'mxrun.pl'
 
 # mcplot and mcdisplay configuration
 #  For Python + Gnuplot use
