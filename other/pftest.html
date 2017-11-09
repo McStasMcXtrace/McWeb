@@ -19,15 +19,33 @@
 <script>
 onChange = function() {
   let label = document.getElementById("nodeName").value;
-  pushNodeLabel(label);
+  let anchArr = document.getElementById("anchorArray").value;
+  pushNodeLabel(label, JSON.parse("[" + anchArr + "]"));
+  //pushAnchorArray(anchArr);
 }
 
 </script>
 
 <div id="controls">
   <fieldset>
-    Enter tag & Click: 
-    <input type="text" id="nodeName" onChange="onChange();"></input>
+    <table>
+      <tr>
+        <td>
+          Enter tag & Click:
+        </td>
+        <td>
+          <input type="text" id="nodeName" onChange="onChange();">e.g. data</input>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Anchor angles:
+        </td>
+        <td>
+          <input type="text" id="anchorArray" onChange="onChange();">e.g. 70, 110, 300</input>
+        </td>
+      </tr>
+    </table>
   </fieldset>
 </div>
 </div>
@@ -35,6 +53,7 @@ onChange = function() {
 <script>
   clearTbxCB = function() {
     document.getElementById("nodeName").value = '';
+    document.getElementById("anchorArray").value = '';
   }
   run();
 </script>
