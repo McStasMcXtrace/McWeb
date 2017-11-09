@@ -35,6 +35,7 @@ AUTHENTICATION_BACKENDS = (
 
 # number of MPI processes pr worker process
 MPI_PR_WORKER=@MPICORES@
+MAX_THREADS=8
 
 MCRUN = 'mcrun.pl'
 MXRUN = 'mxrun.pl'

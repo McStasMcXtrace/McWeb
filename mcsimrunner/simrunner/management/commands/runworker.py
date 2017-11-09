@@ -15,7 +15,8 @@ import re
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MPI_PR_WORKER, MCRUN
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD
+from mcweb.settings import MPI_PR_WORKER, MAX_THREADS, MCRUN, BASE_DIR
 import mcweb.settings as settings
 
 class ExitException(Exception):
@@ -194,7 +195,7 @@ def mcdisplay_webgl(simrun, pout=False):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
-                               cwd = '/srv/mcweb/McWeb/mcsimrunner/' + simrun.data_folder)
+                               cwd = os.path.join(BASE_DIR, simrun.data_folder))
     (stdoutdata, stderrdata) = process.communicate()
     if pout:
         print(stdoutdata)
@@ -356,7 +357,7 @@ def get_and_start_new_simrun():
         
     return simrun
 
-def threadwork(simrun):
+def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''
     try:
         # check simrun object age
@@ -390,7 +391,11 @@ def threadwork(simrun):
         
         logging.error('fail: %s (%s)' % (e.__str__(), type(e).__name__))
 
-def work(threaded=True):
+    finally:
+        logging.info("releasing semaphore")
+        semaphore.release()
+
+def work(threaded=True, semaphore=None):
     ''' iterates non-started SimRun objects, updates statuses, and calls sim, layout display and plot functions '''
     
     # avoid having two worker threads starting on the same job
@@ -406,7 +411,8 @@ def work(threaded=True):
                 logging.info('delegating simrun for %s (%d-point scansweep)...' % (simrun.instr_displayname, simrun.scanpoints))
             
             if threaded:
-                t = threading.Thread(target=threadwork, args=(simrun,))
+                semaphore.acquire() # this will block untill a slot is released
+                t = threading.Thread(target=threadwork, args=(simrun, semaphore))
                 t.setDaemon(True)
                 t.setName('%s (%s)' % (t.getName().replace('Thread-','T'), simrun.instr_displayname))
                 t.start()
@@ -457,9 +463,12 @@ class Command(BaseCommand):
                 exit()
             
             # main threaded execution loop:
+            sema = threading.BoundedSemaphore(MAX_THREADS)
+            logging.info("created semaphore with %d slots" % MAX_THREADS)
+            
             logging.info("looking for simruns...")
             while True:
-                work()
+                work(threaded=True, semaphore=sema)
                 time.sleep(1)
             
         # ctr-c exits
