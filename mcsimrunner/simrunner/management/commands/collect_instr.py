@@ -9,7 +9,7 @@ import os, errno
 import shutil
 import datetime
 from simrunner.models import InstrGroup, Instrument
-from mcweb.settings import MCRUN, MXRUN
+from mcweb.settings import MCRUN #, MXRUN
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
