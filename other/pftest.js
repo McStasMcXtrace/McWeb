@@ -3,6 +3,14 @@ const height = 790;
 const nodeRadius = 35;
 const anchorRadius = 5;
 
+const anchSpace = 80;
+const pathChargeStrength = -100;
+const pathLinkStrength = 2;
+const distance = 80;
+
+const color = d3.scaleOrdinal()
+  .range(d3.schemeCategory20);
+
 // node type
 class Node {
   constructor(label, x, y, angles=[]) {
@@ -12,16 +20,28 @@ class Node {
     this.r = nodeRadius;
     this.label = label;
 
-    var self = this; // this is too weird
+    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
     this.anchors = [];
-    angles.forEach(function(a) { self.anchors.push( new AnchorNode(self, a) ); } );
+    angles.forEach(function(a) { instance.anchors.push( new Anchor(instance, a) ); } );
+    this.centerAnchor = new CenterAnchor(this);
+
+    this.links = [];
+  }
+  anchors() {
+    return this.anchors.concat(this.centerAnchor);
+  }
+  addLink(l) {
+    this.links.push(l);
+  }
+  rmLink(l) {
+    this.links.remove(l);
   }
 }
 
 // fixed node anchor point type
-class AnchorNode {
+class Anchor {
   constructor(owner, angle) {
-    this.type = "AnchorNode";
+    this.type = "Anchor";
     this.owner = owner;
     this.angle = angle;
     this.vx = 0;
@@ -29,7 +49,6 @@ class AnchorNode {
     this.r = 3;
     this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
     this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
-
     this.selected = false;
   }
   get x() { return this.owner.x + this.localx; }
@@ -40,14 +59,29 @@ class AnchorNode {
 
 // path helper node type
 class PathAnchor {
-  constructor(x, y) {
+  constructor(x, y, owner) {
+    this.owner = owner; // this must be a link object
     this.x = x;
     this.y = y;
     this.vx = 0;
     this.vy = 0;
   }
 }
-const anchSpace = 20;
+
+// placed at Node centers, used to provide a static charge for path layout simulations
+class CenterAnchor {
+  constructor(owner) {
+    this.owner = owner;
+    this.x = 0;
+    this.y = 0
+    this.vx = 0;
+    this.vy = 0;
+  }
+  get x() { return new Number(this.owner.x); }
+  set x(value) { /* empty:)) */ }
+  get y() { return new Number(this.owner.y); }
+  set y(value) { /* empty:)) */ }
+}
 
 // link data type
 class Link {
@@ -55,41 +89,103 @@ class Link {
     this.d1 = d1;
     this.d2 = d2;
     this.pathAnchors = [];
+    this.recalcPathAnchors();
 
-    let distx = Math.abs(d1.x - d2.x);
-    let disty = Math.abs(d1.y - d2.y);
+    d1.owner.addLink(this);
+    d2.owner.addLink(this);
+  }
+  recalcPathAnchors() {
+    this.pathAnchors = [];
+    let distx = Math.abs(this.d1.x - this.d2.x);
+    let disty = Math.abs(this.d1.y - this.d2.y);
     let len = Math.sqrt( distx*distx + disty*disty );
-    console.log(len);
     let xScale = d3.scaleLinear()
       .domain([0, len])
-      .range([d1.x, d2.x]);
+      .range([this.d1.x, this.d2.x]);
     let yScale = d3.scaleLinear()
       .domain([0, len])
-      .range([d1.y, d2.y]);
+      .range([this.d1.y, this.d2.y]);
     let na = Math.floor(len/anchSpace) - 1;
+    let space = len/na;
     for (let i=1; i <= na; i++) {
-      this.pathAnchors.push( new PathAnchor(xScale(i*anchSpace), yScale(i*anchSpace)) );
+      this.pathAnchors.push( new PathAnchor(xScale(i*space), yScale(i*space), this) );
     }
-
-    console.log("link      - ", this.nodeNames());
-    console.log("  anchors - ", this.pathAnchors);
   }
   length() {
     let dx = d2.x - d1.x;
     let dy = d2.y - d1.y;
     return Math.sqrt(dx*dx + dy*dy);
   }
+  getAnchors() {
+    let result = [this.d1].concat(this.pathAnchors);
+    result.push(this.d2);
+    return result;
+  }
   nodeNames() {
     return [this.d1.owner.label, this.d2.owner.label];
   }
 }
 
-let color = d3.scaleOrdinal()
-  .range(d3.schemeCategory20);
-
-class GraphDraw {
+// node data manager, keeping this interface tight and providing convenient arrays for layout sims
+class GraphData {
   constructor() {
     this.nodes = [];
+    this.links = [];
+    this.anchors = [];
+    this.forceLinks = [];
+
+    this.nodeLabels = [];
+  }
+  // should be private
+  updateAnchors() {
+    this.anchors = [];
+    this.forceLinks = [];
+    for (let j = 0; j < this.links.length; j++) {
+
+      let anchors = this.links[j].getAnchors();
+      let fl = null;
+
+      for (let i = 0; i < anchors.length; i++) {
+        this.anchors.push(anchors[i]);
+        if (i > 0) {
+          fl = { 'source' : anchors[i-1], 'target' : anchors[i], 'index' : null }
+          this.forceLinks.push(fl);
+        }
+      }
+    }
+  }
+  getAnchors() {
+    this.updateAnchors();
+    return this.anchors;
+  }
+  getForceLinks() {
+    this.updateAnchors();
+    return this.forceLinks;
+  }
+  addNode(n) {
+    if (!this.nodeLabels.includes(n.label)) {
+      this.nodes.push(n);
+      this.nodeLabels.push(n.label);
+      this.anchors.push(n.centerAnchor);
+    }
+  }
+  rmNode(n) {
+    console.log("rmNode: not implemented");
+  }
+  addLink(l) {
+    this.links.push(l);
+    this.updateAnchors();
+  }
+  rmLink(l) {
+    console.log("rmLink: not implemented");
+  }
+}
+
+// responsible for drawing, and acts as an interface
+class GraphDraw {
+  constructor() {
+    this.graphData = new GraphData();
+
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
       .append('svg')
@@ -101,46 +197,76 @@ class GraphDraw {
         let svg_x = m[0];
         let svg_y = m[1];
         clickSvg(svg_x, svg_y);
-        } )
-    this.collideSim = d3.forceSimulation(this.nodes)
-        .force("collide",
-          d3.forceCollide(nodeRadius + 3)
-          .iterations(4))
-        .force("centering",
-          d3.forceCenter(width/2, height/2))
-        .on("tick", this.drawNodes)
-        .restart();
+      } )
+    this.collideSim = d3.forceSimulation()
+      .force("collide",
+        d3.forceCollide(nodeRadius + 3)
+        .iterations(4)
+      )
+      .on("tick", this.update)
+      .restart();
+    this.centeringSim = d3.forceSimulation()
+      .force("centering",
+        d3.forceCenter(width/2, height/2)
+      )
+      .on("tick", this.update)
+      .restart();
+    this.pathSim = d3.forceSimulation()
+      .force("link",
+        d3.forceLink()
+          .strength(pathLinkStrength)
+          .distance( function(d) { return distance; } )
+      )
+      .force("pathcharge",
+        d3.forceManyBody()
+          .strength(pathChargeStrength)
+      )
+      .on("tick", this.update)
+      .restart();
+
     this.draggable = null;
+    this.dragAnchor = null;
+    this.temp = null;
 
-    // root nodes for various item types
-    this.nodeGroup = this.svg.append("g");
+    // root nodes for various item types (NOTE: the ordering matters)
     this.linkGroup = this.svg.append("g");
+    this.splineGroup = this.svg.append("g");
+    this.nodeGroup = this.svg.append("g");
 
-    // anchor activation
-    this.selectedAnchor = null;
-    this.links = [];
+    // specific selections
+    this.nodes = null;
+    this.paths = null;
+    this.anchors = null;
 
     // pythonicism
     self = this;
   }
-
-  addNode(label, x, y, angles) {
-    self.addNode2( new Node(label, x, y, angles) );
-  }
-  addNode2(node) {
-    self.nodes.push(node);
+  addNode_obj(node) {
+    self.graphData.addNode(node);
     self.resetChargeSim();
+    self.restartCollideSim(); // make sure everything is centered
     self.drawNodes();
   }
   resetChargeSim() {
-    self.distanceSim = d3.forceSimulation(self.nodes)
-      .force("repulsion",
-          d3.forceManyBody()
+    // the charge force seems to have to reset like this for some reason
+    self.distanceSim = d3.forceSimulation(self.graphData.nodes)
+      .force("noderepulsion",
+        d3.forceManyBody()
           .strength( -40 )
           .distanceMin(20)
           .distanceMax(100))
-      .on("tick", self.drawNodes)
+      //.on("tick", self.drawNodes)
+      .on("tick", self.update)
       .stop();
+  }
+  resetPathSim() {
+    self.pathSim.stop();
+    self.pathSim.nodes(self.graphData.getAnchors());
+    self.pathSim.force("link").links(self.graphData.getForceLinks());
+  }
+  restartPathSim() {
+    self.pathSim.stop();
+    self.pathSim.alpha(1).restart();
   }
   restartChargeSim() {
     self.distanceSim.stop();
@@ -148,16 +274,20 @@ class GraphDraw {
   }
   restartCollideSim() {
     self.collideSim.stop();
-    self.collideSim.nodes(self.nodes);
+    self.collideSim.nodes(self.graphData.nodes);
     self.collideSim.alpha(1).restart();
+    // path anchors go into the center-sim only
+    self.centeringSim.stop();
+    self.centeringSim.nodes(self.graphData.nodes.concat(self.graphData.anchors));
+    self.centeringSim.alpha(1).restart();
   }
   dragged(d) {
     // reheating is needed during long drags
     if (self.collideSim.alpha() < 0.1) { self.restartCollideSim(); }
+    if (self.pathSim.alpha() < 0.1) { self.restartPathSim(); }
 
     d.x += d3.event.dx;
     d.y += d3.event.dy;
-    self.drawNodes();
   }
   dragstarted(d) {
     d.active = true;
@@ -165,34 +295,81 @@ class GraphDraw {
   }
   dragended(d) {
     d.active = false;
-    self.drawNodes();
+
+    // recalc node link path anchors here
+    d.links.forEach( function(l) {
+      l.recalcPathAnchors();
+    } )
+
+    // restart post-drag relevant layout sims
     self.restartChargeSim();
-  }
-  anchorClick(d, i) {
-    console.log(i);
-    let s = self.selectedAnchor;
-    if (s == null) {
-      self.selectedAnchor = d;
-      d.selected = true;
-    }
-    else {
-      self.links.push(new Link(s, d));
-      self.selectedAnchor = null;
-      d.selected = false;
-    }
-    console.log("anchor click - ", d.owner.label, d.x, d.y);
+    self.resetPathSim(); // we need to reset, because the path anchors may have changed during recalcPathAnchors
+    self.restartPathSim();
+
     self.drawNodes();
   }
+  anchorMouseDown(d) {
+    self.dragAnchor = d;
+    d.selected = true;
+  }
+  anchorMouseUp(d) {
+    let s = self.dragAnchor;
+    if (s != d && s.owner != d.owner)
+    {
+      self.graphData.addLink(new Link(s, d));
+      self.drawNodes();
+    }
+    d.selected = false;
+    self.dragAnchor = null;
+
+    self.resetPathSim();
+    self.restartPathSim();
+  }
+  update() {
+    self.draggable
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
+    self.nodes
+      .classed("active", function(d) { return d.active; });
+
+    self.splines
+      .each( function(l, i) {
+        self.temp =  l.getAnchors()
+        let anchors = self.temp;
+
+        let g = d3.select(this)
+          .select('path')
+          .datum(anchors)
+          .attr('d', d3.line()
+            //.curve(d3.curveMonotoneX)
+            .curve(d3.curveBasis)
+            .x( function(p) { return p.x; } )
+            .y( function(p) { return p.y; } )
+          );
+      });
+
+    /*
+    // for DEBUG purposes
+    self.paths
+      .attr("x1", function(d) { return d['source'].x; })
+      .attr("y1", function(d) { return d['source'].y; })
+      .attr("x2", function(d) { return d['target'].x; })
+      .attr("y2", function(d) { return d['target'].y; });
+
+    self.anchors
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+    */
+  }
+
   drawNodes() {
     // clear all nodes
     if (self.draggable) self.draggable.remove();
 
     // draw all nodes
     self.draggable = self.nodeGroup.selectAll("g")
-      .data(self.nodes)
+      .data(self.graphData.nodes)
       .enter()
       .append("g")
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } )
       .call( d3.drag()
         .on("start", self.dragstarted)
         .on("drag", self.dragged)
@@ -208,16 +385,30 @@ class GraphDraw {
       .enter()
       .append("circle")
       .attr('r', anchorRadius)
+      // semi-static transform, which does not belong in update()
       .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
       .style("fill", "white")
       .style("stroke", "#000")
       .on("mousedown", function(p) {
-        // this will prevent the drag behavior from activating, cancelling click events
+        // these two lines will prevent drag behavior
         d3.event.stopPropagation();
         d3.event.preventDefault();
+        self.anchorMouseDown(p)
       } )
-      .on("click", self.anchorClick);
-    } );
+      .on("mouseup", function(p) {
+        //console.log("mouseup", self.dragAnchor != null);
+        self.anchorMouseUp(p);
+      } )
+      .on("mouseover", function(d) {
+        d3.select(this)
+        .classed("active", true)
+        .style("opacity", 1);
+      } )
+      .on("mouseout", function(d) {
+        d3.select(this)
+          .classed("active", false)
+      } )
+    });
 
     self.draggable.append('text')
       .text( function(d) { return d.label } )
@@ -228,43 +419,66 @@ class GraphDraw {
       .attr("dominant-baseline", "middle")
       .lower();
 
-    self.draggable.append('circle')
+    this.nodes = self.draggable.append('circle')
       .attr('r', function(d) { return d.r; })
       .style("fill", function(d, i) { return color(i); })
-      .classed("active", function(d) { return d.active; })
-      //.on("mousedown", function(p) {
-      //  console.log("circle mousedown: " + p.localx, p.localy)
-      //  d3.event.stopPropagation();
-      //  d3.event.preventDefault();
-      //} )
-      //.on("click", function() { console.log("circle click!"); } )
-      .lower();
-
-    // now draw all links separately
-    if (self.lines) self.lines.remove();
-    self.lines = self.linkGroup.selectAll("line")
-      .data(self.links)
-      .enter()
-      .append("line")
-      .style("stroke", "black")
-      .attr("x1", function(d) { return d.d1.x; })
-      .attr("y1", function(d) { return d.d1.y; })
-      .attr("x2", function(d) { return d.d2.x; })
-      .attr("y2", function(d) { return d.d2.y; })
       .lower();
 
     /*
-    let pathAnchors = []
-    self.links.forEach(function(a) {
-      a.pathAnchors.forEach( function(b) {
-        pathAnchors.push(b)
-      ;});
-    });
+    // draw sublines for each link
+    if (self.paths) self.paths.remove();
+    self.paths = self.linkGroup.selectAll("line")
+      .data(self.graphData.getForceLinks())
+      .enter()
+      .append("line")
+      .style("stroke", "black");
+    */
 
-    //console.log(pathAnchors);
-    if (self.pathAnchors) self.pathAnchors.remove();
-    self.pathAnchors = self.linkGroup.selectAll("circle")
-      .data(pathAnchors)
+    // draw the splines
+    let links = self.graphData.links;
+
+    if (self.splines) self.splines.remove();
+    self.splines = self.splineGroup.selectAll("g")
+      .data(links)
+      .enter()
+      .append("g");
+
+    self.splines
+      .each( function(l, i) {
+        self.temp =  l.getAnchors()
+        let anchors = self.temp;
+
+        let g = d3.select(this)
+          .append('path')
+          .datum(anchors)
+          .attr("class", "line")
+          .attr('d', d3.line()
+            //.curve(d3.curveMonotoneX)
+            .curve(d3.curveBasis)
+            .x( function(p) { return p.x; } )
+            .y( function(p) { return p.y; } )
+          );
+      });
+
+    /*
+    // THIS SMALL TEST WORKS FINE
+    let test = [{x:10, y:10}, {x:15, y:15}, {x:15, y:30}]
+    self.svg.append("g").append("path")
+      .datum(test)
+      .attr("class", "line")
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    */
+
+    /*
+    // draw the actual anchors
+    let anchors = self.graphData.anchors;
+    if (self.anchors) self.anchors.remove();
+    self.anchors = self.linkGroup.selectAll("circle")
+      .data(anchors)
       .enter()
       .append("circle")
       .attr("cx", function(d) { return d.x; })
@@ -272,18 +486,26 @@ class GraphDraw {
       .attr("r", 5)
       .attr("fill", "black");
     */
+
+    // update data properties in a separate function
+    self.update();
   }
 }
 
-let gd = null;
+let draw = null;
 // entry point
 function run() {
-  gd = new GraphDraw();
+  draw = new GraphDraw();
 
   // example nodes
-  gd.addNode("gauss", 100, 140, [70, 90, 110, 270]);
-  gd.addNode("en1", 520, 240, [100]);
-  gd.addNode("pg", 450, 44, [270]);
+  createNode("gauss", 100, 240, [70, 90, 110, 270]);
+  createNode("en1", 100, 450, [100]);
+  createNode("pg", 50, 44, [270]);
+  createNode("pg2", 100, 44, [270]);
+  createNode("pg3", 150, 44, [270]);
+}
+function createNode(label, x, y, angles) {
+  draw.addNode_obj( new Node(label, x, y, angles) );
 }
 
 // ui interaction
@@ -294,7 +516,6 @@ let clearTbxCB = null;
 function pushNodeLabel(label, anchArr) {
   nodeLabel = label;
   anchorArray = anchArr;
-  console.log(anchorArray);
 }
 function clickSvg(x, y) {
   label = nodeLabel;
@@ -302,8 +523,8 @@ function clickSvg(x, y) {
   anchs = anchorArray;
   anchArray = [];
   if (label != '') {
-    gd.addNode(label, x, y, anchs);
-    gd.drawNodes();
+    createNode(label, x, y, anchs);
+    draw.drawNodes();
     if (clearTbxCB) {
       clearTbxCB();
     }
