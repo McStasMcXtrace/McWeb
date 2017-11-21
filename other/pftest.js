@@ -12,6 +12,14 @@ const distance = 80;
 const color = d3.scaleOrdinal()
   .range(d3.schemeCategory20);
 
+function remove(lst, element) {
+  let index = lst.indexOf(element);
+  if (index > -1) {
+    lst.splice(index, 1);
+  }
+}
+
+
 // node type
 class Node {
   constructor(label, x, y, angles=[]) {
@@ -35,7 +43,7 @@ class Node {
     this.links.push(l);
   }
   rmLink(l) {
-    this.links.remove(l);
+    remove(this.links, l);
   }
 }
 
@@ -147,6 +155,10 @@ class Link {
     result.push(this.d2);
     return result;
   }
+  detatch() {
+    this.d1.owner.rmLink(this);
+    this.d2.owner.rmLink(this);
+  }
   nodeNames() {
     return [this.d1.owner.label, this.d2.owner.label];
   }
@@ -196,14 +208,19 @@ class GraphData {
     }
   }
   rmNode(n) {
-    console.log("rmNode: not implemented");
+    let nl = n.links.length;
+    for (var i=0; i<nl; i++) {
+      this.rmLink(n.links[0]);
+    }
+    remove(this.nodes, n);
   }
   addLink(l) {
     this.links.push(l);
     this.updateAnchors();
   }
   rmLink(l) {
-    console.log("rmLink: not implemented");
+    l.detatch();
+    remove(this.links, l);
   }
 }
 
@@ -291,12 +308,12 @@ class GraphDraw {
     self.pathSim.force("link").links(self.graphData.getForceLinks());
   }
   restartPathSim() {
+    // run the pathsim manually to avoid the animation
     self.pathSim.alpha(1);
     for (var i=0; i < 300; i++) {
       self.pathSim.tick();
     }
     self.update();
-    //self.pathSim.alpha(1).restart();
   }
   restartChargeSim() {
     self.distanceSim.stop();
@@ -354,6 +371,11 @@ class GraphDraw {
     self.resetPathSim();
     self.restartPathSim();
   }
+  ctrlClickNode(n) {
+    self.graphData.rmNode(n);
+    self.drawNodes();
+    self.restartCollideSim();
+  }
   update() {
     self.draggable
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
@@ -400,10 +422,14 @@ class GraphDraw {
       .enter()
       .append("g")
       .call( d3.drag()
+        .filter( function() {
+          return !d3.event.button && !d3.event.ctrlKey;
+        })
         .on("start", self.dragstarted)
         .on("drag", self.dragged)
         .on("end", self.dragended)
-      );
+      )
+      .on("click", function () { self.ctrlClickNode(d3.select(this).datum()); });
 
     // draw anchor nodes
     self.draggable.each( function(d, i) {
