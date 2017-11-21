@@ -3,6 +3,7 @@ const height = 790;
 const nodeRadius = 35;
 const anchorRadius = 5;
 
+const extensionLength = 20;
 const anchSpace = 80;
 const pathChargeStrength = -100;
 const pathLinkStrength = 2;
@@ -50,6 +51,25 @@ class Anchor {
     this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
     this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
     this.selected = false;
+
+    this.ext = new ExtensionAnchor(owner, angle);
+  }
+  get x() { return this.owner.x + this.localx; }
+  set x(value) { /* empty:)) */ }
+  get y() { return this.owner.y + this.localy; }
+  set y(value) { /* empty:)) */ }
+}
+
+// a radial extension to the Anchor (fixed at a relative position), as a path helper
+class ExtensionAnchor {
+  constructor(owner, angle) {
+    this.type = "ExtensionAnchor";
+    this.owner = owner; // this is the node, not the anchor
+    this.angle = angle;
+    this.vx = 0;
+    this.vy = 0;
+    this.localx = (owner.r + extensionLength) * Math.cos(this.angle/360*2*Math.PI);
+    this.localy = - (this.owner.r + extensionLength) * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
   }
   get x() { return this.owner.x + this.localx; }
   set x(value) { /* empty:)) */ }
@@ -96,15 +116,20 @@ class Link {
   }
   recalcPathAnchors() {
     this.pathAnchors = [];
-    let distx = Math.abs(this.d1.x - this.d2.x);
-    let disty = Math.abs(this.d1.y - this.d2.y);
+    let x1 = this.d1.ext.x;
+    let y1 = this.d1.ext.y;
+    let x2 = this.d2.ext.x;
+    let y2 = this.d2.ext.y;
+
+    let distx = Math.abs(x1 - x2);
+    let disty = Math.abs(y1 - y2);
     let len = Math.sqrt( distx*distx + disty*disty );
     let xScale = d3.scaleLinear()
       .domain([0, len])
-      .range([this.d1.x, this.d2.x]);
+      .range([x1, x2]);
     let yScale = d3.scaleLinear()
       .domain([0, len])
-      .range([this.d1.y, this.d2.y]);
+      .range([y1, y2]);
     let na = Math.floor(len/anchSpace) - 1;
     let space = len/na;
     for (let i=1; i <= na; i++) {
@@ -117,7 +142,8 @@ class Link {
     return Math.sqrt(dx*dx + dy*dy);
   }
   getAnchors() {
-    let result = [this.d1].concat(this.pathAnchors);
+    let result = [this.d1, this.d1.ext].concat(this.pathAnchors);
+    result.push(this.d2.ext);
     result.push(this.d2);
     return result;
   }
@@ -204,13 +230,13 @@ class GraphDraw {
         .iterations(4)
       )
       .on("tick", this.update)
-      .restart();
+      .stop();
     this.centeringSim = d3.forceSimulation()
       .force("centering",
         d3.forceCenter(width/2, height/2)
       )
       .on("tick", this.update)
-      .restart();
+      .stop();
     this.pathSim = d3.forceSimulation()
       .force("link",
         d3.forceLink()
@@ -222,7 +248,7 @@ class GraphDraw {
           .strength(pathChargeStrength)
       )
       .on("tick", this.update)
-      .restart();
+      .stop();
 
     this.draggable = null;
     this.dragAnchor = null;
@@ -265,8 +291,12 @@ class GraphDraw {
     self.pathSim.force("link").links(self.graphData.getForceLinks());
   }
   restartPathSim() {
-    self.pathSim.stop();
-    self.pathSim.alpha(1).restart();
+    self.pathSim.alpha(1);
+    for (var i=0; i < 300; i++) {
+      self.pathSim.tick();
+    }
+    self.update();
+    //self.pathSim.alpha(1).restart();
   }
   restartChargeSim() {
     self.distanceSim.stop();
@@ -282,9 +312,8 @@ class GraphDraw {
     self.centeringSim.alpha(1).restart();
   }
   dragged(d) {
-    // reheating is needed during long drags
+    // reheating collision protection is needed during long drags
     if (self.collideSim.alpha() < 0.1) { self.restartCollideSim(); }
-    if (self.pathSim.alpha() < 0.1) { self.restartPathSim(); }
 
     d.x += d3.event.dx;
     d.y += d3.event.dy;
@@ -461,7 +490,6 @@ class GraphDraw {
       });
 
     /*
-    // THIS SMALL TEST WORKS FINE
     let test = [{x:10, y:10}, {x:15, y:15}, {x:15, y:30}]
     self.svg.append("g").append("path")
       .datum(test)
