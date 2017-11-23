@@ -26,9 +26,9 @@
 onChange = function() {
   let label = document.getElementById("nodeName").value;
   let anchArr = document.getElementById("anchorArray").value;
-  pushNodeLabel(label, JSON.parse("[" + anchArr + "]"));
+  let type = document.getElementById("typeSelector").value;
+  pushNodeLabel(label, JSON.parse("[" + anchArr + "]"), type);
 }
-
 </script>
 
 <div id="controls">
@@ -49,6 +49,16 @@ onChange = function() {
         <td>
           <input type="text" id="anchorArray" onChange="onChange();">e.g. 70, 110, 300</input>
         </td>
+        <td>
+          <select id="typeSelector" onChange="onChange();">
+            <option value="0">CIRCLE</option>
+            <option value="1">CIRCLEPAD</option>
+            <option value="2">SQUARE</option>
+            <option value="3">FLUFFY</option>
+            <option value="4">FLUFFYPAD</option>
+            <option value="5">HEXAGONAL</option>
+          </select>
+        </td>
       </tr>
     </table>
   </fieldset>
@@ -56,11 +66,11 @@ onChange = function() {
 </div>
 
 <script>
-  clearTbxCB = function() {
-    document.getElementById("nodeName").value = '';
-    document.getElementById("anchorArray").value = '';
-  }
-  run();
+clearTbxCB = function() {
+  document.getElementById("nodeName").value = '';
+  document.getElementById("anchorArray").value = '';
+}
+run();
 </script>
 
 </body>

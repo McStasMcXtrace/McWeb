@@ -3,7 +3,7 @@ const height = 790;
 const nodeRadius = 35;
 const anchorRadius = 5;
 
-const extensionLength = 20;
+const extensionLength = 40;
 const anchSpace = 80;
 const pathChargeStrength = -100;
 const pathLinkStrength = 2;
@@ -21,11 +21,12 @@ function remove(lst, element) {
 }
 
 NodeIconType = {
-  CIRCULAR : 0,
-  SQUARE : 1,
-  FLUFFY : 2,
-  FLUFFYPAD : 3,
-  HEXAGONAL : 4
+  CIRCE : 0,
+  CIRCLEPAD : 1,
+  SQUARE : 2,
+  FLUFFY : 3,
+  FLUFFYPAD : 4,
+  HEXAGONAL : 5
 }
 
 // node data type
@@ -60,7 +61,29 @@ class NodeCircular extends Node {
     return branch
       .append('circle')
       .attr('r', function(d) { return d.r; })
+      .attr('stroke', "black")
       .style("fill", function(d, j) { return color(i); })
+  }
+}
+
+class NodeCircularPad extends Node {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
+    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
+  }
+  draw(branch, i) {
+    branch
+      .append('circle')
+      .attr('r', 0.85*this.r)
+      .attr('stroke', "black")
+      .style("fill", function(d, j) { return color(i); }).lower()
+    branch
+      .append('circle')
+      .attr('r', this.r)
+      .attr('stroke', "black")
+      .style("fill", function(d, j) { return color(i); }).lower()
+    return branch;
   }
 }
 
@@ -97,21 +120,77 @@ class NodeHexagonal extends Node {
     let points = [];
     for (i=0; i<6; i++) {
       alpha = i*Math.PI*2/6;
-      points.push( {x : r*Math.cos(alpha), y : r*Math.sin(alpha) } );
+      points.push( {x : r*Math.cos(alpha), y : - r*Math.sin(alpha) } );
     }
     points.push(points[0]);
 
     return branch
       .append('path')
       .datum(points)
-      .style("stroke", "black")
-      .style("fill", function(d, j) { return color(i); })
+      .style('fill', function(d, j) { return color(i); })
       .attr('d', d3.line()
         .x( function(p) { return p.x; } )
         .y( function(p) { return p.y; } )
       );
   }
 }
+
+class NodeFluffy extends Node {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    this.numfluff = 14;
+    this.fluffrad = 8;
+    this.r = 1.05 * nodeRadius;
+    var instance = this;
+    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
+  }
+  draw(branch, i) {
+    // fluff not satisfactory because the circle shows - try d3.lineRadial()
+    let r = 0.80 * this.r;
+    let alpha;
+    let points = [];
+    for (let j=0; j<this.numfluff; j++) {
+      alpha = j*Math.PI*2/this.numfluff;
+      points.push( {x : r*Math.cos(alpha), y : - r*Math.sin(alpha) } );
+    }
+
+    branch.append("g").lower()
+      .append('circle')
+      .attr('r', r)
+      .style("fill", function(d, j) { return color(i); })
+      .lower();
+    branch.append("g").lower()
+      .selectAll("circle")
+      .data(points)
+      .enter()
+      .append("circle")
+      .attr('r', this.fluffrad)
+      .attr("transform", function(p) { return "translate(" + p.x + "," + p.y + ")" } )
+      .style("fill", function(d, j) { return color(i); });
+
+    return branch;
+  }
+}
+
+class NodeFluffyPad extends NodeFluffy {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    this.r = 0.9*this.r;
+    this.numfluff = 8;
+    this.fluffrad = 12;
+  }
+  draw(branch, i) {
+    branch
+      .append('circle')
+      .attr('r', 0.85*this.r)
+      .attr('stroke', "black")
+      .style("fill", function(d, j) { return color(i); }).lower()
+
+    return super.draw(branch, i)
+  }
+
+}
+
 
 // connection anchor point fixed on a node at a circular periphery
 class Anchor {
@@ -471,7 +550,7 @@ class GraphDraw {
   }
   anchorMouseUp(d) {
     let s = self.dragAnchor;
-    if (s != d && s.owner != d.owner)
+    if (s && s != d && s.owner != d.owner)
     {
       self.graphData.addLink(new Link(s, d));
       self.drawNodes();
@@ -582,12 +661,6 @@ class GraphDraw {
     this.nodes = self.draggable.each( function(d, i) {
       d.draw(d3.select(this), i).lower();
     });
-    /*
-    this.nodes = self.draggable.append('circle')
-      .attr('r', function(d) { return d.r; })
-      .style("fill", function(d, i) { return color(i); })
-      .lower();
-    */
 
     // draw the splines
     let links = self.graphData.links;
@@ -641,12 +714,15 @@ function run() {
   // example nodes
   createNodeSquare("gauss", 100, 240, [70, 90, 110, 270]);
   createNodeHexagonal("en1", 100, 450, [100]);
-  createNodeCircular("pg", 50, 44, [270]);
-  createNodeCircular("pg2", 100, 44, [270]);
+  createNodeCircularPad("pg", 50, 44, [270]);
+  createNodeFluffy("pg2", 100, 44, [270]);
   createNodeCircular("pg3", 150, 44, [270]);
 }
 function createNodeCircular(label, x, y, angles) {
   draw.addNode_obj( new NodeCircular(label, x, y, angles) );
+}
+function createNodeCircularPad(label, x, y, angles) {
+  draw.addNode_obj( new NodeCircularPad(label, x, y, angles) );
 }
 function createNodeSquare(label, x, y, angles) {
   draw.addNode_obj( new NodeSquare(label, x, y, angles) );
@@ -654,15 +730,23 @@ function createNodeSquare(label, x, y, angles) {
 function createNodeHexagonal(label, x, y, angles) {
   draw.addNode_obj( new NodeHexagonal(label, x, y, angles) );
 }
+function createNodeFluffy(label, x, y, angles) {
+  draw.addNode_obj( new NodeFluffy(label, x, y, angles) );
+}
+function createNodeFluffyPad(label, x, y, angles) {
+  draw.addNode_obj( new NodeFluffyPad(label, x, y, angles) );
+}
 
 // ui interaction
 let nodeLabel = '';
 let anchArray = [];
 let labelHistory = []
 let clearTbxCB = null;
-function pushNodeLabel(label, anchArr) {
+let nodeType = '';
+function pushNodeLabel(label, anchArr, type) {
   nodeLabel = label;
   anchorArray = anchArr;
+  nodeType = type;
 }
 function clickSvg(x, y) {
   label = nodeLabel;
@@ -670,7 +754,14 @@ function clickSvg(x, y) {
   anchs = anchorArray;
   anchArray = [];
   if (label != '') {
-    createNode(label, x, y, anchs);
+    if (nodeType == NodeIconType.CIRCE) { createNodeCircular(label, x, y, anchs); }
+    else if (nodeType == NodeIconType.CIRCLEPAD) { createNodeCircularPad(label, x, y, anchs); }
+    else if (nodeType == NodeIconType.SQUARE) { createNodeSquare(label, x, y, anchs); }
+    else if (nodeType == NodeIconType.FLUFFY) { createNodeFluffy(label, x, y, anchs); }
+    else if (nodeType == NodeIconType.FLUFFYPAD) { createNodeFluffyPad(label, x, y, anchs); }
+    else if (nodeType == NodeIconType.HEXAGONAL) { createNodeHexagonal(label, x, y, anchs); }
+    else { console.log("default"); }
+
     draw.drawNodes();
     if (clearTbxCB) {
       clearTbxCB();
