@@ -9,9 +9,10 @@ const pathChargeStrength = -100;
 const pathLinkStrength = 2;
 const distance = 80;
 
-const color = d3.scaleOrdinal()
-  .range(d3.schemeCategory20);
+// some debug colours
+const color = d3.scaleOrdinal().range(d3.schemeCategory20);
 
+// list.remove convenience function
 function remove(lst, element) {
   let index = lst.indexOf(element);
   if (index > -1) {
@@ -19,22 +20,24 @@ function remove(lst, element) {
   }
 }
 
+NodeIconType = {
+  CIRCULAR : 0,
+  SQUARE : 1,
+  FLUFFY : 2,
+  FLUFFYPAD : 3,
+  HEXAGONAL : 4
+}
 
-// node type
+// node data type
 class Node {
-  constructor(label, x, y, angles=[]) {
-    this.type = "Node";
+  constructor(label, x, y) {
     this.x = x;
     this.y = y;
     this.r = nodeRadius;
     this.label = label;
-
-    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
     this.anchors = [];
-    angles.forEach(function(a) { instance.anchors.push( new Anchor(instance, a) ); } );
-    this.centerAnchor = new CenterAnchor(this);
-
     this.links = [];
+    this.centerAnchor = new CenterAnchor(this);
   }
   anchors() {
     return this.anchors.concat(this.centerAnchor);
@@ -47,20 +50,83 @@ class Node {
   }
 }
 
-// fixed node anchor point type
+class NodeCircular extends Node {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
+    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
+  }
+  draw(branch, i) {
+    return branch
+      .append('circle')
+      .attr('r', function(d) { return d.r; })
+      .style("fill", function(d, j) { return color(i); })
+  }
+}
+
+class NodeSquare extends Node {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    this.r = 0.85 * nodeRadius; // this is now the half height/width of the square
+    var instance = this;
+    angles.forEach(function(a) { instance.anchors.push( new AnchorSquare(instance, a) ); } );
+  }
+  draw(branch, i) {
+    return branch
+      .append("g")
+      .lower()
+      .append('rect')
+      .attr('width', function(d) { return 2*d.r; })
+      .attr('height', function(d) { return 2*d.r; })
+      .attr('x', function(d) { return -d.r; })
+      .attr('y', function(d) { return -d.r; })
+      .style("fill", function(d, j) { return color(i); })
+  }
+}
+
+class NodeHexagonal extends Node {
+  constructor(label, x, y, angles=[]) {
+    super(label, x, y);
+    this.r = 1.05 * nodeRadius;
+    var instance = this;
+    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
+  }
+  draw(branch, i) {
+    let r = 1.1 * this.r;
+    let alpha;
+    let points = [];
+    for (i=0; i<6; i++) {
+      alpha = i*Math.PI*2/6;
+      points.push( {x : r*Math.cos(alpha), y : r*Math.sin(alpha) } );
+    }
+    points.push(points[0]);
+
+    return branch
+      .append('path')
+      .datum(points)
+      .style("stroke", "black")
+      .style("fill", function(d, j) { return color(i); })
+      .attr('d', d3.line()
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+  }
+}
+
+// connection anchor point fixed on a node at a circular periphery
 class Anchor {
   constructor(owner, angle) {
-    this.type = "Anchor";
     this.owner = owner;
     this.angle = angle;
+
     this.vx = 0;
     this.vy = 0;
     this.r = 3;
-    this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
-    this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
-    this.selected = false;
+    this.localx = null;
+    this.localy = null;
 
-    this.ext = new ExtensionAnchor(owner, angle);
+    this.selected = false;
+    this.ext = null;
   }
   get x() { return this.owner.x + this.localx; }
   set x(value) { /* empty:)) */ }
@@ -68,16 +134,61 @@ class Anchor {
   set y(value) { /* empty:)) */ }
 }
 
-// a radial extension to the Anchor (fixed at a relative position), as a path helper
-class ExtensionAnchor {
+class AnchorCircular extends Anchor {
   constructor(owner, angle) {
-    this.type = "ExtensionAnchor";
+    super(owner, angle);
+    this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
+    this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
+
+    let ext_localx = (owner.r + extensionLength) * Math.cos(this.angle/360*2*Math.PI);
+    let ext_localy = - (this.owner.r + extensionLength) * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
+    this.ext = new ExtensionAnchor(owner, ext_localx, ext_localy);
+  }
+}
+
+class AnchorSquare extends Anchor {
+  constructor(owner, angle) {
+    super(owner, angle);
+    this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
+    this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
+
+    // TODO: angle = angle modulus 360 and shift to positive
+    if (0 <= angle && angle < 360/8) {
+      this.localx = owner.r;
+      this.localy = -owner.r * Math.tan(angle/180*Math.PI);
+    }
+    else if (360/8 <= angle && angle < 3*360/8) {
+      //this.localx = owner.r * Math.cos(angle/180*Math.PI);
+      this.localx = -owner.r * Math.tan(angle/180*Math.PI - Math.PI/2);
+      this.localy = -owner.r;
+    }
+    else if (3*360/8 <= angle && angle < 5*360/8) {
+      this.localx = -owner.r;
+      this.localy = owner.r * Math.tan(angle/180*Math.PI - Math.PI);
+    }
+    else if (5*360/8 <= angle && angle < 7*360/8) {
+      this.localx = owner.r * Math.tan(angle/180*Math.PI - 3*Math.PI/2);
+      this.localy = owner.r;
+    }
+    else if (7*360/8 <= angle && angle < 360) {
+      this.localx = owner.r;
+      this.localy = -owner.r * Math.tan(angle/180*Math.PI);
+    }
+
+    let ext_localx = this.localx + this.localx/owner.r * extensionLength;
+    let ext_localy = this.localy + this.localy/owner.r * extensionLength;
+    this.ext = new ExtensionAnchor(owner, ext_localx, ext_localy);
+  }
+}
+
+// a "path helper" radial extension to Anchor
+class ExtensionAnchor {
+  constructor(owner, localx, localy) {
     this.owner = owner; // this is the node, not the anchor
-    this.angle = angle;
     this.vx = 0;
     this.vy = 0;
-    this.localx = (owner.r + extensionLength) * Math.cos(this.angle/360*2*Math.PI);
-    this.localy = - (this.owner.r + extensionLength) * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
+    this.localx = localx;
+    this.localy = localy;
   }
   get x() { return this.owner.x + this.localx; }
   set x(value) { /* empty:)) */ }
@@ -391,7 +502,6 @@ class GraphDraw {
           .select('path')
           .datum(anchors)
           .attr('d', d3.line()
-            //.curve(d3.curveMonotoneX)
             .curve(d3.curveBasis)
             .x( function(p) { return p.x; } )
             .y( function(p) { return p.y; } )
@@ -400,12 +510,6 @@ class GraphDraw {
 
     /*
     // for DEBUG purposes
-    self.paths
-      .attr("x1", function(d) { return d['source'].x; })
-      .attr("y1", function(d) { return d['source'].y; })
-      .attr("x2", function(d) { return d['target'].x; })
-      .attr("y2", function(d) { return d['target'].y; });
-
     self.anchors
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
@@ -433,38 +537,38 @@ class GraphDraw {
 
     // draw anchor nodes
     self.draggable.each( function(d, i) {
-      let anchors = d3.select(this)
-      .append("g")
-      .selectAll("circle")
-      .data(d.anchors)
-      .enter()
-      .append("circle")
-      .attr('r', anchorRadius)
-      // semi-static transform, which does not belong in update()
-      .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
-      .style("fill", "white")
-      .style("stroke", "#000")
-      .on("mousedown", function(p) {
-        // these two lines will prevent drag behavior
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
-        self.anchorMouseDown(p)
-      } )
-      .on("mouseup", function(p) {
-        //console.log("mouseup", self.dragAnchor != null);
-        self.anchorMouseUp(p);
-      } )
-      .on("mouseover", function(d) {
-        d3.select(this)
-        .classed("active", true)
-        .style("opacity", 1);
-      } )
-      .on("mouseout", function(d) {
-        d3.select(this)
-          .classed("active", false)
-      } )
+      d3.select(this)
+        .append("g")
+        .selectAll("circle")
+        .data(d.anchors)
+        .enter()
+        .append("circle")
+        .attr('r', anchorRadius)
+        // semi-static transform, which does not belong in update()
+        .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
+        .style("fill", "white")
+        .style("stroke", "#000")
+        .on("mousedown", function(p) {
+          // these two lines will prevent drag behavior
+          d3.event.stopPropagation();
+          d3.event.preventDefault();
+          self.anchorMouseDown(p)
+        } )
+        .on("mouseup", function(p) {
+          self.anchorMouseUp(p);
+        } )
+        .on("mouseover", function(d) {
+          d3.select(this)
+          .classed("active", true)
+          .style("opacity", 1);
+        } )
+        .on("mouseout", function(d) {
+          d3.select(this)
+            .classed("active", false)
+        } )
     });
 
+    // draw labels
     self.draggable.append('text')
       .text( function(d) { return d.label } )
       .attr("font-family", "sans-serif")
@@ -474,19 +578,15 @@ class GraphDraw {
       .attr("dominant-baseline", "middle")
       .lower();
 
+    // draw nodes by delegation to each instance (strategy pattern)
+    this.nodes = self.draggable.each( function(d, i) {
+      d.draw(d3.select(this), i).lower();
+    });
+    /*
     this.nodes = self.draggable.append('circle')
       .attr('r', function(d) { return d.r; })
       .style("fill", function(d, i) { return color(i); })
       .lower();
-
-    /*
-    // draw sublines for each link
-    if (self.paths) self.paths.remove();
-    self.paths = self.linkGroup.selectAll("line")
-      .data(self.graphData.getForceLinks())
-      .enter()
-      .append("line")
-      .style("stroke", "black");
     */
 
     // draw the splines
@@ -508,7 +608,6 @@ class GraphDraw {
           .datum(anchors)
           .attr("class", "line")
           .attr('d', d3.line()
-            //.curve(d3.curveMonotoneX)
             .curve(d3.curveBasis)
             .x( function(p) { return p.x; } )
             .y( function(p) { return p.y; } )
@@ -516,19 +615,7 @@ class GraphDraw {
       });
 
     /*
-    let test = [{x:10, y:10}, {x:15, y:15}, {x:15, y:30}]
-    self.svg.append("g").append("path")
-      .datum(test)
-      .attr("class", "line")
-      .attr('d', d3.line()
-        .curve(d3.curveBasis)
-        .x( function(p) { return p.x; } )
-        .y( function(p) { return p.y; } )
-      );
-    */
-
-    /*
-    // draw the actual anchors
+    // DEBUG draw anchors
     let anchors = self.graphData.anchors;
     if (self.anchors) self.anchors.remove();
     self.anchors = self.linkGroup.selectAll("circle")
@@ -541,7 +628,7 @@ class GraphDraw {
       .attr("fill", "black");
     */
 
-    // update data properties in a separate function
+    // update data properties
     self.update();
   }
 }
@@ -552,14 +639,20 @@ function run() {
   draw = new GraphDraw();
 
   // example nodes
-  createNode("gauss", 100, 240, [70, 90, 110, 270]);
-  createNode("en1", 100, 450, [100]);
-  createNode("pg", 50, 44, [270]);
-  createNode("pg2", 100, 44, [270]);
-  createNode("pg3", 150, 44, [270]);
+  createNodeSquare("gauss", 100, 240, [70, 90, 110, 270]);
+  createNodeHexagonal("en1", 100, 450, [100]);
+  createNodeCircular("pg", 50, 44, [270]);
+  createNodeCircular("pg2", 100, 44, [270]);
+  createNodeCircular("pg3", 150, 44, [270]);
 }
-function createNode(label, x, y, angles) {
-  draw.addNode_obj( new Node(label, x, y, angles) );
+function createNodeCircular(label, x, y, angles) {
+  draw.addNode_obj( new NodeCircular(label, x, y, angles) );
+}
+function createNodeSquare(label, x, y, angles) {
+  draw.addNode_obj( new NodeSquare(label, x, y, angles) );
+}
+function createNodeHexagonal(label, x, y, angles) {
+  draw.addNode_obj( new NodeHexagonal(label, x, y, angles) );
 }
 
 // ui interaction
