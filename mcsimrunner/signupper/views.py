@@ -538,7 +538,7 @@ def man_disabled(req, menu, post, base_context):
             req.session['message'] = 'Selected signups were re-activated and notified.'
         elif action == 'purge':
             message = utils.purgeusers(objs)
-            req.session['message'] = 'Selected signups were attempted purged, with message "".' % message
+            req.session['message'] = 'Selected signups were attempted purged, with message "%s".' % message
 
         return redirect("/manage/%s" % menu)
 
