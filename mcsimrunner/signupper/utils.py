@@ -202,7 +202,6 @@ def enroluser(signup, course_sn, teacher=False):
 
 def get_courses():
     ''' safe proxy call to moodleutils.course_list '''
-    return ['dummy']
     try:
         lst = []
         for c in mu.course_list():
