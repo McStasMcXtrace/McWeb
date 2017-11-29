@@ -29,7 +29,34 @@ NodeIconType = {
   SQUARE : 2,
   FLUFFY : 3,
   FLUFFYPAD : 4,
-  HEXAGONAL : 5
+  HEXAGONAL : 5,
+}
+
+NodeState = {
+  DISCONNECTED : 0,
+  PASSIVE : 1,
+  ACTIVE : 2,
+  RUNNING : 3,
+  FAIL : 4,
+}
+
+function getNodeStateClass(state) {
+  if (state==NodeState.DISCONNECTED) {
+    return "disconnected";
+  }
+  else if (state==NodeState.PASSIVE) {
+    return "passive";
+  }
+  else if (state==NodeState.ACTIVE) {
+    return "active";
+  }
+  else if (state==NodeState.RUNNING) {
+    return "running";
+  }
+  else if (state==NodeState.FAIL) {
+    return "fail";
+  }
+  else throw "invalid value"
 }
 
 // node data type
@@ -42,6 +69,8 @@ class Node {
     this.anchors = [];
     this.links = [];
     this.centerAnchor = new CenterAnchor(this);
+
+    this.state = NodeState.DISCONNECTED;
   }
   anchors() {
     return this.anchors.concat(this.centerAnchor);
@@ -52,6 +81,11 @@ class Node {
   rmLink(l) {
     remove(this.links, l);
   }
+  draw(branch, i) {
+    return branch
+      .attr('stroke', "black")
+      .classed(getNodeStateClass(this.state), true);
+  }
 }
 
 class NodeCircular extends Node {
@@ -61,11 +95,10 @@ class NodeCircular extends Node {
     angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
+    branch = super.draw(branch, i);
     return branch
       .append('circle')
       .attr('r', function(d) { return d.r; })
-      .attr('stroke', "black")
-      .style("fill", function(d, j) { return color(i); })
   }
 }
 
@@ -76,16 +109,18 @@ class NodeCircularPad extends Node {
     angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
+    branch = super.draw(branch, i);
     branch
       .append('circle')
       .attr('r', 0.85*this.r)
       .attr('stroke', "black")
-      .style("fill", function(d, j) { return color(i); }).lower()
+      .attr('fill', "none")
+      .lower()
     branch
       .append('circle')
       .attr('r', this.r)
       .attr('stroke', "black")
-      .style("fill", function(d, j) { return color(i); }).lower()
+      .lower()
     return branch;
   }
 }
@@ -98,6 +133,7 @@ class NodeSquare extends Node {
     angles.forEach(function(a) { instance.anchors.push( new AnchorSquare(instance, a) ); } );
   }
   draw(branch, i) {
+    branch = super.draw(branch, i);
     return branch
       .append("g")
       .lower()
@@ -106,7 +142,6 @@ class NodeSquare extends Node {
       .attr('height', function(d) { return 2*d.r; })
       .attr('x', function(d) { return -d.r; })
       .attr('y', function(d) { return -d.r; })
-      .style("fill", function(d, j) { return color(i); })
   }
 }
 
@@ -127,10 +162,10 @@ class NodeHexagonal extends Node {
     }
     points.push(points[0]);
 
+    branch = super.draw(branch, i);
     return branch
       .append('path')
       .datum(points)
-      .style('fill', function(d, j) { return color(i); })
       .attr('d', d3.line()
         .x( function(p) { return p.x; } )
         .y( function(p) { return p.y; } )
@@ -142,7 +177,7 @@ class NodeFluffy extends Node {
   constructor(label, x, y, angles=[]) {
     super(label, x, y);
     this.numfluff = 14;
-    this.fluffrad = 8;
+    this.fluffrad = 7;
     this.r = 1.05 * nodeRadius;
     var instance = this;
     angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
@@ -156,11 +191,10 @@ class NodeFluffy extends Node {
       alpha = j*Math.PI*2/this.numfluff;
       points.push( {x : r*Math.cos(alpha), y : - r*Math.sin(alpha) } );
     }
-
+    branch = super.draw(branch, i);
     branch.append("g").lower()
       .append('circle')
       .attr('r', r)
-      .style("fill", function(d, j) { return color(i); })
       .lower();
     branch.append("g").lower()
       .selectAll("circle")
@@ -168,8 +202,7 @@ class NodeFluffy extends Node {
       .enter()
       .append("circle")
       .attr('r', this.fluffrad)
-      .attr("transform", function(p) { return "translate(" + p.x + "," + p.y + ")" } )
-      .style("fill", function(d, j) { return color(i); });
+      .attr("transform", function(p) { return "translate(" + p.x + "," + p.y + ")" } );
 
     return branch;
   }
@@ -185,15 +218,13 @@ class NodeFluffyPad extends NodeFluffy {
   draw(branch, i) {
     branch
       .append('circle')
-      .attr('r', 0.85*this.r)
-      .attr('stroke', "black")
-      .style("fill", function(d, j) { return color(i); }).lower()
+      .attr("fill", "none")
+      .attr('r', 0.85*this.r);
 
     return super.draw(branch, i)
   }
 
 }
-
 
 // connection anchor point fixed on a node at a circular periphery
 class Anchor {
@@ -445,6 +476,16 @@ class GraphData {
   }
 }
 
+class ConnectionTruth {
+  constructor() {
+    // This class will tell the truth about suggested connections
+    // and node states. It is the rule book and should always be
+    // consulted before making changes to the node graph.
+    // However, these rules are not built into the graph classes,
+    // making them exchangable.
+  }
+}
+
 // responsible for drawing, and acts as an interface
 class GraphDraw {
   constructor() {
@@ -602,7 +643,7 @@ class GraphDraw {
     self.draggable
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
     self.nodes
-      .classed("active", function(d) { return d.active; });
+      .classed("selected", function(d) { return d.active; });
 
     self.splines
       .each( function(l, i) {
@@ -672,12 +713,12 @@ class GraphDraw {
         } )
         .on("mouseover", function(d) {
           d3.select(this)
-          .classed("active", true)
-          .style("opacity", 1);
+            .classed("selected", true)
+            .style("opacity", 1);
         } )
         .on("mouseout", function(d) {
           d3.select(this)
-            .classed("active", false)
+            .classed("selected", false)
         } )
 
       branch
@@ -691,13 +732,14 @@ class GraphDraw {
       .text( function(d) { return d.label } )
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
-      .attr("fill", "white")
+      .attr("color", "red")
+      //.attr("fill", "black")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .lower();
 
     // draw nodes (by delegation & strategy)
-    this.nodes = self.draggable.each( function(d, i) {
+    this.nodes = self.draggable.append("g").lower().each( function(d, i) {
       d.draw(d3.select(this), i).lower();
     });
 
@@ -717,7 +759,7 @@ class GraphDraw {
 
         let g = d3.select(this)
           .append('path')
-          .datum(anchors) // must be "datum" singular, not "data"
+          .datum(anchors)
           .attr("class", "arrow")
           .attr('d', d3.line()
             .curve(d3.curveBasis)
@@ -758,22 +800,34 @@ function run() {
   createNodeCircular("pg3", 150, 44, [270]);
 }
 function createNodeCircular(label, x, y, angles) {
-  draw.addNode_obj( new NodeCircular(label, x, y, angles) );
+  let n = new NodeCircular(label, x, y, angles);
+  n.state = NodeState.DISCONNECTED;
+  draw.addNode_obj( n );
 }
 function createNodeCircularPad(label, x, y, angles) {
-  draw.addNode_obj( new NodeCircularPad(label, x, y, angles) );
+  let n = new NodeCircularPad(label, x, y, angles);
+  n.state = NodeState.PASSIVE;
+  draw.addNode_obj( n );
 }
 function createNodeSquare(label, x, y, angles) {
-  draw.addNode_obj( new NodeSquare(label, x, y, angles) );
+  let n = new NodeSquare(label, x, y, angles);
+  n.state = NodeState.ACTIVE;
+  draw.addNode_obj( n );
 }
 function createNodeHexagonal(label, x, y, angles) {
-  draw.addNode_obj( new NodeHexagonal(label, x, y, angles) );
+  let n = new NodeHexagonal(label, x, y, angles);
+  n.state = NodeState.RUNNING;
+  draw.addNode_obj( n );
 }
 function createNodeFluffy(label, x, y, angles) {
-  draw.addNode_obj( new NodeFluffy(label, x, y, angles) );
+  let n = new NodeFluffy(label, x, y, angles);
+  n.state = NodeState.PASSIVE;
+  draw.addNode_obj( n );
 }
 function createNodeFluffyPad(label, x, y, angles) {
-  draw.addNode_obj( new NodeFluffyPad(label, x, y, angles) );
+  let n = new NodeFluffyPad(label, x, y, angles);
+  n.state = NodeState.PASSIVE;
+  draw.addNode_obj( n );
 }
 
 // ui interaction
@@ -793,7 +847,7 @@ function clickSvg(x, y) {
   anchs = anchorArray;
   anchArray = [];
   if (label != '') {
-    if (nodeType == NodeIconType.CIRCE) { createNodeCircular(label, x, y, anchs); }
+    if (nodeType == NodeIconType.CIRCE) { createNodeCircular(label, x, y, anchs, NodeState.DISCONNECTED); }
     else if (nodeType == NodeIconType.CIRCLEPAD) { createNodeCircularPad(label, x, y, anchs); }
     else if (nodeType == NodeIconType.SQUARE) { createNodeSquare(label, x, y, anchs); }
     else if (nodeType == NodeIconType.FLUFFY) { createNodeFluffy(label, x, y, anchs); }
