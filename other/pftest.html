@@ -8,7 +8,7 @@
     stroke: #000;
     stroke-width: 2px;
   }
-  .line {
+  .arrow {
     fill: none;
     stroke: blue;
     stroke-width: 2px;
@@ -32,23 +32,10 @@ onChange = function() {
 </script>
 
 <div id="controls">
+  <p>You may: Ctrl-click to delete, drag to re-arrange nodes,  drag anchors (small circles) to connect. Create nodes below.</p>
   <fieldset>
     <table>
       <tr>
-        <td>
-          Enter tag & Click:
-        </td>
-        <td>
-          <input type="text" id="nodeName" onChange="onChange();">e.g. data</input>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Anchor angles:
-        </td>
-        <td>
-          <input type="text" id="anchorArray" onChange="onChange();">e.g. 70, 110, 300</input>
-        </td>
         <td>
           <select id="typeSelector" onChange="onChange();">
             <option value="0">CIRCLE</option>
@@ -58,6 +45,22 @@ onChange = function() {
             <option value="4">FLUFFYPAD</option>
             <option value="5">HEXAGONAL</option>
           </select>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Enter and click above to create:
+        </td>
+        <td>
+          <input type="text" id="nodeName" onChange="onChange();">e.g. data</input>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Anchor angles, comma-separated:
+        </td>
+        <td>
+          <input type="text" id="anchorArray" onChange="onChange();">e.g. 70, 110, 300</input>
         </td>
       </tr>
     </table>

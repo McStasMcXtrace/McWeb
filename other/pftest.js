@@ -9,6 +9,9 @@ const pathChargeStrength = -100;
 const pathLinkStrength = 2;
 const distance = 80;
 
+const arrowHeadLength = 12;
+const arrowHeadAngle = 25;
+
 // some debug colours
 const color = d3.scaleOrdinal().range(d3.schemeCategory20);
 
@@ -206,11 +209,36 @@ class Anchor {
 
     this.selected = false;
     this.ext = null;
+
+    this.isTarget = false;
+    this.arrowHead = null;
   }
   get x() { return this.owner.x + this.localx; }
   set x(value) { /* empty:)) */ }
   get y() { return this.owner.y + this.localy; }
   set y(value) { /* empty:)) */ }
+  drawArrowhead(branch, i) {
+    if (!this.isTarget) return branch;
+
+    let angle1 = Math.PI/180*(this.angle - arrowHeadAngle);
+    let angle2 = Math.PI/180*(this.angle + arrowHeadAngle);
+    let x0 = this.localx + this.localx*anchorRadius/nodeRadius;
+    let y0 = this.localy + this.localy*anchorRadius/nodeRadius;
+    let x1 = x0 + arrowHeadLength*Math.cos(angle1);
+    let y1 = y0 - arrowHeadLength*Math.sin(angle1);
+    let x2 = x0 + arrowHeadLength*Math.cos(angle2);
+    let y2 = y0 - arrowHeadLength*Math.sin(angle2);
+    let points = [{x:x1,y:y1}, {x:x0,y:y0}, {x:x2,y:y2}]
+
+    this.arrowHead = branch.append("path")
+      .datum(points)
+      .attr("class", "arrow")
+      .attr('d', d3.line()
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    return this.arrowHead;
+  }
 }
 
 class AnchorCircular extends Anchor {
@@ -311,6 +339,8 @@ class Link {
 
     d1.owner.addLink(this);
     d2.owner.addLink(this);
+
+    d2.isTarget = true;
   }
   recalcPathAnchors() {
     this.pathAnchors = [];
@@ -346,6 +376,7 @@ class Link {
     return result;
   }
   detatch() {
+    this.d2.isTarget = false;
     this.d1.owner.rmLink(this);
     this.d2.owner.rmLink(this);
   }
@@ -470,6 +501,7 @@ class GraphDraw {
     this.nodes = null;
     this.paths = null;
     this.anchors = null;
+    self.arrowHeads = null;
 
     // pythonicism
     self = this;
@@ -599,7 +631,7 @@ class GraphDraw {
     // clear all nodes
     if (self.draggable) self.draggable.remove();
 
-    // draw all nodes
+    // prepare node groups
     self.draggable = self.nodeGroup.selectAll("g")
       .data(self.graphData.nodes)
       .enter()
@@ -616,11 +648,13 @@ class GraphDraw {
 
     // draw anchor nodes
     self.draggable.each( function(d, i) {
-      d3.select(this)
+      let branch = d3.select(this)
         .append("g")
         .selectAll("circle")
         .data(d.anchors)
         .enter()
+        .append("g")
+      branch
         .append("circle")
         .attr('r', anchorRadius)
         // semi-static transform, which does not belong in update()
@@ -645,8 +679,13 @@ class GraphDraw {
           d3.select(this)
             .classed("active", false)
         } )
-    });
 
+      branch
+        .each( function(d, i) {
+          d.drawArrowhead(d3.select(this), i).lower();
+        } );
+
+    });
     // draw labels
     self.draggable.append('text')
       .text( function(d) { return d.label } )
@@ -657,7 +696,7 @@ class GraphDraw {
       .attr("dominant-baseline", "middle")
       .lower();
 
-    // draw nodes by delegation to each instance (strategy pattern)
+    // draw nodes (by delegation & strategy)
     this.nodes = self.draggable.each( function(d, i) {
       d.draw(d3.select(this), i).lower();
     });
@@ -678,8 +717,8 @@ class GraphDraw {
 
         let g = d3.select(this)
           .append('path')
-          .datum(anchors)
-          .attr("class", "line")
+          .datum(anchors) // must be "datum" singular, not "data"
+          .attr("class", "arrow")
           .attr('d', d3.line()
             .curve(d3.curveBasis)
             .x( function(p) { return p.x; } )
