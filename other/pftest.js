@@ -183,7 +183,6 @@ class NodeFluffy extends Node {
     angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
-    // fluff not satisfactory because the circle shows - try d3.lineRadial()
     let r = 0.80 * this.r;
     let alpha;
     let points = [];
@@ -195,6 +194,7 @@ class NodeFluffy extends Node {
     branch.append("g").lower()
       .append('circle')
       .attr('r', r)
+      .attr("stroke", "none")
       .lower();
     branch.append("g").lower()
       .selectAll("circle")
@@ -208,20 +208,42 @@ class NodeFluffy extends Node {
   }
 }
 
-class NodeFluffyPad extends NodeFluffy {
-  constructor(label, x, y, angles=[]) {
+class NodeFluffyPad extends Node {
+  constructor(label, x, y, angles) {
     super(label, x, y);
-    this.r = 0.9*this.r;
     this.numfluff = 8;
-    this.fluffrad = 12;
+    this.fluffrad = 13;
+    var instance = this;
+    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
+    branch = super.draw(branch, i);
     branch
       .append('circle')
-      .attr("fill", "none")
-      .attr('r', 0.85*this.r);
+      .attr('r', 0.9*this.r);
 
-    return super.draw(branch, i)
+    let r = 0.7 * this.r;
+    let alpha;
+    let points = [];
+    for (let j=0; j<this.numfluff; j++) {
+      alpha = j*Math.PI*2/this.numfluff;
+      points.push( {x : r*Math.cos(alpha), y : - r*Math.sin(alpha) } );
+    }
+
+    branch.append("g").lower()
+      .append('circle')
+      .attr('r', r)
+      .attr("stroke", "none")
+      .lower();
+    branch.append("g").lower()
+      .selectAll("circle")
+      .data(points)
+      .enter()
+      .append("circle")
+      .attr('r', this.fluffrad)
+      .attr("transform", function(p) { return "translate(" + p.x + "," + p.y + ")" } );
+
+    return branch;
   }
 
 }
@@ -793,40 +815,40 @@ function run() {
   draw = new GraphDraw();
 
   // example nodes
-  createNodeSquare("gauss", 100, 240, [70, 90, 110, 270]);
-  createNodeHexagonal("en1", 100, 450, [100]);
-  createNodeCircularPad("pg", 50, 44, [270]);
-  createNodeFluffy("pg2", 100, 44, [270]);
-  createNodeCircular("pg3", 150, 44, [270]);
+  createNodeSquare("gauss", 100, 240, [70, 90, 110, 270], NodeState.RUNNING);
+  createNodeHexagonal("en1", 100, 450, [100], NodeState.DISCONNECTED);
+  createNodeCircularPad("pg", 50, 44, [270], NodeState.PASSIVE);
+  createNodeFluffyPad("pg2", 100, 44, [270, 240, 0], NodeState.ACTIVE);
+  createNodeCircular("pg3", 150, 44, [270], NodeState.ACTIVE);
 }
-function createNodeCircular(label, x, y, angles) {
+function createNodeCircular(label, x, y, angles, state) {
   let n = new NodeCircular(label, x, y, angles);
-  n.state = NodeState.DISCONNECTED;
+  n.state = state;
   draw.addNode_obj( n );
 }
-function createNodeCircularPad(label, x, y, angles) {
+function createNodeCircularPad(label, x, y, angles, state) {
   let n = new NodeCircularPad(label, x, y, angles);
-  n.state = NodeState.PASSIVE;
+  n.state = state;
   draw.addNode_obj( n );
 }
-function createNodeSquare(label, x, y, angles) {
+function createNodeSquare(label, x, y, angles, state) {
   let n = new NodeSquare(label, x, y, angles);
-  n.state = NodeState.ACTIVE;
+  n.state = state;
   draw.addNode_obj( n );
 }
-function createNodeHexagonal(label, x, y, angles) {
+function createNodeHexagonal(label, x, y, angles, state) {
   let n = new NodeHexagonal(label, x, y, angles);
-  n.state = NodeState.RUNNING;
+  n.state = state;
   draw.addNode_obj( n );
 }
-function createNodeFluffy(label, x, y, angles) {
+function createNodeFluffy(label, x, y, angles, state) {
   let n = new NodeFluffy(label, x, y, angles);
-  n.state = NodeState.PASSIVE;
+  n.state = state;
   draw.addNode_obj( n );
 }
-function createNodeFluffyPad(label, x, y, angles) {
+function createNodeFluffyPad(label, x, y, angles, state) {
   let n = new NodeFluffyPad(label, x, y, angles);
-  n.state = NodeState.PASSIVE;
+  n.state = state;
   draw.addNode_obj( n );
 }
 
@@ -835,11 +857,13 @@ let nodeLabel = '';
 let anchArray = [];
 let labelHistory = []
 let clearTbxCB = null;
-let nodeType = '';
-function pushNodeLabel(label, anchArr, type) {
+let nodeType = null;
+let nodeState = null;
+function pushNodeLabel(label, anchArr, type, state) {
   nodeLabel = label;
   anchorArray = anchArr;
   nodeType = type;
+  nodeState = state;
 }
 function clickSvg(x, y) {
   label = nodeLabel;
@@ -847,12 +871,12 @@ function clickSvg(x, y) {
   anchs = anchorArray;
   anchArray = [];
   if (label != '') {
-    if (nodeType == NodeIconType.CIRCE) { createNodeCircular(label, x, y, anchs, NodeState.DISCONNECTED); }
-    else if (nodeType == NodeIconType.CIRCLEPAD) { createNodeCircularPad(label, x, y, anchs); }
-    else if (nodeType == NodeIconType.SQUARE) { createNodeSquare(label, x, y, anchs); }
-    else if (nodeType == NodeIconType.FLUFFY) { createNodeFluffy(label, x, y, anchs); }
-    else if (nodeType == NodeIconType.FLUFFYPAD) { createNodeFluffyPad(label, x, y, anchs); }
-    else if (nodeType == NodeIconType.HEXAGONAL) { createNodeHexagonal(label, x, y, anchs); }
+    if (nodeType == NodeIconType.CIRCE) { let n = createNodeCircular(label, x, y, anchs, nodeState); }
+    else if (nodeType == NodeIconType.CIRCLEPAD) { createNodeCircularPad(label, x, y, anchs, nodeState); }
+    else if (nodeType == NodeIconType.SQUARE) { createNodeSquare(label, x, y, anchs, nodeState); }
+    else if (nodeType == NodeIconType.FLUFFY) { createNodeFluffy(label, x, y, anchs, nodeState); }
+    else if (nodeType == NodeIconType.FLUFFYPAD) { createNodeFluffyPad(label, x, y, anchs, nodeState); }
+    else if (nodeType == NodeIconType.HEXAGONAL) { createNodeHexagonal(label, x, y, anchs, nodeState); }
     else { console.log("default"); }
 
     draw.drawNodes();
