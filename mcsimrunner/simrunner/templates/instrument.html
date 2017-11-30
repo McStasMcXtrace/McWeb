@@ -97,10 +97,12 @@
                     <td><label>random seed:</label></td>
                     <td><input type="text" name="seed" value="{{ seed }}" id="paramsinput"/></td>
                 </tr>
+                {% if gravity_visible %}
                 <tr>
                     <td><label>gravity:</label></td>
                     <td><input type="checkbox" name="gravity" id="gravity"/></td>
                 </tr>
+                {% endif %}
             </table>
         </fieldset>
 

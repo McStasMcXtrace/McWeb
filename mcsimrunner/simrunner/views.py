@@ -123,10 +123,11 @@ def instrument(req, group_name, instr_name=None, menu=False):
     seed = 0
     scanpoints = 1
     
-    return render(req, 'instrument.html', {'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
-                                           'instr_image': instr.image,
-                                           'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
-                                           'show_menu': menu, 'instr_urlbit': instr_urlbit})
+    return render(req, 'instrument.html', { 'group_names': group_names, 'instr_displaynames': instr_displaynames, 'group_name': group.name, 'instr_displayname': instr.displayname,
+                                            'instr_image': instr.image,
+                                            'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
+                                            'show_menu': menu, 'instr_urlbit': instr_urlbit, 
+                                            'gravity_visible' : not instr.is_mcxtrace })
 
 @login_required    
 def instrument_post(req):

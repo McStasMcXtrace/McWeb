@@ -8,8 +8,9 @@ import subprocess
 import os, errno
 import shutil
 import datetime
+import re
 from simrunner.models import InstrGroup, Instrument
-from mcweb.settings import MCRUN #, MXRUN
+from mcweb.settings import MCRUN, MXRUN
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
@@ -70,23 +71,20 @@ def get_group_instrs(basedir):
     
     return grp_instr
 
-def get_instr_params(instr_grp, instr_file):
-    ''' returns params [[name, value]] list of list, from instr_file (relative path) '''
-    
-    
-    '''
+def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr):
+    ''' returns params [[name, value]] list of list, from instr_displayname (relative path) '''
     MCCODE = MCRUN
+    instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr'
     
     # Check if this is McStas or McXtrace by a simple 
     for line in open(instr_file):
         if re.search('mcxtrace', line, re.IGNORECASE):
             MCCODE = MXRUN
+            instr.is_mcxtrace = True
             break
     
-    cmd = MCCODE + ' --mpi=1 ' + instr_file + " --info"
-    '''
-
-    cmd = MCRUN + ' --mpi=1 ' + instr_file + " --info"
+    cmd = MCCODE + ' --mpi=1 ' + instr_displayname + " --info"
+    
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
@@ -96,7 +94,7 @@ def get_instr_params(instr_grp, instr_file):
     if process.returncode != 0:
         raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
     
-    cmd2 = 'mcdoc -t ./' + os.path.basename(instr_file)
+    cmd2 = 'mcdoc -t ./' + os.path.basename(instr_displayname)
     process2 = subprocess.Popen(cmd2, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
@@ -178,7 +176,7 @@ class Command(BaseCommand):
                     except Instrument.DoesNotExist:    
                         instr = Instrument(group=group, name=name, displayname=displayname)
                         print "instrument %s created" % i
-                        
+                    
                     if os.path.isfile('sim/' + g + '/' + i + '.png'):
                         instr.image = "/static/doc/" + g + "/" + i + ".png"
                         shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
@@ -187,7 +185,7 @@ class Command(BaseCommand):
                         instr.image = '/static/noimage.png'
                     
                     # update instr params
-                    instr.params = get_instr_params(g, i)
+                    instr.params = get_instr_params_and_set_affiliation(g, i, instr)
                     instr.save()
                     print "instrument %s params updated" % i
                 except Exception as e:

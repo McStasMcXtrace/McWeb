@@ -19,6 +19,7 @@ class Instrument(Model):
     name = CharField(max_length=200, unique=True)
     displayname = CharField(max_length=200)
     docs = TextField()
+    is_mcxtrace = BooleanField(default=False)
     
     params_str = CharField(max_length=1000)
 
