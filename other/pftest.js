@@ -94,6 +94,20 @@ class Node {
     }
     return true;
   }
+  get neighbours() {
+    let nbs = [];
+    let l;
+    for (var j=0; j<this.links.length; j++) {
+      l = this.links[j];
+      if (l.d1.owner != this) {
+        nbs.push(l.d1.owner);
+      }
+      if (l.d2.owner != this) {
+        nbs.push(l.d2.owner);
+      }
+    }
+    return nbs;
+  }
   anchors() {
     return this.anchors.concat(this.centerAnchor);
   }
@@ -282,7 +296,6 @@ class Anchor {
     this.localx = null;
     this.localy = null;
 
-    this.selected = false;
     this.ext = null;
 
     this.isTarget = false;
@@ -292,6 +305,16 @@ class Anchor {
   set x(value) { /* empty:)) */ }
   get y() { return this.owner.y + this.localy; }
   set y(value) { /* empty:)) */ }
+  get connections() {
+    let answer = 0;
+    let olinks = this.owner.links;
+    let l = null;
+    for (var i=0; i<olinks.length; i++) {
+      l = olinks[i];
+      if (this == l.d1 || this == l.d2) answer++;
+    }
+    return answer;
+  }
   drawArrowhead(branch, i) {
     if (!this.isTarget) return branch;
 
@@ -565,9 +588,13 @@ class ConnectionTruth {
     } else throw "give a number from 0 to 5";
   }
   canConnect(a1, a2) {
+    // a1 must be an output and a2 an input
     let t1 = 45 < a2.angle && a2.angle < 135;
     let t2 = 225 < a1.angle && a1.angle < 315;
-    if (t1 && t2) return true; else return false;
+    // inputs can only have one connection
+    let t3 = a2.connections == 0;
+    // all conditions must be fulfilled
+    return t1 && t2 && t3
   }
   updateStates(nodes) {
     for (var i=0; i<nodes.length; i++) {
@@ -721,20 +748,21 @@ class GraphDraw {
   }
   anchorMouseDown(d) {
     self.dragAnchor = d;
-    d.selected = true;
   }
   anchorMouseUp(d) {
     let s = self.dragAnchor;
+
     if (s && s != d && s.owner != d.owner)
     {
       self.tryCreateLink(s, d);
       self.drawNodes();
+      self.resetPathSim();
+      self.restartPathSim();
     }
-    d.selected = false;
     self.dragAnchor = null;
 
-    self.resetPathSim();
-    self.restartPathSim();
+    // the s == d case triggers the node drawn to disappear, so redraw to reflect data
+    self.drawNodes();
   }
   tryCreateLink(s, d) {
     if (self.truth.canConnect(s, d)) self.graphData.addLink(new Link(s, d));
@@ -742,7 +770,11 @@ class GraphDraw {
     this.truth.updateNodeState(d.owner);
   }
   ctrlClickNode(n) {
+    let neighbours = n.neighbours;
     self.graphData.rmNode(n);
+    for (var i=0; i<neighbours.length; i++) {
+      self.truth.updateNodeState(neighbours[i])
+    }
     self.drawNodes();
     self.restartCollideSim();
   }
@@ -931,7 +963,7 @@ let nodeLabel = '';
 let anchArray = [];
 let labelHistory = []
 let clearTbxCB = null;
-let nodeType = null;
+let nodeIconType = null;
 let nodeState = null;
 function pushNodeLabel(label, anchArr, iconType, state) {
   nodeLabel = label;
@@ -942,6 +974,8 @@ function pushNodeLabel(label, anchArr, iconType, state) {
 
 // this callback in connected somewhere in GraphDraw
 function clickSvg(x, y) {
+  if (nodeLabel == '') return;
+
   label = nodeLabel;
   nodeLabel = '';
   anchs = anchorArray;
