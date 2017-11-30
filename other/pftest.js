@@ -71,6 +71,28 @@ class Node {
     this.centerAnchor = new CenterAnchor(this);
 
     this.state = NodeState.DISCONNECTED;
+    this.data = null;
+  }
+  isAllConnected() {
+    // collect endpoint anchors of all connected links
+    let links = this.links;
+    let linkAnchors = [];
+    let l = null;
+    for (var j=0; j<links.length; j++) {
+      l = links[j];
+      linkAnchors.push(l.d1);
+      linkAnchors.push(l.d2);
+    }
+    // check that every local anchor can be found as an anchor of a local link
+    let anchors = this.anchors;
+    let a = null;
+    for (var j=0; j<anchors.length; j++) {
+      a = anchors[j];
+      if (linkAnchors.indexOf(a) == -1) {
+        return false;
+      }
+    }
+    return true;
   }
   anchors() {
     return this.anchors.concat(this.centerAnchor);
@@ -499,12 +521,69 @@ class GraphData {
 }
 
 class ConnectionTruth {
-  constructor() {
+  constructor(types) {
     // This class will tell the truth about suggested connections
     // and node states. It is the rule book and should always be
     // consulted before making changes to the node graph.
     // However, these rules are not built into the graph classes,
     // making them exchangable.
+
+    // ConnectionTruth requires a "types" object to interpret, in order to
+    // decide how to manage connections and node states
+    this.types = types;
+  }
+  // returns the specified number of angles which will all be interpreted as inputs
+  getInputAngles(num) {
+    if (num == 0) {
+      return [0];
+    } else if (num == 1) {
+      return [90];
+    } else if (num == 2) {
+      return [80, 100];
+    } else if (num == 3) {
+      return [70, 90, 110];
+    } else if (num == 4) {
+      return [60, 80, 100, 120];
+    } else if (num == 5) {
+      return [50, 70, 90, 110, 130];
+    } else throw "give a number from 0 to 5";
+  }
+  // returns the specified number of angles which will all be interpreted as outputs
+  getOutputAngles(num) {
+    if (num == 0) {
+      return [0];
+    } else if (num == 1) {
+      return [270];
+    } else if (num == 2) {
+      return [260, 280];
+    } else if (num == 3) {
+      return [250, 270, 290];
+    } else if (num == 4) {
+      return [240, 260, 280, 300];
+    } else if (num == 5) {
+      return [230, 250, 270, 290, 310];
+    } else throw "give a number from 0 to 5";
+  }
+  canConnect(a1, a2) {
+    let t1 = 45 < a2.angle && a2.angle < 135;
+    let t2 = 225 < a1.angle && a1.angle < 315;
+    if (t1 && t2) return true; else return false;
+  }
+  updateStates(nodes) {
+    for (var i=0; i<nodes.length; i++) {
+      this.updateNodeState(nodes[i]);
+    }
+  }
+  updateNodeState(node) {
+    if (!node.isAllConnected()){
+      node.state = NodeState.DISCONNECTED;
+    }
+    else if (node.data != null) {
+      node.state = NodeState.ACTIVE;
+    }
+    else if (true) {
+      node.state = NodeState.PASSIVE;
+    }
   }
 }
 
@@ -512,6 +591,7 @@ class ConnectionTruth {
 class GraphDraw {
   constructor() {
     this.graphData = new GraphData();
+    this.truth = new ConnectionTruth(null);
 
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
@@ -647,7 +727,7 @@ class GraphDraw {
     let s = self.dragAnchor;
     if (s && s != d && s.owner != d.owner)
     {
-      self.graphData.addLink(new Link(s, d));
+      self.tryCreateLink(s, d);
       self.drawNodes();
     }
     d.selected = false;
@@ -655,6 +735,11 @@ class GraphDraw {
 
     self.resetPathSim();
     self.restartPathSim();
+  }
+  tryCreateLink(s, d) {
+    if (self.truth.canConnect(s, d)) self.graphData.addLink(new Link(s, d));
+    this.truth.updateNodeState(s.owner);
+    this.truth.updateNodeState(d.owner);
   }
   ctrlClickNode(n) {
     self.graphData.rmNode(n);
@@ -810,46 +895,35 @@ class GraphDraw {
 }
 
 let draw = null;
-// entry point
+// entry point, test setup etc.
 function run() {
   draw = new GraphDraw();
 
   // example nodes
-  createNodeSquare("gauss", 100, 240, [70, 90, 110, 270], NodeState.RUNNING);
-  createNodeHexagonal("en1", 100, 450, [100], NodeState.DISCONNECTED);
-  createNodeCircularPad("pg", 50, 44, [270], NodeState.PASSIVE);
-  createNodeFluffyPad("pg2", 100, 44, [270, 240, 0], NodeState.ACTIVE);
-  createNodeCircular("pg3", 150, 44, [270], NodeState.ACTIVE);
+  drawTestNodes();
 }
-function createNodeCircular(label, x, y, angles, state) {
-  let n = new NodeCircular(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
+function createAndPushNode(label, x, y, angles, iconType) {
+  if (label != '') {
+    let n = null;
+    if (iconType == NodeIconType.CIRCE) { n = new NodeCircular(label, x, y, angles); }
+    else if (iconType == NodeIconType.CIRCLEPAD) { n = new NodeCircularPad(label, x, y, angles); }
+    else if (iconType == NodeIconType.SQUARE) { n = new NodeSquare(label, x, y, angles); }
+    else if (iconType == NodeIconType.FLUFFY) { n = new NodeFluffy(label, x, y, angles); }
+    else if (iconType == NodeIconType.FLUFFYPAD) { n = new NodeFluffyPad(label, x, y, angles); }
+    else if (iconType == NodeIconType.HEXAGONAL) { n = new NodeHexagonal(label, x, y, angles); }
+    else throw "invalid node icon type";
+
+    draw.addNode_obj( n );
+    draw.drawNodes();
+    console.log("a node with label '" + label + "' was added")
+  }
 }
-function createNodeCircularPad(label, x, y, angles, state) {
-  let n = new NodeCircularPad(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
-}
-function createNodeSquare(label, x, y, angles, state) {
-  let n = new NodeSquare(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
-}
-function createNodeHexagonal(label, x, y, angles, state) {
-  let n = new NodeHexagonal(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
-}
-function createNodeFluffy(label, x, y, angles, state) {
-  let n = new NodeFluffy(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
-}
-function createNodeFluffyPad(label, x, y, angles, state) {
-  let n = new NodeFluffyPad(label, x, y, angles);
-  n.state = state;
-  draw.addNode_obj( n );
+function drawTestNodes() {
+  createAndPushNode("gauss", 100, 240, [70, 90, 110, 270], NodeIconType.SQUARE );
+  createAndPushNode("en1", 100, 450, [100], NodeIconType.HEXAGONAL);
+  createAndPushNode("pg", 50, 44, [270], NodeIconType.CIRCLEPAD);
+  createAndPushNode("pg2", 100, 44, [270, 240, 0], NodeIconType.FLUFFYPAD);
+  createAndPushNode("pg3", 150, 44, [270], NodeIconType.CIRCE);
 }
 
 // ui interaction
@@ -859,31 +933,28 @@ let labelHistory = []
 let clearTbxCB = null;
 let nodeType = null;
 let nodeState = null;
-function pushNodeLabel(label, anchArr, type, state) {
+function pushNodeLabel(label, anchArr, iconType, state) {
   nodeLabel = label;
   anchorArray = anchArr;
-  nodeType = type;
+  nodeIconType = iconType;
   nodeState = state;
 }
+
+// this callback in connected somewhere in GraphDraw
 function clickSvg(x, y) {
   label = nodeLabel;
   nodeLabel = '';
   anchs = anchorArray;
   anchArray = [];
-  if (label != '') {
-    if (nodeType == NodeIconType.CIRCE) { let n = createNodeCircular(label, x, y, anchs, nodeState); }
-    else if (nodeType == NodeIconType.CIRCLEPAD) { createNodeCircularPad(label, x, y, anchs, nodeState); }
-    else if (nodeType == NodeIconType.SQUARE) { createNodeSquare(label, x, y, anchs, nodeState); }
-    else if (nodeType == NodeIconType.FLUFFY) { createNodeFluffy(label, x, y, anchs, nodeState); }
-    else if (nodeType == NodeIconType.FLUFFYPAD) { createNodeFluffyPad(label, x, y, anchs, nodeState); }
-    else if (nodeType == NodeIconType.HEXAGONAL) { createNodeHexagonal(label, x, y, anchs, nodeState); }
-    else { console.log("default"); }
-
-    draw.drawNodes();
-    if (clearTbxCB) {
-      clearTbxCB();
-    }
-    labelHistory.push(label);
-    console.log("a node with label '" + label + "' was added")
+  itpe = nodeIconType;
+  createAndPushNode(label, x, y, anchs, itpe);
+  if (clearTbxCB) {
+    clearTbxCB();
   }
+  labelHistory.push(label);
+}
+
+NodeConfig = { label : '', x : 0, y : 0, }
+function createNode(nodeConfig) {
+
 }
