@@ -262,8 +262,9 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
     
 def mcrun(simrun, print_mcrun_output=False):
     ''' runs the simulation associated with simrun '''
-    # assemble the run command 
-    runstr = MCRUN + ' --mpi=' + str(MPI_PR_WORKER) + " " + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
+    # assemble the run command
+    gravity = '-g ' if simrun.gravity else ''
+    runstr = MCRUN + ' --mpi=' + str(MPI_PR_WORKER) + " " + gravity + simrun.instr_displayname + '.instr -d ' + MCRUN_OUTPUT_DIRNAME
     runstr = runstr + ' -n ' + str(simrun.neutrons)
     if simrun.scanpoints > 1:
         runstr = runstr + ' -N ' + str(simrun.scanpoints)

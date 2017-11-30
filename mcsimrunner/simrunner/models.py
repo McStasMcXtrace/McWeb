@@ -1,7 +1,7 @@
 '''
 simrunner models
 '''
-from django.db.models import Model, CharField, TextField, ForeignKey, DateTimeField, PositiveIntegerField
+from django.db.models import Model, CharField, TextField, ForeignKey, DateTimeField, PositiveIntegerField, BooleanField
 from django.utils import timezone
 import json
 
@@ -46,6 +46,7 @@ class SimRun(Model):
     neutrons = PositiveIntegerField(default=1000000)
     seed = PositiveIntegerField(default=0)
     scanpoints = PositiveIntegerField(default=1)
+    gravity = BooleanField(default=False)
     params_str = CharField(max_length=1000)
     
     # meta-fields below this line
