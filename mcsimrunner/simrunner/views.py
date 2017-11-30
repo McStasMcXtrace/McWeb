@@ -139,6 +139,7 @@ def instrument_post(req):
     neutrons = int(float(form.get('neutrons')))
     scanpoints = form.get('scanpoints')
     seed = form.get('seed')
+    gravity = bool(form.get('gravity'))
     
     params_default = json.loads(form.get('params_jsonified'))
     params=[]
@@ -149,7 +150,7 @@ def instrument_post(req):
     
     simrun = SimRun(group_name=group_name, instr_displayname=instr_displayname, 
                     owner_username=owner_username,
-                    neutrons=neutrons, scanpoints=scanpoints, seed=seed,
+                    neutrons=neutrons, scanpoints=scanpoints, seed=seed, gravity=gravity,
                     params=params)
     simrun.save()
     return redirect('simrun', sim_id=simrun.id)
