@@ -52,12 +52,13 @@
 
 
 <script>
-onChange = function() {
+onUiChange = function() {
   let label = document.getElementById("nodeName").value;
-  let anchArr = document.getElementById("anchorArray").value;
-  let type = document.getElementById("typeSelector").value;
-  let state = document.getElementById("stateSelector").value;
-  pushNodeLabel(label, JSON.parse("[" + anchArr + "]"), type, state);
+  let n_inputs = document.getElementById("numInputsSelector").value;
+  let n_outputs = document.getElementById("numOutputsSelector").value;
+  let iconType = document.getElementById("iconTypeSelector").value;
+
+  pushNodeRequest(label, n_inputs, n_outputs, iconType)
 }
 </script>
 
@@ -66,8 +67,10 @@ onChange = function() {
   <fieldset>
     <table>
       <tr>
-        <td>Type
-          <select id="typeSelector" onChange="onChange();">
+        <td>Node icon type
+        </td>
+        <td>
+          <select id="iconTypeSelector" onChange="onUiChange();">
             <option value="0">CIRCLE</option>
             <option value="1">CIRCLEPAD</option>
             <option value="2">SQUARE</option>
@@ -76,30 +79,43 @@ onChange = function() {
             <option value="5">HEXAGONAL</option>
           </select>
         </td>
-        <td>State
-          <select id="stateSelector" onChange="onChange();">
-            <option value="0">DISCONNECTED</option>
-            <option value="1">PASSIVE</option>
-            <option value="2">ACTIVE</option>
-            <option value="3">RUNNING</option>
-            <option value="4">FAIL</option>
+      </tr>
+      <tr>
+        <td>
+          Label the node and click above to create:
+        </td>
+        <td>
+          <input type="text" id="nodeName" onChange="onUiChange();">e.g. data</input>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Number of inputs:
+        </td>
+        <td>
+          <select id="numInputsSelector" onChange="onUiChange();">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
           </select>
         </td>
       </tr>
       <tr>
         <td>
-          Enter and click above to create:
+          Number of outputs:
         </td>
         <td>
-          <input type="text" id="nodeName" onChange="onChange();">e.g. data</input>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Anchor angles, comma-separated:
-        </td>
-        <td>
-          <input type="text" id="anchorArray" onChange="onChange();">e.g. 70, 110, 300</input>
+          <select id="numOutputsSelector" onChange="onUiChange();">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
         </td>
       </tr>
     </table>
@@ -110,7 +126,8 @@ onChange = function() {
 <script>
 clearTbxCB = function() {
   document.getElementById("nodeName").value = '';
-  document.getElementById("anchorArray").value = '';
+  document.getElementById("numInputsSelector").value = 0;
+  document.getElementById("numOutputsSelector").value = 0;
 }
 run();
 </script>

@@ -1,7 +1,7 @@
 const width = 790;
-const height = 790;
+const height = 590;
 const nodeRadius = 35;
-const anchorRadius = 5;
+const anchorRadius = 6;
 
 const extensionLength = 40;
 const anchSpace = 80;
@@ -107,9 +107,6 @@ class Node {
       }
     }
     return nbs;
-  }
-  anchors() {
-    return this.anchors.concat(this.centerAnchor);
   }
   addLink(l) {
     this.links.push(l);
@@ -543,13 +540,11 @@ class GraphData {
   }
 }
 
-class ConnectionTruth {
+class ConnectionTruthMcWeb {
   constructor(types) {
     // This class will tell the truth about suggested connections
     // and node states. It is the rule book and should always be
     // consulted before making changes to the node graph.
-    // However, these rules are not built into the graph classes,
-    // making them exchangable.
 
     // ConnectionTruth requires a "types" object to interpret, in order to
     // decide how to manage connections and node states
@@ -558,7 +553,7 @@ class ConnectionTruth {
   // returns the specified number of angles which will all be interpreted as inputs
   getInputAngles(num) {
     if (num == 0) {
-      return [0];
+      return [];
     } else if (num == 1) {
       return [90];
     } else if (num == 2) {
@@ -574,7 +569,7 @@ class ConnectionTruth {
   // returns the specified number of angles which will all be interpreted as outputs
   getOutputAngles(num) {
     if (num == 0) {
-      return [0];
+      return [];
     } else if (num == 1) {
       return [270];
     } else if (num == 2) {
@@ -618,7 +613,7 @@ class ConnectionTruth {
 class GraphDraw {
   constructor() {
     this.graphData = new GraphData();
-    this.truth = new ConnectionTruth(null);
+    this.truth = new ConnectionTruthMcWeb(null);
 
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
@@ -761,7 +756,7 @@ class GraphDraw {
     }
     self.dragAnchor = null;
 
-    // the s == d case triggers the node drawn to disappear, so redraw to reflect data
+    // the s == d case triggers the node drawn to disappear, so redraw
     self.drawNodes();
   }
   tryCreateLink(s, d) {
@@ -933,6 +928,9 @@ function run() {
 
   // example nodes
   drawTestNodes();
+
+  // more testing
+  createNode();
 }
 function createAndPushNode(label, x, y, angles, iconType) {
   if (label != '') {
@@ -951,11 +949,13 @@ function createAndPushNode(label, x, y, angles, iconType) {
   }
 }
 function drawTestNodes() {
-  createAndPushNode("gauss", 100, 240, [70, 90, 110, 270], NodeIconType.SQUARE );
-  createAndPushNode("en1", 100, 450, [100], NodeIconType.HEXAGONAL);
-  createAndPushNode("pg", 50, 44, [270], NodeIconType.CIRCLEPAD);
-  createAndPushNode("pg2", 100, 44, [270, 240, 0], NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 44, [270], NodeIconType.CIRCE);
+  let gia = draw.truth.getInputAngles;
+  let goa = draw.truth.getOutputAngles;
+  createAndPushNode("gauss", 100, 180, gia(3).concat(goa(1)), NodeIconType.SQUARE );
+  createAndPushNode("en1", 100, 350, gia(1), NodeIconType.HEXAGONAL);
+  createAndPushNode("pg", 50, 14, goa(1), NodeIconType.CIRCLEPAD);
+  createAndPushNode("pg2", 100, 24, gia(1).concat(goa(2)), NodeIconType.FLUFFYPAD);
+  createAndPushNode("pg3", 150, 34, goa(1), NodeIconType.CIRCE);
 }
 
 // ui interaction
@@ -964,12 +964,14 @@ let anchArray = [];
 let labelHistory = []
 let clearTbxCB = null;
 let nodeIconType = null;
-let nodeState = null;
-function pushNodeLabel(label, anchArr, iconType, state) {
+
+function pushNodeRequest(label, n_inputs, n_outputs, iconType) {
+  console.log(n_inputs, n_outputs);
+  let gia = draw.truth.getInputAngles;
+  let goa = draw.truth.getOutputAngles;
   nodeLabel = label;
-  anchorArray = anchArr;
+  anchorArray = gia(n_inputs).concat(goa(n_outputs));
   nodeIconType = iconType;
-  nodeState = state;
 }
 
 // this callback in connected somewhere in GraphDraw
@@ -988,7 +990,21 @@ function clickSvg(x, y) {
   labelHistory.push(label);
 }
 
-NodeConfig = { label : '', x : 0, y : 0, }
+NodeConfig = {
+  'label' : '',
+  'type' : '',
+  'tooltip' : '',
+  'classifications' : {
+    'objfct' : {
+      'input_types' : [],
+      'output_types' : [],
+    },
+    'fctop' : {
+      'input_types' : [],
+      'output_types' : [],
+    }
+  }
+}
 function createNode(nodeConfig) {
 
 }
