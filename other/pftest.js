@@ -59,6 +59,63 @@ function getNodeStateClass(state) {
   else throw "invalid value"
 }
 
+// factory functions
+function createAndPushNode(label, x, y, angles, anchorTypes, iconType) {
+  if (label != '') {
+    let anchors = [];
+    let n = null;
+    if (iconType == NodeIconType.CIRCE) {
+      n = new NodeCircular(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      }
+      console.log(anchors);
+      n.setAnchors(anchors);
+    }
+    else if (iconType == NodeIconType.CIRCLEPAD) {
+      n = new NodeCircularPad(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      }
+      n.setAnchors(anchors);
+    }
+    else if (iconType == NodeIconType.SQUARE) {
+      n = new NodeSquare(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorSquare(n, angles[i], anchorTypes[i]) );
+      }
+      n.setAnchors(anchors);
+    }
+    else if (iconType == NodeIconType.FLUFFY) {
+      n = new NodeFluffy(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      }
+      n.setAnchors(anchors);
+    }
+    else if (iconType == NodeIconType.FLUFFYPAD) {
+      n = new NodeFluffyPad(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      }
+      n.setAnchors(anchors);
+    }
+    else if (iconType == NodeIconType.HEXAGONAL) {
+      n = new NodeHexagonal(label, x, y);
+      for (var i=0;i<angles.length;i++) {
+        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      }
+      n.setAnchors(anchors);
+    }
+    else throw "invalid node icon type";
+
+    draw.addNode_obj( n );
+    draw.drawNodes();
+    console.log("a node with label '" + label + "' was added")
+  }
+}
+
+
 // node data type
 class Node {
   constructor(label, x, y) {
@@ -66,12 +123,16 @@ class Node {
     this.y = y;
     this.r = nodeRadius;
     this.label = label;
-    this.anchors = [];
+    this.anchors = null;
     this.links = [];
     this.centerAnchor = new CenterAnchor(this);
 
     this.state = NodeState.DISCONNECTED;
     this.data = null;
+  }
+  setAnchors(anchors) {
+    if (this.anchors != null) throw "please only set anchors once, cleaning up makes a mess"
+    this.anchors = anchors;
   }
   isAllConnected() {
     // collect endpoint anchors of all connected links
@@ -122,10 +183,8 @@ class Node {
 }
 
 class NodeCircular extends Node {
-  constructor(label, x, y, angles=[]) {
+  constructor(label, x, y) {
     super(label, x, y);
-    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
-    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -136,10 +195,8 @@ class NodeCircular extends Node {
 }
 
 class NodeCircularPad extends Node {
-  constructor(label, x, y, angles=[]) {
+  constructor(label, x, y) {
     super(label, x, y);
-    var instance = this; // this is too weird: we can't nake this "self", since that is taken by GraphDraw...
-    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -159,11 +216,9 @@ class NodeCircularPad extends Node {
 }
 
 class NodeSquare extends Node {
-  constructor(label, x, y, angles=[]) {
+  constructor(label, x, y) {
     super(label, x, y);
     this.r = 0.85 * nodeRadius; // this is now the half height/width of the square
-    var instance = this;
-    angles.forEach(function(a) { instance.anchors.push( new AnchorSquare(instance, a) ); } );
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -179,11 +234,9 @@ class NodeSquare extends Node {
 }
 
 class NodeHexagonal extends Node {
-  constructor(label, x, y, angles=[]) {
+  constructor(label, x, y) {
     super(label, x, y);
     this.r = 1.05 * nodeRadius;
-    var instance = this;
-    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
     let r = 1.1 * this.r;
@@ -207,13 +260,11 @@ class NodeHexagonal extends Node {
 }
 
 class NodeFluffy extends Node {
-  constructor(label, x, y, angles=[]) {
+  constructor(label, x, y) {
     super(label, x, y);
     this.numfluff = 14;
     this.fluffrad = 7;
     this.r = 1.05 * nodeRadius;
-    var instance = this;
-    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
     let r = 0.80 * this.r;
@@ -242,12 +293,10 @@ class NodeFluffy extends Node {
 }
 
 class NodeFluffyPad extends Node {
-  constructor(label, x, y, angles) {
+  constructor(label, x, y) {
     super(label, x, y);
     this.numfluff = 8;
     this.fluffrad = 13;
-    var instance = this;
-    angles.forEach(function(a) { instance.anchors.push( new AnchorCircular(instance, a) ); } );
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -283,7 +332,9 @@ class NodeFluffyPad extends Node {
 
 // connection anchor point fixed on a node at a circular periphery
 class Anchor {
-  constructor(owner, angle) {
+  constructor(owner, angle, type) {
+    this.type = type;
+
     this.owner = owner;
     this.angle = angle;
 
@@ -337,8 +388,8 @@ class Anchor {
 }
 
 class AnchorCircular extends Anchor {
-  constructor(owner, angle) {
-    super(owner, angle);
+  constructor(owner, angle, type) {
+    super(owner, angle, type);
     this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
     this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
 
@@ -349,8 +400,8 @@ class AnchorCircular extends Anchor {
 }
 
 class AnchorSquare extends Anchor {
-  constructor(owner, angle) {
-    super(owner, angle);
+  constructor(owner, angle, type) {
+    super(owner, angle, type);
     this.localx = owner.r * Math.cos(this.angle/360*2*Math.PI);
     this.localy = - this.owner.r * Math.sin(this.angle/360*2*Math.PI); // svg inverted y-axis
 
@@ -582,14 +633,22 @@ class ConnectionTruthMcWeb {
       return [230, 250, 270, 290, 310];
     } else throw "give a number from 0 to 5";
   }
+  isInputAngle(angle) {
+    return 45 < angle && angle < 135;
+  }
+  isOutputAngle(angle) {
+    return 225 < angle && angle < 315;
+  }
   canConnect(a1, a2) {
     // a1 must be an output and a2 an input
-    let t1 = 45 < a2.angle && a2.angle < 135;
-    let t2 = 225 < a1.angle && a1.angle < 315;
+    let t1 = this.isInputAngle(a2.angle);
+    let t2 = this.isOutputAngle(a1.angle);
     // inputs can only have one connection
     let t3 = a2.connections == 0;
+    // both anchors must be of the same type
+    let t4 = a1.type == a2.type;
     // all conditions must be fulfilled
-    return t1 && t2 && t3
+    return t1 && t2 && t3 && t4;
   }
   updateStates(nodes) {
     for (var i=0; i<nodes.length; i++) {
@@ -627,6 +686,11 @@ class GraphDraw {
         let svg_y = m[1];
         clickSvg(svg_x, svg_y);
       } )
+    this.ttdiv = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    // force layout simulations
     this.collideSim = d3.forceSimulation()
       .force("collide",
         d3.forceCollide(nodeRadius + 3)
@@ -661,6 +725,18 @@ class GraphDraw {
     this.linkGroup = this.svg.append("g");
     this.splineGroup = this.svg.append("g");
     this.nodeGroup = this.svg.append("g");
+    this.tooltip = this.svg.append("g");
+    this.tooltip.append("rect")
+      .attr("x", -30)
+      .attr("y", -13)
+      .attr("width", 60)
+      .attr("height", 26)
+      .attr("fill", 'white')
+      .attr("stroke", "black");
+    this.tooltip.append("text")
+      .attr("id", "tooltip_text")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle");
 
     // specific selections
     this.nodes = null;
@@ -773,6 +849,17 @@ class GraphDraw {
     self.drawNodes();
     self.restartCollideSim();
   }
+  showTooltip(x, y, tip) {
+    self.tooltip
+      .attr("transform", "translate(" + (x-30) + "," + (y+20) + ")")
+      .style("opacity", 1)
+      .select("#tooltip_text")
+      .text(tip)
+  }
+  clearTooltip() {
+    self.tooltip
+      .style("opacity", 0);
+  }
   update() {
     self.draggable
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
@@ -849,10 +936,13 @@ class GraphDraw {
           d3.select(this)
             .classed("selected", true)
             .style("opacity", 1);
+          let m = d3.mouse(this);
+          self.showTooltip(d3.event.clientX, d3.event.clientY, d.type);
         } )
         .on("mouseout", function(d) {
           d3.select(this)
             .classed("selected", false)
+          self.clearTooltip();
         } )
 
       branch
@@ -866,8 +956,6 @@ class GraphDraw {
       .text( function(d) { return d.label } )
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
-      .attr("color", "red")
-      //.attr("fill", "black")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .lower();
@@ -921,6 +1009,7 @@ class GraphDraw {
   }
 }
 
+
 let draw = null;
 // entry point, test setup etc.
 function run() {
@@ -932,30 +1021,14 @@ function run() {
   // more testing
   createNode();
 }
-function createAndPushNode(label, x, y, angles, iconType) {
-  if (label != '') {
-    let n = null;
-    if (iconType == NodeIconType.CIRCE) { n = new NodeCircular(label, x, y, angles); }
-    else if (iconType == NodeIconType.CIRCLEPAD) { n = new NodeCircularPad(label, x, y, angles); }
-    else if (iconType == NodeIconType.SQUARE) { n = new NodeSquare(label, x, y, angles); }
-    else if (iconType == NodeIconType.FLUFFY) { n = new NodeFluffy(label, x, y, angles); }
-    else if (iconType == NodeIconType.FLUFFYPAD) { n = new NodeFluffyPad(label, x, y, angles); }
-    else if (iconType == NodeIconType.HEXAGONAL) { n = new NodeHexagonal(label, x, y, angles); }
-    else throw "invalid node icon type";
-
-    draw.addNode_obj( n );
-    draw.drawNodes();
-    console.log("a node with label '" + label + "' was added")
-  }
-}
 function drawTestNodes() {
   let gia = draw.truth.getInputAngles;
   let goa = draw.truth.getOutputAngles;
-  createAndPushNode("gauss", 100, 180, gia(3).concat(goa(1)), NodeIconType.SQUARE );
-  createAndPushNode("en1", 100, 350, gia(1), NodeIconType.HEXAGONAL);
-  createAndPushNode("pg", 50, 14, goa(1), NodeIconType.CIRCLEPAD);
-  createAndPushNode("pg2", 100, 24, gia(1).concat(goa(2)), NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 34, goa(1), NodeIconType.CIRCE);
+  createAndPushNode("gauss", 100, 180, gia(3).concat(goa(1)), ['pg', 'pg2', 'pg2', 'gauss'], NodeIconType.SQUARE );
+  createAndPushNode("en1", 100, 350, gia(1), ['gauss'], NodeIconType.HEXAGONAL);
+  createAndPushNode("pg", 50, 14, goa(1), ['pg'], NodeIconType.CIRCLEPAD);
+  createAndPushNode("pg2", 100, 24, gia(1).concat(goa(2)), ['pg3', 'pg2', 'pg2'], NodeIconType.FLUFFYPAD);
+  createAndPushNode("pg3", 150, 34, goa(1), ['pg3'], NodeIconType.CIRCE);
 }
 
 // ui interaction
