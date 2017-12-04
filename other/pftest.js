@@ -851,7 +851,7 @@ class GraphDraw {
   }
   showTooltip(x, y, tip) {
     self.tooltip
-      .attr("transform", "translate(" + (x-30) + "," + (y+20) + ")")
+      .attr("transform", "translate(" + (x+40) + "," + (y+25) + ")")
       .style("opacity", 1)
       .select("#tooltip_text")
       .text(tip)
@@ -936,8 +936,7 @@ class GraphDraw {
           d3.select(this)
             .classed("selected", true)
             .style("opacity", 1);
-          let m = d3.mouse(this);
-          self.showTooltip(d3.event.clientX, d3.event.clientY, d.type);
+          self.showTooltip(d.x, d.y, d.type);
         } )
         .on("mouseout", function(d) {
           d3.select(this)
