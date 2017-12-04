@@ -60,50 +60,68 @@ function getNodeStateClass(state) {
 }
 
 // factory functions
-function createAndPushNode(label, x, y, angles, anchorTypes, iconType) {
+function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, iconType) {
   if (label != '') {
+    if (!iconType) iconType = '';
     let anchors = [];
     let n = null;
     if (iconType == NodeIconType.CIRCE) {
       n = new NodeCircular(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
-      console.log(anchors);
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
+      }
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.CIRCLEPAD) {
       n = new NodeCircularPad(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
+      }
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
       }
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.SQUARE) {
       n = new NodeSquare(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorSquare(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
+      }
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
       }
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.FLUFFY) {
       n = new NodeFluffy(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
+      }
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
       }
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.FLUFFYPAD) {
       n = new NodeFluffyPad(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
+      }
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
       }
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.HEXAGONAL) {
       n = new NodeHexagonal(label, x, y);
-      for (var i=0;i<angles.length;i++) {
-        anchors.push( new AnchorCircular(n, angles[i], anchorTypes[i]) );
+      for (var i=0;i<iangles.length;i++) {
+        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
+      }
+      for (var i=0;i<oangles.length;i++) {
+        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
       }
       n.setAnchors(anchors);
     }
@@ -602,22 +620,24 @@ class ConnectionTruthMcWeb {
     this.types = types;
   }
   // returns the specified number of angles which will all be interpreted as inputs
+  // NOTE: input angle are returned in reversed order, due to the let-to-right counting for inputs as function arguments
   getInputAngles(num) {
     if (num == 0) {
       return [];
     } else if (num == 1) {
       return [90];
     } else if (num == 2) {
-      return [80, 100];
+      return [80, 100].reverse();
     } else if (num == 3) {
-      return [70, 90, 110];
+      return [70, 90, 110].reverse();
     } else if (num == 4) {
-      return [60, 80, 100, 120];
+      return [60, 80, 100, 120].reverse();
     } else if (num == 5) {
-      return [50, 70, 90, 110, 130];
+      return [50, 70, 90, 110, 130].reverse();
     } else throw "give a number from 0 to 5";
   }
   // returns the specified number of angles which will all be interpreted as outputs
+  // NOTE: output angles are NOT reversed, see comment on getInputAngles
   getOutputAngles(num) {
     if (num == 0) {
       return [];
@@ -1023,43 +1043,52 @@ function run() {
 function drawTestNodes() {
   let gia = draw.truth.getInputAngles;
   let goa = draw.truth.getOutputAngles;
-  createAndPushNode("gauss", 100, 180, gia(3).concat(goa(1)), ['pg', 'pg2', 'pg2', 'gauss'], NodeIconType.SQUARE );
-  createAndPushNode("en1", 100, 350, gia(1), ['gauss'], NodeIconType.HEXAGONAL);
-  createAndPushNode("pg", 50, 14, goa(1), ['pg'], NodeIconType.CIRCLEPAD);
-  createAndPushNode("pg2", 100, 24, gia(1).concat(goa(2)), ['pg3', 'pg2', 'pg2'], NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 34, goa(1), ['pg3'], NodeIconType.CIRCE);
+  createAndPushNode("gauss", 100, 180, gia(3), goa(1), ['pg', 'pg2', 'pg2'], ['gauss'], NodeIconType.SQUARE );
+  createAndPushNode("en1", 100, 350, gia(1), [], ['gauss'], [], NodeIconType.HEXAGONAL);
+  createAndPushNode("pg", 50, 14, goa(1), [], ['pg'], [], NodeIconType.CIRCLEPAD);
+  createAndPushNode("pg2", 100, 24, gia(1), goa(2), ['pg3'], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
+  createAndPushNode("pg3", 150, 34, goa(1), [], ['pg3'], [], NodeIconType.CIRCE);
 }
 
 // ui interaction
 let nodeLabel = '';
-let anchArray = [];
+let iangles = [];
+let oangles = [];
+let itypes = [];
+let otypes = [];
 let labelHistory = []
 let clearTbxCB = null;
 let nodeIconType = null;
 
 function pushNodeRequest(label, n_inputs, n_outputs, iconType) {
-  console.log(n_inputs, n_outputs);
+  nodeLabel = label;
+  nodeIconType = iconType;
+
   let gia = draw.truth.getInputAngles;
   let goa = draw.truth.getOutputAngles;
-  nodeLabel = label;
-  anchorArray = gia(n_inputs).concat(goa(n_outputs));
-  nodeIconType = iconType;
+  iangles = gia(n_inputs);
+  oangles = goa(n_outputs);
+
+  let ia = [];
+  for (var i=0;i<n_inputs;i++) { ia.push(i); }
+  itypes = ia;
+  let oa = [];
+  for (var i=0;i<n_outputs;i++) { oa.push(label); }
+  otypes = oa;
 }
 
 // this callback in connected somewhere in GraphDraw
 function clickSvg(x, y) {
   if (nodeLabel == '') return;
 
-  label = nodeLabel;
+  createAndPushNode(nodeLabel, x, y, iangles, oangles, itypes, otypes, nodeIconType);
+
+  // clean up
+  labelHistory.push(nodeLabel);
   nodeLabel = '';
-  anchs = anchorArray;
-  anchArray = [];
-  itpe = nodeIconType;
-  createAndPushNode(label, x, y, anchs, itpe);
   if (clearTbxCB) {
     clearTbxCB();
   }
-  labelHistory.push(label);
 }
 
 NodeConfig = {
