@@ -145,15 +145,23 @@ class Node {
     this.links = [];
     this.centerAnchor = new CenterAnchor(this);
 
+    // graphics switch on this property, which is updated externally according to some rule
     this.state = NodeState.DISCONNECTED;
+
+    // properties held only to associate the high-level data with the graph structure
     this.data = null;
+    this.config = null;
   }
   setAnchors(anchors) {
     if (this.anchors != null) throw "please only set anchors once, cleaning up makes a mess"
     this.anchors = anchors;
   }
   isAllConnected() {
-    // collect endpoint anchors of all connected links
+    let c = this.getConnections();
+    return c.indexOf(false) == -1;
+  }
+  getConnections() {
+    // collect local link anchors
     let links = this.links;
     let linkAnchors = [];
     let l = null;
@@ -162,16 +170,15 @@ class Node {
       linkAnchors.push(l.d1);
       linkAnchors.push(l.d2);
     }
-    // check that every local anchor can be found as an anchor of a local link
+    // match anchors with link anchors
+    let connectivity = [];
     let anchors = this.anchors;
     let a = null;
     for (var j=0; j<anchors.length; j++) {
       a = anchors[j];
-      if (linkAnchors.indexOf(a) == -1) {
-        return false;
-      }
+      connectivity.push(linkAnchors.indexOf(a) != -1);
     }
-    return true;
+    return connectivity;
   }
   get neighbours() {
     let nbs = [];
@@ -549,6 +556,84 @@ class Link {
   }
 }
 
+class LinkSingle extends Link {
+  constructor(d1, d2) {
+    super(d1, d2);
+  }
+  draw(branch, i) {
+    let anchors = this.getAnchors();
+    return branch
+      .append('path')
+      .datum(anchors)
+      .attr("class", "arrow")
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+  }
+  update(branch, i) {
+    let anchors = this.getAnchors();
+    return branch
+      .select('path')
+      .datum(anchors)
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+  }
+}
+
+class LinkDouble extends Link {
+  constructor(d1, d2) {
+    super(d1, d2);
+  }
+  draw(branch, i) {
+    let anchors = this.getAnchors();
+    branch
+      .append('path')
+      .datum(anchors)
+      .attr("class", "arrowThick")
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    branch
+      .append('path')
+      .datum(anchors)
+      .attr("class", "arrowThin")
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    return branch;
+  }
+  update(branch, i) {
+    let anchors = this.getAnchors();
+    branch
+      .select('path')
+      .datum(anchors)
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    branch
+      .selectAll('path')
+      .filter(function (d, i) { return i === 1; })
+      .datum(anchors)
+      .attr('d', d3.line()
+        .curve(d3.curveBasis)
+        .x( function(p) { return p.x; } )
+        .y( function(p) { return p.y; } )
+      );
+    return branch;
+  }
+}
+
 // node data manager, keeping this interface tight and providing convenient arrays for layout sims
 class GraphData {
   constructor() {
@@ -659,16 +744,60 @@ class ConnectionTruthMcWeb {
   isOutputAngle(angle) {
     return 225 < angle && angle < 315;
   }
+  getFunctionalInputAngles(num) {
+    if (num == 0) {
+      return [];
+    } else if (num == 1) {
+      return [180];
+    } else if (num == 2) {
+      return [170, 190].reverse();
+    } else if (num == 3) {
+      return [160, 180, 200].reverse();
+    } else if (num == 4) {
+      return [150, 170, 190, 210].reverse();
+    } else if (num == 5) {
+      return [140, 160, 180, 200, 220].reverse();
+    } else throw "give a number from 0 to 5";
+  }
+  getFunctionalOutputAngles(num) {
+    if (num == 0) {
+      return [];
+    } else if (num == 1) {
+      return [0];
+    } else if (num == 2) {
+      return [10, 350];
+    } else if (num == 3) {
+      return [20, 0, 340];
+    } else if (num == 4) {
+      return [30, 10, 350, 330];
+    } else if (num == 5) {
+      return [40, 20, 0, 340, 320];
+    } else throw "give a number from 0 to 5";
+  }
+  isFunctionalInputAngle(angle) {
+    return 135 < angle && angle < 225;
+  }
+  isFunctionalOutputAngle(angle) {
+    let t1 = 0 <= angle && angle < 45;
+    let t2 = 315 < angle && angle <= 360;
+    return t1 || t2;
+  }
   canConnect(a1, a2) {
     // a1 must be an output and a2 an input
     let t1 = this.isInputAngle(a2.angle);
     let t2 = this.isOutputAngle(a1.angle);
+    let t3 = this.isFunctionalInputAngle(a2.angle);
+    let t4 = this.isFunctionalOutputAngle(a1.angle);
+
     // inputs can only have one connection
-    let t3 = a2.connections == 0;
+    let t5 = a2.connections == 0;
     // both anchors must be of the same type
-    let t4 = a1.type == a2.type;
-    // all conditions must be fulfilled
-    return t1 && t2 && t3 && t4;
+    let t6 = a1.type == a2.type;
+
+    return ( t1 && t2 || t3 && t4 ) && t5 && t6;
+  }
+  getLinkClass(a) {
+    if (this.isInputAngle(a.angle) || this.isOutputAngle(a.angle)) return LinkSingle; else return LinkDouble;
   }
   updateStates(nodes) {
     for (var i=0; i<nodes.length; i++) {
@@ -854,7 +983,10 @@ class GraphDraw {
     self.drawNodes();
   }
   tryCreateLink(s, d) {
-    if (self.truth.canConnect(s, d)) self.graphData.addLink(new Link(s, d));
+    if (self.truth.canConnect(s, d)) {
+      let linkClass = self.truth.getLinkClass(s);
+      self.graphData.addLink(new linkClass(s, d));
+    }
     this.truth.updateNodeState(s.owner);
     this.truth.updateNodeState(d.owner);
   }
@@ -886,17 +1018,7 @@ class GraphDraw {
 
     self.splines
       .each( function(l, i) {
-        self.temp =  l.getAnchors()
-        let anchors = self.temp;
-
-        let g = d3.select(this)
-          .select('path')
-          .datum(anchors)
-          .attr('d', d3.line()
-            .curve(d3.curveBasis)
-            .x( function(p) { return p.x; } )
-            .y( function(p) { return p.y; } )
-          );
+        l.update(d3.select(this), i);
       });
 
     /*
@@ -978,9 +1100,12 @@ class GraphDraw {
       .lower();
 
     // draw nodes (by delegation & strategy)
-    this.nodes = self.draggable.append("g").lower().each( function(d, i) {
-      d.draw(d3.select(this), i).lower();
-    });
+    this.nodes = self.draggable
+      .append("g")
+      .lower()
+      .each( function(d, i) {
+        d.draw(d3.select(this), i).lower();
+      });
 
     // draw the splines
     let links = self.graphData.links;
@@ -993,18 +1118,7 @@ class GraphDraw {
 
     self.splines
       .each( function(l, i) {
-        self.temp =  l.getAnchors()
-        let anchors = self.temp;
-
-        let g = d3.select(this)
-          .append('path')
-          .datum(anchors)
-          .attr("class", "arrow")
-          .attr('d', d3.line()
-            .curve(d3.curveBasis)
-            .x( function(p) { return p.x; } )
-            .y( function(p) { return p.y; } )
-          );
+        l.draw(d3.select(this), i);
       });
 
     /*
@@ -1043,9 +1157,14 @@ function drawTestNodes() {
   let goa = draw.truth.getOutputAngles;
   createAndPushNode("gauss", 100, 180, gia(3), goa(1), ['pg', 'pg2', 'pg2'], ['gauss'], NodeIconType.SQUARE );
   createAndPushNode("en1", 100, 350, gia(1), [], ['gauss'], [], NodeIconType.HEXAGONAL);
-  createAndPushNode("pg", 50, 14, goa(1), [], ['pg'], [], NodeIconType.CIRCLEPAD);
+  createAndPushNode("pg", 50, 14, [], goa(1), [], ['pg'], NodeIconType.CIRCLEPAD);
   createAndPushNode("pg2", 100, 24, gia(1), goa(2), ['pg3'], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 34, goa(1), [], ['pg3'], [], NodeIconType.CIRCE);
+  createAndPushNode("pg3", 150, 34, [], goa(1), [], ['pg3'], NodeIconType.CIRCE);
+
+  let gfia = draw.truth.getFunctionalInputAngles;
+  let gfoa = draw.truth.getFunctionalOutputAngles;
+  createAndPushNode("f", 320, 200, [], gfoa(1), [], [''], NodeIconType.CIRCE);
+  createAndPushNode("op", 500, 220, gfia(1), [], [''], [], NodeIconType.SQUARE);
 }
 
 // ui interaction
