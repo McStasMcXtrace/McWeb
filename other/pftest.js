@@ -620,7 +620,7 @@ class ConnectionTruthMcWeb {
     this.types = types;
   }
   // returns the specified number of angles which will all be interpreted as inputs
-  // NOTE: input angle are returned in reversed order, due to the let-to-right counting for inputs as function arguments
+  // NOTE: input angle are reversed, due to the let-to-right counting for inputs as function arguments
   getInputAngles(num) {
     if (num == 0) {
       return [];
@@ -706,9 +706,6 @@ class GraphDraw {
         let svg_y = m[1];
         clickSvg(svg_x, svg_y);
       } )
-    this.ttdiv = d3.select("body").append("div")
-      .attr("class", "tooltip")
-      .style("opacity", 0);
 
     // force layout simulations
     this.collideSim = d3.forceSimulation()
@@ -745,7 +742,8 @@ class GraphDraw {
     this.linkGroup = this.svg.append("g");
     this.splineGroup = this.svg.append("g");
     this.nodeGroup = this.svg.append("g");
-    this.tooltip = this.svg.append("g");
+    this.tooltip = this.svg.append("g")
+      .attr("opacity", 0);
     this.tooltip.append("rect")
       .attr("x", -30)
       .attr("y", -13)
@@ -1091,16 +1089,16 @@ function clickSvg(x, y) {
   }
 }
 
+// this mixes two abstraction levels, should be re-designed
 NodeConfig = {
   'label' : '',
-  'type' : '',
   'tooltip' : '',
   'classifications' : {
-    'objfct' : {
+    'obj-fct' : {
       'input_types' : [],
       'output_types' : [],
     },
-    'fctop' : {
+    'fct-op' : {
       'input_types' : [],
       'output_types' : [],
     }
