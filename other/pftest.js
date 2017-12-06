@@ -194,16 +194,31 @@ class GraphicsNode {
     }
     return nbs;
   }
-  addLink(l) {
-    this.links.push(l);
+  addLink(link, isInput) {
+    this.links.push(link);
+    this.onConnect(link, isInput);
   }
-  rmLink(l) {
-    remove(this.links, l);
+  rmLink(link, isInput) {
+    remove(this.links, link);
+    this.onDisconnect(link, isInput);
   }
   draw(branch, i) {
     return branch
       .attr('stroke', "black")
       .classed(getNodeStateClass(this.state), true);
+  }
+  // hooks for higher level nodes
+  onConnect(link, isInput) {}
+  onDisconnect(link, isInput) {}
+  setAnchorTypes(at) {
+    let anchors = this.anchors;
+    let a = null;
+    if (at.length == anchors.length) {
+      for (var j=0; j<anchors.length; j++) {
+        a = anchors[j];
+        a.type = at[j];
+      }
+    }
   }
 }
 
@@ -357,9 +372,8 @@ class GraphicsNodeFluffyPad extends GraphicsNode {
 // connection anchor point fixed on a node at a circular periphery
 class Anchor {
   constructor(owner, angle, type) {
-    this.type = type;
-
     this.owner = owner;
+    this.type = type;
     this.angle = angle;
 
     this.vx = 0;
@@ -507,8 +521,8 @@ class Link {
     this.pathAnchors = [];
     this.recalcPathAnchors();
 
-    d1.owner.addLink(this);
-    d2.owner.addLink(this);
+    d1.owner.addLink(this, false);
+    d2.owner.addLink(this, true);
 
     d2.isTarget = true;
   }
@@ -547,8 +561,8 @@ class Link {
   }
   detatch() {
     this.d2.isTarget = false;
-    this.d1.owner.rmLink(this);
-    this.d2.owner.rmLink(this);
+    this.d1.owner.rmLink(this, false);
+    this.d2.owner.rmLink(this, true);
   }
   nodeNames() {
     return [this.d1.owner.label, this.d2.owner.label];
@@ -784,8 +798,9 @@ class ConnectionTruthMcWeb {
     // both anchors must be of the same type
     let t6 = a1.type == a2.type;
     let t7 = a1.type == '' || a2.type == ''; // the latter of these two is questionable
+    let t8 = a1.type == 'obj' || a2.type == 'obj'; // the latter of these two is questionable
 
-    return ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7);
+    return ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7 || t8);
   }
   static getLinkClass(a) {
     if (this.isInputAngle(a.angle) || this.isOutputAngle(a.angle)) return LinkSingle; else return LinkDouble;
@@ -797,6 +812,17 @@ class ConnectionTruthMcWeb {
   }
   static updateNodeState(node) {
     // (label, x, y, iangles, oangles, itooltip, otooltip, iconType)
+    let high = node.owner;
+    if (high.isActive()) {
+      node.state = NodeState.ACTIVE;
+    }
+    else if (!high.isConnected()){
+      node.state = NodeState.DISCONNECTED;
+    }
+    else {
+      node.state = NodeState.PASSIVE;
+    }
+    /*
     let conn = node.getConnections();
     if (!node.isAllConnected()){
       node.state = NodeState.DISCONNECTED;
@@ -807,6 +833,7 @@ class ConnectionTruthMcWeb {
     else if (true) {
       node.state = NodeState.PASSIVE;
     }
+    */
   }
 }
 
@@ -839,8 +866,8 @@ class Node {
     for (var i=0;i<ianglesF.length;i++) { anchors.push( new at(n, ianglesF[i], itypesF[i]) ); }
     for (var i=0;i<oanglesF.length;i++) { anchors.push( new at(n, oanglesF[i], otypesF[i]) ); }
     n.setAnchors(anchors);
-
-    console.log(n);
+    n.onConnect = this.onConnect.bind(this);
+    n.onDisconnect = this.onDisconnect.bind(this);
 
     this.gNode = n;
   }
@@ -856,9 +883,11 @@ class Node {
   isConnected(iIsConn, oIsConn) {
     throw "abstract method call";
   }
-  static isActive(node) {
-    return node.obj != null;
+  isActive() {
+    return this.obj != null;
   }
+  onConnect(link, isInput) { console.log("onconnect"); }
+  onDisconnect(link, isInput) { console.log("ondisconnect"); }
 }
 
 class NodeFunction extends Node {
@@ -874,10 +903,9 @@ class NodeFunction extends Node {
   }
   isConnected() {
     let conn = this.gNode.getConnections();
-    let subconn = conn.slice(0, this.idxF);
     // connectivity as a function
+    let subconn = conn.slice(0, this.idxF); // the pre-functional connections
     return subconn.indexOf(false) == -1;
-
     /*
     // this would be the connectivity as a functional, but that is not always used
     if (conn.length > this.idxF) {
@@ -905,7 +933,36 @@ class NodeObject extends Node {
       return conn[0];
     }
   }
+  // these two are just a TEST - obj output type should be set only upon execution return
+  onConnect(link, isInput) {
+    if (isInput) {
+      this.otypes = [link.d1.type];
+    }
+    this.gNode.setAnchorTypes(this.itypes.concat(this.otypes));
+  }
+  onDisconnect(link, isInput) {
+    if (isInput) {
+      this.otypes = ['obj'];
+    }
+    this.gNode.setAnchorTypes(this.itypes.concat(this.otypes));
+  }
 }
+
+class NodeFunctional extends Node {
+  constructor(x, y, label, itypesF, otypesF) {
+    super(x, y, '', '', label, [], [], itypesF, otypesF);
+  }
+  _getGNType() {
+    return GraphicsNodeSquare;
+  }
+  _getAnchorType() {
+    return AnchorSquare;
+  }
+  isConnected() {
+    return this.gNode.getConnections().indexOf(false) == -1;
+  }
+}
+
 
 // responsible for drawing, and acts as an interface
 class GraphDraw {
@@ -979,7 +1036,7 @@ class GraphDraw {
     this.nodes = null;
     this.paths = null;
     this.anchors = null;
-    self.arrowHeads = null;
+    this.arrowHeads = null;
 
     // pythonicism
     self = this;
@@ -988,6 +1045,7 @@ class GraphDraw {
     self.graphData.addNode(node);
     self.resetChargeSim();
     self.restartCollideSim(); // make sure everything is centered
+    self.truth.updateNodeState(node);
     self.drawNodes();
   }
   resetChargeSim() {
@@ -1237,8 +1295,8 @@ function run() {
   draw = new GraphDraw();
 
   // test nodes
-  drawTestNodes();
-  //drawMoreTestNodes();
+  //drawTestNodes();
+  drawMoreTestNodes();
 }
 function drawTestNodes() {
   let gia = draw.truth.getInputAngles;
@@ -1262,6 +1320,7 @@ function drawMoreTestNodes() {
   nodes.push( new NodeObject(300, 300, 'obj3') );
   nodes.push( new NodeObject(400, 400, 'obj4') );
   nodes.push( new NodeFunction(200, 200, 'f1', ['int','int','str'], ['str']) );
+  nodes.push( new NodeFunctional(50, 400, 'op1', ['func','func'], ['func']) );
 
   for (var i=0;i<nodes.length;i++) {
     let n = nodes[i];
