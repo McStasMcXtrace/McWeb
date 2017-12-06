@@ -66,7 +66,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
     let anchors = [];
     let n = null;
     if (iconType == NodeIconType.CIRCE) {
-      n = new GraphicsNodeCircular(label, x, y);
+      n = new GraphicsNodeCircular(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -76,7 +76,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.CIRCLEPAD) {
-      n = new GraphicsNodeCircularPad(label, x, y);
+      n = new GraphicsNodeCircularPad(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -86,7 +86,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.SQUARE) {
-      n = new NodeSquare(label, x, y);
+      n = new GraphicsNodeSquare(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -96,7 +96,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.FLUFFY) {
-      n = new NodeFluffy(label, x, y);
+      n = new GraphicsNodeFluffy(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -106,7 +106,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.FLUFFYPAD) {
-      n = new NodeFluffyPad(label, x, y);
+      n = new GraphicsNodeFluffyPad(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -116,7 +116,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.HEXAGONAL) {
-      n = new NodeHexagonal(label, x, y);
+      n = new GraphicsNodeHexagonal(null, label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -133,9 +133,10 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
   }
 }
 
-// node data type
+// node type supplying graphical data
 class GraphicsNode {
-  constructor(label, x, y) {
+  constructor(owner, label, x, y) {
+    this.owner = owner;
     this.x = x;
     this.y = y;
     this.r = nodeRadius;
@@ -207,8 +208,8 @@ class GraphicsNode {
 }
 
 class GraphicsNodeCircular extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -219,8 +220,8 @@ class GraphicsNodeCircular extends GraphicsNode {
 }
 
 class GraphicsNodeCircularPad extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
   }
   draw(branch, i) {
     branch = super.draw(branch, i);
@@ -239,9 +240,9 @@ class GraphicsNodeCircularPad extends GraphicsNode {
   }
 }
 
-class NodeSquare extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+class GraphicsNodeSquare extends GraphicsNode {
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
     this.r = 0.85 * nodeRadius; // this is now the half height/width of the square
   }
   draw(branch, i) {
@@ -257,9 +258,9 @@ class NodeSquare extends GraphicsNode {
   }
 }
 
-class NodeHexagonal extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+class GraphicsNodeHexagonal extends GraphicsNode {
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
     this.r = 1.05 * nodeRadius;
   }
   draw(branch, i) {
@@ -283,9 +284,9 @@ class NodeHexagonal extends GraphicsNode {
   }
 }
 
-class NodeFluffy extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+class GraphicsNodeFluffy extends GraphicsNode {
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
     this.numfluff = 14;
     this.fluffrad = 7;
     this.r = 1.05 * nodeRadius;
@@ -316,9 +317,9 @@ class NodeFluffy extends GraphicsNode {
   }
 }
 
-class NodeFluffyPad extends GraphicsNode {
-  constructor(label, x, y) {
-    super(label, x, y);
+class GraphicsNodeFluffyPad extends GraphicsNode {
+  constructor(owner, label, x, y) {
+    super(owner, label, x, y);
     this.numfluff = 8;
     this.fluffrad = 13;
   }
@@ -351,7 +352,6 @@ class NodeFluffyPad extends GraphicsNode {
 
     return branch;
   }
-
 }
 
 // connection anchor point fixed on a node at a circular periphery
@@ -798,8 +798,6 @@ class ConnectionTruthMcWeb {
   static updateNodeState(node) {
     // (label, x, y, iangles, oangles, itooltip, otooltip, iconType)
     let conn = node.getConnections();
-
-
     if (!node.isAllConnected()){
       node.state = NodeState.DISCONNECTED;
     }
@@ -812,61 +810,101 @@ class ConnectionTruthMcWeb {
   }
 }
 
+// high-level node types
+class Node {
+  // F stands for functional, e.g. type lists for the "other" classification
+  constructor (x, y, id, name, label, itypes, otypes, itypesF=[], otypesF=[]) {
+    this.id = id;
+    this.name = name;
+    this.label = label;
+    this.itypes = itypes;
+    this.otypes = otypes;
+    this.itypesF = itypesF;
+    this.otypesF = otypesF;
 
-class TypeOfNode {
-  static minInputs() {
-    throw "abstract method call";
-  }
-  static maxInputs() {
-    throw "abstract method call";
-  }
-  static minOutputs() {
-    throw "abstract method call";
-  }
-  static maxOutputs() {
-    throw "abstract method call";
-  }
-  static isAllConnected(iIsConn, oIsConn) {
-    return (iIsConn.indexOf(false) == -1) && (iIsConn.indexOf(false) == -1);
-  }
-  static isConnected(iIsConn, oIsConn) {
+    this.gNode = null; // the graphics representing this object
+    this.obj = null; // the data object of this handle
 
+    // practical construction used by subclasses
+    let iangles = ConnectionTruthMcWeb.getInputAngles(itypes.length);
+    let oangles = ConnectionTruthMcWeb.getOutputAngles(otypes.length)
+    let ianglesF = ConnectionTruthMcWeb.getFunctionalInputAngles(itypesF.length);
+    let oanglesF = ConnectionTruthMcWeb.getFunctionalOutputAngles(otypesF.length)
+    let anchors = [];
+    let nt = this._getGNType();
+    let at = this._getAnchorType();
+    let n = new nt(this, label, x, y);
+    for (var i=0;i<iangles.length;i++) { anchors.push( new at(n, iangles[i], itypes[i]) ); }
+    for (var i=0;i<oangles.length;i++) { anchors.push( new at(n, oangles[i], otypes[i]) ); }
+    for (var i=0;i<ianglesF.length;i++) { anchors.push( new at(n, ianglesF[i], itypesF[i]) ); }
+    for (var i=0;i<oanglesF.length;i++) { anchors.push( new at(n, oanglesF[i], otypesF[i]) ); }
+    n.setAnchors(anchors);
+
+    console.log(n);
+
+    this.gNode = n;
+  }
+  static isAllConnected() {
+    return this.gNode.isAllConnected();
+  }
+  _getGNType() {
+    throw "abstract method call"
+  }
+  _getAnchorType() {
+    throw "abstract method call"
+  }
+  isConnected(iIsConn, oIsConn) {
+    throw "abstract method call";
   }
   static isActive(node) {
     return node.obj != null;
   }
 }
 
-class TypeObj extends TypeOfNode {
-  constructor(itypes, otypes) {
-    this.itypes = itypes;
-    this.otypes = otypes;
+class NodeFunction extends Node {
+  constructor(x, y, label, itypes, otypes) {
+    super(x, y, '', '', label, itypes, otypes, ['func'], ['func']);
+    this.idxF = itypes.length + otypes.length -1;
   }
-  static minInputs() {
-    return 0;
+  _getGNType() {
+    return GraphicsNodeCircular;
   }
-  static maxInputs() {
-    return 1;
+  _getAnchorType() {
+    return AnchorCircular;
   }
-  static minOutputs() {
-    return 0;
+  isConnected() {
+    let conn = this.gNode.getConnections();
+    let subconn = conn.slice(0, this.idxF);
+    // connectivity as a function
+    return subconn.indexOf(false) == -1;
+
+    /*
+    // this would be the connectivity as a functional, but that is not always used
+    if (conn.length > this.idxF) {
+      return conn[this.idxF];
+    }
+    */
   }
-  static maxOutputs() {
-    return 1;
+}
+
+class NodeObject extends Node {
+  constructor(x, y, label) {
+    let itypes = ['obj'];
+    let otypes = ['obj'];
+    super(x, y, '', '', label, itypes, otypes);
   }
-  static isConnected(iconn, oconn) {
+  _getGNType() {
+    return GraphicsNodeFluffy;
+  }
+  _getAnchorType() {
+    return AnchorCircular;
+  }
+  isConnected() {
+    let conn = this.gNode.getConnections();
     if (conn.length > 0) {
       return conn[0];
     }
   }
-}
-
-class TypeSubject extends TypeOfNode {
-
-}
-
-class TypeSubjObj extends TypeOfNode {
-
 }
 
 // responsible for drawing, and acts as an interface
@@ -1198,8 +1236,9 @@ let draw = null;
 function run() {
   draw = new GraphDraw();
 
-  // example nodes
+  // test nodes
   drawTestNodes();
+  //drawMoreTestNodes();
 }
 function drawTestNodes() {
   let gia = draw.truth.getInputAngles;
@@ -1215,7 +1254,21 @@ function drawTestNodes() {
   createAndPushNode("f", 320, 200, [], gfoa(1), [], [''], NodeIconType.CIRCE);
   createAndPushNode("op", 500, 220, gfia(1), [], [''], [], NodeIconType.SQUARE);
 }
+let nodes = [];
+function drawMoreTestNodes() {
+  nodes = [];
+  nodes.push( new NodeObject(400, 400, 'obj1') );
+  nodes.push( new NodeObject(300, 400, 'obj2') );
+  nodes.push( new NodeObject(300, 300, 'obj3') );
+  nodes.push( new NodeObject(400, 400, 'obj4') );
+  nodes.push( new NodeFunction(200, 200, 'f1', ['int','int','str'], ['str']) );
 
+  for (var i=0;i<nodes.length;i++) {
+    let n = nodes[i];
+    draw.addNode_obj(n.gNode);
+  }
+  draw.drawNodes();
+}
 // ui interaction
 let nodeLabel = '';
 let iangles = [];
