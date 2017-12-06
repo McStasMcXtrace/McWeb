@@ -66,7 +66,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
     let anchors = [];
     let n = null;
     if (iconType == NodeIconType.CIRCE) {
-      n = new NodeCircular(label, x, y);
+      n = new GraphicsNodeCircular(label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -76,7 +76,7 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
       n.setAnchors(anchors);
     }
     else if (iconType == NodeIconType.CIRCLEPAD) {
-      n = new NodeCircularPad(label, x, y);
+      n = new GraphicsNodeCircularPad(label, x, y);
       for (var i=0;i<iangles.length;i++) {
         anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
       }
@@ -133,9 +133,8 @@ function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, ic
   }
 }
 
-
 // node data type
-class Node {
+class GraphicsNode {
   constructor(label, x, y) {
     this.x = x;
     this.y = y;
@@ -207,7 +206,7 @@ class Node {
   }
 }
 
-class NodeCircular extends Node {
+class GraphicsNodeCircular extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
   }
@@ -219,7 +218,7 @@ class NodeCircular extends Node {
   }
 }
 
-class NodeCircularPad extends Node {
+class GraphicsNodeCircularPad extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
   }
@@ -240,7 +239,7 @@ class NodeCircularPad extends Node {
   }
 }
 
-class NodeSquare extends Node {
+class NodeSquare extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
     this.r = 0.85 * nodeRadius; // this is now the half height/width of the square
@@ -258,7 +257,7 @@ class NodeSquare extends Node {
   }
 }
 
-class NodeHexagonal extends Node {
+class NodeHexagonal extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
     this.r = 1.05 * nodeRadius;
@@ -284,7 +283,7 @@ class NodeHexagonal extends Node {
   }
 }
 
-class NodeFluffy extends Node {
+class NodeFluffy extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
     this.numfluff = 14;
@@ -317,7 +316,7 @@ class NodeFluffy extends Node {
   }
 }
 
-class NodeFluffyPad extends Node {
+class NodeFluffyPad extends GraphicsNode {
   constructor(label, x, y) {
     super(label, x, y);
     this.numfluff = 8;
@@ -813,6 +812,63 @@ class ConnectionTruthMcWeb {
   }
 }
 
+
+class TypeOfNode {
+  static minInputs() {
+    throw "abstract method call";
+  }
+  static maxInputs() {
+    throw "abstract method call";
+  }
+  static minOutputs() {
+    throw "abstract method call";
+  }
+  static maxOutputs() {
+    throw "abstract method call";
+  }
+  static isAllConnected(iIsConn, oIsConn) {
+    return (iIsConn.indexOf(false) == -1) && (iIsConn.indexOf(false) == -1);
+  }
+  static isConnected(iIsConn, oIsConn) {
+
+  }
+  static isActive(node) {
+    return node.obj != null;
+  }
+}
+
+class TypeObj extends TypeOfNode {
+  constructor(itypes, otypes) {
+    this.itypes = itypes;
+    this.otypes = otypes;
+  }
+  static minInputs() {
+    return 0;
+  }
+  static maxInputs() {
+    return 1;
+  }
+  static minOutputs() {
+    return 0;
+  }
+  static maxOutputs() {
+    return 1;
+  }
+  static isConnected(iconn, oconn) {
+    if (conn.length > 0) {
+      return conn[0];
+    }
+  }
+}
+
+class TypeSubject extends TypeOfNode {
+
+}
+
+class TypeSubjObj extends TypeOfNode {
+
+}
+
 // responsible for drawing, and acts as an interface
 class GraphDraw {
   constructor() {
@@ -1144,9 +1200,6 @@ function run() {
 
   // example nodes
   drawTestNodes();
-
-  // more testing
-  createNode();
 }
 function drawTestNodes() {
   let gia = draw.truth.getInputAngles;
