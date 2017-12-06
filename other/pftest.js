@@ -153,7 +153,7 @@ class Node {
     this.config = null;
   }
   setAnchors(anchors) {
-    if (this.anchors != null) throw "please only set anchors once, cleaning up makes a mess"
+    if (this.anchors != null) throw "please set anchors only once, cleaning up makes a mess"
     this.anchors = anchors;
   }
   isAllConnected() {
@@ -695,18 +695,9 @@ class GraphData {
 }
 
 class ConnectionTruthMcWeb {
-  constructor(types) {
-    // This class will tell the truth about suggested connections
-    // and node states. It is the rule book and should always be
-    // consulted before making changes to the node graph.
-
-    // ConnectionTruth requires a "types" object to interpret, in order to
-    // decide how to manage connections and node states
-    this.types = types;
-  }
   // returns the specified number of angles which will all be interpreted as inputs
   // NOTE: input angle are reversed, due to the let-to-right counting for inputs as function arguments
-  getInputAngles(num) {
+  static getInputAngles(num) {
     if (num == 0) {
       return [];
     } else if (num == 1) {
@@ -723,7 +714,7 @@ class ConnectionTruthMcWeb {
   }
   // returns the specified number of angles which will all be interpreted as outputs
   // NOTE: output angles are NOT reversed, see comment on getInputAngles
-  getOutputAngles(num) {
+  static getOutputAngles(num) {
     if (num == 0) {
       return [];
     } else if (num == 1) {
@@ -738,13 +729,13 @@ class ConnectionTruthMcWeb {
       return [230, 250, 270, 290, 310];
     } else throw "give a number from 0 to 5";
   }
-  isInputAngle(angle) {
+  static isInputAngle(angle) {
     return 45 < angle && angle < 135;
   }
-  isOutputAngle(angle) {
+  static isOutputAngle(angle) {
     return 225 < angle && angle < 315;
   }
-  getFunctionalInputAngles(num) {
+  static getFunctionalInputAngles(num) {
     if (num == 0) {
       return [];
     } else if (num == 1) {
@@ -759,7 +750,7 @@ class ConnectionTruthMcWeb {
       return [140, 160, 180, 200, 220].reverse();
     } else throw "give a number from 0 to 5";
   }
-  getFunctionalOutputAngles(num) {
+  static getFunctionalOutputAngles(num) {
     if (num == 0) {
       return [];
     } else if (num == 1) {
@@ -774,15 +765,15 @@ class ConnectionTruthMcWeb {
       return [40, 20, 0, 340, 320];
     } else throw "give a number from 0 to 5";
   }
-  isFunctionalInputAngle(angle) {
+  static isFunctionalInputAngle(angle) {
     return 135 < angle && angle < 225;
   }
-  isFunctionalOutputAngle(angle) {
+  static isFunctionalOutputAngle(angle) {
     let t1 = 0 <= angle && angle < 45;
     let t2 = 315 < angle && angle <= 360;
     return t1 || t2;
   }
-  canConnect(a1, a2) {
+  static canConnect(a1, a2) {
     // a1 must be an output and a2 an input
     let t1 = this.isInputAngle(a2.angle);
     let t2 = this.isOutputAngle(a1.angle);
@@ -793,18 +784,23 @@ class ConnectionTruthMcWeb {
     let t5 = a2.connections == 0;
     // both anchors must be of the same type
     let t6 = a1.type == a2.type;
+    let t7 = a1.type == '' || a2.type == ''; // the latter of these two is questionable
 
-    return ( t1 && t2 || t3 && t4 ) && t5 && t6;
+    return ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7);
   }
-  getLinkClass(a) {
+  static getLinkClass(a) {
     if (this.isInputAngle(a.angle) || this.isOutputAngle(a.angle)) return LinkSingle; else return LinkDouble;
   }
-  updateStates(nodes) {
+  static updateStates(nodes) {
     for (var i=0; i<nodes.length; i++) {
       this.updateNodeState(nodes[i]);
     }
   }
-  updateNodeState(node) {
+  static updateNodeState(node) {
+    // (label, x, y, iangles, oangles, itooltip, otooltip, iconType)
+    let conn = node.getConnections();
+
+
     if (!node.isAllConnected()){
       node.state = NodeState.DISCONNECTED;
     }
@@ -821,7 +817,7 @@ class ConnectionTruthMcWeb {
 class GraphDraw {
   constructor() {
     this.graphData = new GraphData();
-    this.truth = new ConnectionTruthMcWeb(null);
+    this.truth = ConnectionTruthMcWeb;
 
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
@@ -1000,6 +996,7 @@ class GraphDraw {
     self.restartCollideSim();
   }
   showTooltip(x, y, tip) {
+    if (tip == '') return;
     self.tooltip
       .attr("transform", "translate(" + (x+40) + "," + (y+25) + ")")
       .style("opacity", 1)
@@ -1140,7 +1137,6 @@ class GraphDraw {
   }
 }
 
-
 let draw = null;
 // entry point, test setup etc.
 function run() {
@@ -1158,8 +1154,8 @@ function drawTestNodes() {
   createAndPushNode("gauss", 100, 180, gia(3), goa(1), ['pg', 'pg2', 'pg2'], ['gauss'], NodeIconType.SQUARE );
   createAndPushNode("en1", 100, 350, gia(1), [], ['gauss'], [], NodeIconType.HEXAGONAL);
   createAndPushNode("pg", 50, 14, [], goa(1), [], ['pg'], NodeIconType.CIRCLEPAD);
-  createAndPushNode("pg2", 100, 24, gia(1), goa(2), ['pg3'], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 34, [], goa(1), [], ['pg3'], NodeIconType.CIRCE);
+  createAndPushNode("pg2", 100, 24, gia(1), goa(2), [''], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
+  createAndPushNode("pg3", 150, 34, [], goa(1), [], [''], NodeIconType.CIRCE);
 
   let gfia = draw.truth.getFunctionalInputAngles;
   let gfoa = draw.truth.getFunctionalOutputAngles;
@@ -1173,7 +1169,6 @@ let iangles = [];
 let oangles = [];
 let itypes = [];
 let otypes = [];
-let labelHistory = []
 let clearTbxCB = null;
 let nodeIconType = null;
 
@@ -1200,8 +1195,6 @@ function clickSvg(x, y) {
 
   createAndPushNode(nodeLabel, x, y, iangles, oangles, itypes, otypes, nodeIconType);
 
-  // clean up
-  labelHistory.push(nodeLabel);
   nodeLabel = '';
   if (clearTbxCB) {
     clearTbxCB();
@@ -1210,7 +1203,6 @@ function clickSvg(x, y) {
 
 // this mixes two abstraction levels, should be re-designed
 NodeConfig = {
-  'label' : '',
   'tooltip' : '',
   'classifications' : {
     'obj-fct' : {
@@ -1222,7 +1214,4 @@ NodeConfig = {
       'output_types' : [],
     }
   }
-}
-function createNode(nodeConfig) {
-
 }
