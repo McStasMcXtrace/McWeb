@@ -1,6 +1,6 @@
 const width = 790;
-const height = 590;
-const nodeRadius = 35;
+const height = 700;
+const nodeRadius = 30;
 const anchorRadius = 6;
 
 const extensionLength = 40;
@@ -800,7 +800,8 @@ class ConnectionTruthMcWeb {
     let t7 = a1.type == '' || a2.type == ''; // the latter of these two is questionable
     let t8 = a1.type == 'obj' || a2.type == 'obj'; // the latter of these two is questionable
 
-    return ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7 || t8);
+    let ans = ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7 || t8);
+    return ans;
   }
   static getLinkClass(a) {
     if (this.isInputAngle(a.angle) || this.isOutputAngle(a.angle)) return LinkSingle; else return LinkDouble;
@@ -886,8 +887,26 @@ class Node {
   isActive() {
     return this.obj != null;
   }
-  onConnect(link, isInput) { console.log("onconnect"); }
-  onDisconnect(link, isInput) { console.log("ondisconnect"); }
+  // order means itypes/otypes/itypesF/otypesF == 0/1/2/3
+  getAnchor(idx, order) {
+    let l1 = this.itypes.length;
+    let l2 = this.otypes.length;
+    let l3 = this.itypesF.length;
+
+    let a = null;
+    if (order == 0) {
+      a = this.gNode.anchors[idx];
+    } else if (order == 1) {
+      a = this.gNode.anchors[idx+l1];
+    } else if (order == 2) {
+      a = this.gNode.anchors[idx+l1+l2];
+    } else if (order == 3) {
+      a = this.gNode.anchors[idx+l1+l2+l3];
+    } else throw "nonsenseException"
+    return a;
+  }
+  onConnect(link, isInput) { }
+  onDisconnect(link, isInput) { }
 }
 
 class NodeFunction extends Node {
@@ -912,6 +931,12 @@ class NodeFunction extends Node {
       return conn[this.idxF];
     }
     */
+  }
+}
+
+class NodeIFunc extends NodeFunction {
+  _getGNType() {
+    return GraphicsNodeCircularPad;
   }
 }
 
@@ -945,6 +970,12 @@ class NodeObject extends Node {
       this.otypes = ['obj'];
     }
     this.gNode.setAnchorTypes(this.itypes.concat(this.otypes));
+  }
+}
+
+class NodeIData extends NodeObject {
+  _getGNType() {
+    return GraphicsNodeFluffyPad;
   }
 }
 
@@ -1044,7 +1075,8 @@ class GraphDraw {
   addNode_obj(node) {
     self.graphData.addNode(node);
     self.resetChargeSim();
-    self.restartCollideSim(); // make sure everything is centered
+    self.restartCollideSim();
+
     self.truth.updateNodeState(node);
     self.drawNodes();
   }
@@ -1290,7 +1322,7 @@ class GraphDraw {
 }
 
 let draw = null;
-// entry point, test setup etc.
+// entry point and, test setup
 function run() {
   draw = new GraphDraw();
 
@@ -1314,21 +1346,66 @@ function drawTestNodes() {
 }
 let nodes = [];
 function drawMoreTestNodes() {
-  nodes = [];
-  nodes.push( new NodeObject(400, 400, 'obj1') );
-  nodes.push( new NodeObject(300, 400, 'obj2') );
-  nodes.push( new NodeObject(300, 300, 'obj3') );
-  nodes.push( new NodeObject(400, 400, 'obj4') );
-  nodes.push( new NodeFunction(200, 200, 'f1', ['int','int','str'], ['str']) );
-  nodes.push( new NodeFunctional(50, 400, 'op1', ['func','func'], ['func']) );
+  let n1 = new NodeObject(480, 128, 'data');
+  let n2 = new NodeObject(290, 250, 'pg');
+  let n3 = new NodeObject(143, 346, 'pc');
 
+  let n4 = new NodeObject(336, 610, 'plt_c');
+  let n5 = new NodeObject(539, 516, 'plt_fit');
+  let n6 = new NodeObject(443, 568, 'plt_g');
+
+  let n7 = new NodeFunction(390, 63, 'load', [], ['IData']);
+
+  let n8 = new NodeIFunc(208, 449, 'const', ['pars', 'IData'], ['IData']);
+  let n9 = new NodeIFunc(311, 379, 'gauss', ['pars', 'IData'], ['IData']);
+  let n10 = new NodeIFunc(565, 355, 'fitfunc', ['IData'], ['IData']);
+
+  let n11 = new NodeFunctional(415, 433, '+', ['func','func'], ['func']);
+
+  nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11];
   for (var i=0;i<nodes.length;i++) {
     let n = nodes[i];
     draw.addNode_obj(n.gNode);
   }
+
+  linkNodes(n7, 0, n1, 0);
+
+  linkNodes(n3, 0, n8, 0);
+
+  linkNodes(n1, 0, n8, 1);
+  linkNodes(n1, 0, n9, 1);
+  linkNodes(n1, 0, n10, 0);
+
+  linkNodes(n8, 0, n11, 0, true);
+  linkNodes(n9, 0, n11, 1, true);
+
+  linkNodes(n11, 0, n10, 0, true);
+
+  linkNodes(n8, 0, n4, 0);
+  linkNodes(n10, 0, n5, 0);
+  linkNodes(n9, 0, n6, 0);
+
+  linkNodes(n2, 0, n9, 0);
   draw.drawNodes();
 }
+// nodes are high-level and indexes local, i.e. subordinated input/output/inputF/outputF
+function linkNodes(n1, idx1, n2, idx2, functional=false) {
+  let a1 = null;
+  let a2 = null;
+  if (!functional) {
+    a1 = n1.getAnchor(idx1, 1);
+    a2 = n2.getAnchor(idx2, 0);
+  } else {
+    a1 = n1.getAnchor(idx1, 3);
+    a2 = n2.getAnchor(idx2, 2);
+  }
+  draw.tryCreateLink(a1, a2);
+}
+
+
+//
 // ui interaction
+//
 let nodeLabel = '';
 let iangles = [];
 let oangles = [];
@@ -1363,20 +1440,5 @@ function clickSvg(x, y) {
   nodeLabel = '';
   if (clearTbxCB) {
     clearTbxCB();
-  }
-}
-
-// this mixes two abstraction levels, should be re-designed
-NodeConfig = {
-  'tooltip' : '',
-  'classifications' : {
-    'obj-fct' : {
-      'input_types' : [],
-      'output_types' : [],
-    },
-    'fct-op' : {
-      'input_types' : [],
-      'output_types' : [],
-    }
   }
 }
