@@ -1005,6 +1005,9 @@ class NodeFunctional extends Node {
 // responsible for drawing, and acts as an interface
 class GraphDraw {
   constructor() {
+    // pythonicism
+    self = this;
+
     this.graphData = new GraphData();
     this.truth = ConnectionTruthMcWeb;
 
@@ -1012,7 +1015,7 @@ class GraphDraw {
     this.svg = d3.select('#svg_container')
       .append('svg')
       .attr('width', width)
-      .attr('height', height)
+      .attr('height', height);
     this.svg
       .on("click", function() {
         let m = d3.mouse(this)
@@ -1069,15 +1072,13 @@ class GraphDraw {
       .attr("id", "tooltip_text")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle");
+    this.linkHelper = this.svg.append("g");
 
     // specific selections
     this.nodes = null;
     this.paths = null;
     this.anchors = null;
     this.arrowHeads = null;
-
-    // pythonicism
-    self = this;
   }
   addNode_obj(node) {
     self.graphData.addNode(node);
@@ -1153,8 +1154,41 @@ class GraphDraw {
   }
   anchorMouseDown(d) {
     self.dragAnchor = d;
+
+    // this helper-line stuff works, but prevents mouseup and mouseover from firing
+    /*
+    // register helpline hooks and self-dissembly
+    self.svg
+      .on("mousemove", function() {
+        let p0 = [self.dragAnchor.x, self.dragAnchor.y];
+        let m = d3.mouse(self.svg.node());
+        self.linkHelper
+          .select("path")
+          .datum([p0, m])
+          .attr('d', d3.line()
+            .x( function(p) { return p[0]; } )
+            .y( function(p) { return p[1]; } )
+          );
+      } );
+    self.svg
+      .on("mouseup", function() {
+        self.linkHelper.selectAll("path").remove();
+        self.svg.on("mousemove", null);
+      } );
+    // draw initial line
+    let p0 = [d.x, d.y];
+    let m = d3.mouse(self.svg.node());
+    self.linkHelper
+      .append("path")
+      .classed("linkHelper", true)
+      .datum([p0, m])
+      .attr('d', d3.line()
+        .x( function(p) { return p[0]; } )
+        .y( function(p) { return p[1]; } )
+      );
+    */
   }
-  anchorMouseUp(d) {
+  anchorMouseUp(d, branch) {
     let s = self.dragAnchor;
 
     if (s && s != d && s.owner != d.owner)
@@ -1244,19 +1278,20 @@ class GraphDraw {
         .data(d.anchors)
         .enter()
         .append("g");
-      branch
+      branch = branch
         .append("circle")
         .attr('r', anchorRadius)
         // semi-static transform, which does not belong in update()
         .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
         .style("fill", "white")
         .style("stroke", "#000")
-        .classed("hidden", function(d) { return d.isLinked; })
+        .classed("hidden", function(d) { return d.isLinked; });
+      branch
         .on("mousedown", function(p) {
           // these two lines will prevent drag behavior
           d3.event.stopPropagation();
           d3.event.preventDefault();
-          self.anchorMouseDown(p)
+          self.anchorMouseDown(p);
         } )
         .on("mouseup", function(p) {
           self.anchorMouseUp(p);
