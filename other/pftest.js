@@ -385,6 +385,8 @@ class Anchor {
     this.ext = null;
 
     this.isTarget = false;
+    this.isLinked = false;
+
     this.arrowHead = null;
   }
   get x() { return this.owner.x + this.localx; }
@@ -406,8 +408,8 @@ class Anchor {
 
     let angle1 = Math.PI/180*(this.angle - arrowHeadAngle);
     let angle2 = Math.PI/180*(this.angle + arrowHeadAngle);
-    let x0 = this.localx + this.localx*anchorRadius/nodeRadius;
-    let y0 = this.localy + this.localy*anchorRadius/nodeRadius;
+    let x0 = this.localx;
+    let y0 = this.localy;
     let x1 = x0 + arrowHeadLength*Math.cos(angle1);
     let y1 = y0 - arrowHeadLength*Math.sin(angle1);
     let x2 = x0 + arrowHeadLength*Math.cos(angle2);
@@ -525,6 +527,8 @@ class Link {
     d2.owner.addLink(this, true);
 
     d2.isTarget = true;
+    d1.isLinked = true;
+    d2.isLinked = true;
   }
   recalcPathAnchors() {
     this.pathAnchors = [];
@@ -561,6 +565,9 @@ class Link {
   }
   detatch() {
     this.d2.isTarget = false;
+    this.d1.isLinked = false;
+    this.d2.isLinked = false;
+
     this.d1.owner.rmLink(this, false);
     this.d2.owner.rmLink(this, true);
   }
@@ -1195,7 +1202,7 @@ class GraphDraw {
     self.draggable
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
     self.nodes
-      .classed("selected", function(d) { return d.active; });
+      .classed("selected", function(d) { return d.active; })
 
     self.splines
       .each( function(l, i) {
@@ -1236,7 +1243,7 @@ class GraphDraw {
         .selectAll("circle")
         .data(d.anchors)
         .enter()
-        .append("g")
+        .append("g");
       branch
         .append("circle")
         .attr('r', anchorRadius)
@@ -1244,6 +1251,7 @@ class GraphDraw {
         .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
         .style("fill", "white")
         .style("stroke", "#000")
+        .classed("hidden", function(d) { return d.isLinked; })
         .on("mousedown", function(p) {
           // these two lines will prevent drag behavior
           d3.event.stopPropagation();
@@ -1256,12 +1264,15 @@ class GraphDraw {
         .on("mouseover", function(d) {
           d3.select(this)
             .classed("selected", true)
-            .style("opacity", 1);
+            .classed("hidden", false)
+            .classed("visible", true);
           self.showTooltip(d.x, d.y, d.type);
         } )
         .on("mouseout", function(d) {
           d3.select(this)
             .classed("selected", false)
+            .classed("hidden", function(d) { return d.isLinked; })
+            .classed("visible", false);
           self.clearTooltip();
         } )
 
