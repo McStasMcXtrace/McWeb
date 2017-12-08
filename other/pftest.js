@@ -414,11 +414,11 @@ class Anchor {
     let y1 = y0 - arrowHeadLength*Math.sin(angle1);
     let x2 = x0 + arrowHeadLength*Math.cos(angle2);
     let y2 = y0 - arrowHeadLength*Math.sin(angle2);
-    let points = [{x:x1,y:y1}, {x:x0,y:y0}, {x:x2,y:y2}]
+    let points = [{x:x1,y:y1}, {x:x0,y:y0}, {x:x2,y:y2}];
 
     this.arrowHead = branch.append("path")
       .datum(points)
-      .attr("class", "arrow")
+      .classed("arrow", true)
       .attr('d', d3.line()
         .x( function(p) { return p.x; } )
         .y( function(p) { return p.y; } )
@@ -1366,6 +1366,40 @@ class GraphDraw {
     self.update();
   }
 }
+// nodes are high-level and indexes local, i.e. subordinated input/output/inputF/outputF
+function linkNodes(n1, idx1, n2, idx2, functional=false) {
+  let a1 = null;
+  let a2 = null;
+  if (!functional) {
+    a1 = n1.getAnchor(idx1, 1);
+    a2 = n2.getAnchor(idx2, 0);
+  } else {
+    a1 = n1.getAnchor(idx1, 3);
+    a2 = n2.getAnchor(idx2, 2);
+  }
+  draw.tryCreateLink(a1, a2);
+}
+
+function addLink(id1, idx1, id2, idx2, functional=false) {
+
+}
+function rmLink(id1, idx1, id2, idx2, functional=false) {
+
+}
+function addNode(id, name, label, type, x, y) {
+
+}
+function rmNode(id) {
+
+}
+
+function move(id, x, y) {
+
+}
+function run(id) {
+
+}
+
 
 let draw = null;
 // entry point and, test setup
@@ -1390,7 +1424,6 @@ function drawTestNodes() {
   createAndPushNode("f", 320, 200, [], gfoa(1), [], [''], NodeIconType.CIRCE);
   createAndPushNode("op", 500, 220, gfia(1), [], [''], [], NodeIconType.SQUARE);
 }
-let nodes = [];
 function drawMoreTestNodes() {
   let n1 = new NodeObject(480, 128, 'data');
   let n2 = new NodeObject(290, 250, 'pg');
@@ -1434,20 +1467,6 @@ function drawMoreTestNodes() {
   linkNodes(n2, 0, n9, 0);
   draw.drawNodes();
 }
-// nodes are high-level and indexes local, i.e. subordinated input/output/inputF/outputF
-function linkNodes(n1, idx1, n2, idx2, functional=false) {
-  let a1 = null;
-  let a2 = null;
-  if (!functional) {
-    a1 = n1.getAnchor(idx1, 1);
-    a2 = n2.getAnchor(idx2, 0);
-  } else {
-    a1 = n1.getAnchor(idx1, 3);
-    a2 = n2.getAnchor(idx2, 2);
-  }
-  draw.tryCreateLink(a1, a2);
-}
-
 
 //
 // ui interaction
