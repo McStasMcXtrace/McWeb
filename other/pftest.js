@@ -1278,15 +1278,14 @@ class GraphDraw {
         .data(d.anchors)
         .enter()
         .append("g");
-      branch = branch
+      branch
         .append("circle")
         .attr('r', anchorRadius)
         // semi-static transform, which does not belong in update()
         .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
         .style("fill", "white")
         .style("stroke", "#000")
-        .classed("hidden", function(d) { return d.isLinked; });
-      branch
+        .classed("hidden", function(d) { return d.isLinked; })
         .on("mousedown", function(p) {
           // these two lines will prevent drag behavior
           d3.event.stopPropagation();
