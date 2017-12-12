@@ -1155,9 +1155,6 @@ class GraphDraw {
   anchorMouseDown(d) {
     self.dragAnchor = d;
 
-    // this helper-line stuff works, but prevents mouseup and mouseover from firing
-    /*
-    // register helpline hooks and self-dissembly
     self.svg
       .on("mousemove", function() {
         let p0 = [self.dragAnchor.x, self.dragAnchor.y];
@@ -1186,7 +1183,6 @@ class GraphDraw {
         .x( function(p) { return p[0]; } )
         .y( function(p) { return p[1]; } )
       );
-    */
   }
   anchorMouseUp(d, branch) {
     let s = self.dragAnchor;
