@@ -1004,12 +1004,11 @@ class NodeFunctional extends Node {
 
 // responsible for drawing, and acts as an interface
 class GraphDraw {
-  constructor() {
+  constructor(graphData) {
     // pythonicism
     self = this;
 
-    this.graphData = new GraphData();
-    this.truth = ConnectionTruthMcWeb;
+    this.graphData = graphData; // this is needed for accessing anchors and nodes for simulations
 
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
@@ -1079,14 +1078,6 @@ class GraphDraw {
     this.paths = null;
     this.anchors = null;
     this.arrowHeads = null;
-  }
-  addNode_obj(node) {
-    self.graphData.addNode(node);
-    self.resetChargeSim();
-    self.restartCollideSim();
-
-    self.truth.updateNodeState(node);
-    self.drawNodes();
   }
   resetChargeSim() {
     // the charge force seems to have to reset like this for some reason
@@ -1198,23 +1189,6 @@ class GraphDraw {
 
     // the s == d case triggers the node drawn to disappear, so redraw
     self.drawNodes();
-  }
-  tryCreateLink(s, d) {
-    if (self.truth.canConnect(s, d)) {
-      let linkClass = self.truth.getLinkClass(s);
-      self.graphData.addLink(new linkClass(s, d));
-    }
-    this.truth.updateNodeState(s.owner);
-    this.truth.updateNodeState(d.owner);
-  }
-  ctrlClickNode(n) {
-    let neighbours = n.neighbours;
-    self.graphData.rmNode(n);
-    for (var i=0; i<neighbours.length; i++) {
-      self.truth.updateNodeState(neighbours[i])
-    }
-    self.drawNodes();
-    self.restartCollideSim();
   }
   showTooltip(x, y, tip) {
     if (tip == '') return;
@@ -1361,61 +1335,94 @@ class GraphDraw {
     self.update();
   }
 }
-// nodes are high-level and indexes local, i.e. subordinated input/output/inputF/outputF
-function linkNodes(n1, idx1, n2, idx2, functional=false) {
-  let a1 = null;
-  let a2 = null;
-  if (!functional) {
-    a1 = n1.getAnchor(idx1, 1);
-    a2 = n2.getAnchor(idx2, 0);
-  } else {
-    a1 = n1.getAnchor(idx1, 3);
-    a2 = n2.getAnchor(idx2, 2);
+
+// a sort of controller object
+class GraphInterface {
+  constructor() {
+    this.graphData = new GraphData();
+    this.draw = new GraphDraw(this.graphData);
+    this.truth = ConnectionTruthMcWeb;
   }
-  draw.tryCreateLink(a1, a2);
+  addNode_obj(node) {
+    this.graphData.addNode(node);
+    this.draw.resetChargeSim();
+    this.draw.restartCollideSim();
+
+    this.truth.updateNodeState(node);
+    this.draw.drawNodes();
+  }
+  tryCreateLink(s, d) {
+    if (this.truth.canConnect(s, d)) {
+      let linkClass = this.truth.getLinkClass(s);
+      this.graphData.addLink(new linkClass(s, d));
+    }
+    this.truth.updateNodeState(s.owner);
+    this.truth.updateNodeState(d.owner);
+  }
+  ctrlClickNode(n) {
+    let neighbours = n.neighbours;
+    this.graphData.rmNode(n);
+    for (var i=0; i<neighbours.length; i++) {
+      this.truth.updateNodeState(neighbours[i])
+    }
+    this.draw.drawNodes();
+    this.draw.restartCollideSim();
+  }
+  linkNodes(n1, idx1, n2, idx2, functional=false) {
+    let a1 = null;
+    let a2 = null;
+    if (!functional) {
+      a1 = n1.getAnchor(idx1, 1);
+      a2 = n2.getAnchor(idx2, 0);
+    } else {
+      a1 = n1.getAnchor(idx1, 3);
+      a2 = n2.getAnchor(idx2, 2);
+    }
+    this.tryCreateLink(a1, a2);
+    this.draw.drawNodes();
+  }
+  addLink(id1, idx1, id2, idx2, functional=false) {
+
+  }
+  rmLink(id1, idx1, id2, idx2, functional=false) {
+
+  }
+  addNode(id, name, label, type, x, y) {
+
+  }
+  rmNode(id) {
+
+  }
+
+  move(id, x, y) {
+
+  }
+  run(id) {
+
+  }
 }
 
-function addLink(id1, idx1, id2, idx2, functional=false) {
-
-}
-function rmLink(id1, idx1, id2, idx2, functional=false) {
-
-}
-function addNode(id, name, label, type, x, y) {
-
-}
-function rmNode(id) {
-
-}
-
-function move(id, x, y) {
-
-}
-function run(id) {
-
-}
-
-
-let draw = null;
+let intface = null;
 // entry point and, test setup
 function run() {
-  draw = new GraphDraw();
+  intface = new GraphInterface();
+
 
   // test nodes
   //drawTestNodes();
   drawMoreTestNodes();
 }
 function drawTestNodes() {
-  let gia = draw.truth.getInputAngles;
-  let goa = draw.truth.getOutputAngles;
+  let gia = intface.truth.getInputAngles;
+  let goa = intface.truth.getOutputAngles;
   createAndPushNode("gauss", 100, 180, gia(3), goa(1), ['pg', 'pg2', 'pg2'], ['gauss'], NodeIconType.SQUARE );
   createAndPushNode("en1", 100, 350, gia(1), [], ['gauss'], [], NodeIconType.HEXAGONAL);
   createAndPushNode("pg", 50, 14, [], goa(1), [], ['pg'], NodeIconType.CIRCLEPAD);
   createAndPushNode("pg2", 100, 24, gia(1), goa(2), [''], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
   createAndPushNode("pg3", 150, 34, [], goa(1), [], [''], NodeIconType.CIRCE);
 
-  let gfia = draw.truth.getFunctionalInputAngles;
-  let gfoa = draw.truth.getFunctionalOutputAngles;
+  let gfia = intface.truth.getFunctionalInputAngles;
+  let gfoa = intface.truth.getFunctionalOutputAngles;
   createAndPushNode("f", 320, 200, [], gfoa(1), [], [''], NodeIconType.CIRCE);
   createAndPushNode("op", 500, 220, gfia(1), [], [''], [], NodeIconType.SQUARE);
 }
@@ -1439,28 +1446,27 @@ function drawMoreTestNodes() {
   nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11];
   for (var i=0;i<nodes.length;i++) {
     let n = nodes[i];
-    draw.addNode_obj(n.gNode);
+    intface.addNode_obj(n.gNode);
   }
 
-  linkNodes(n7, 0, n1, 0);
+  intface.linkNodes(n7, 0, n1, 0);
 
-  linkNodes(n3, 0, n8, 0);
+  intface.linkNodes(n3, 0, n8, 0);
 
-  linkNodes(n1, 0, n8, 1);
-  linkNodes(n1, 0, n9, 1);
-  linkNodes(n1, 0, n10, 0);
+  intface.linkNodes(n1, 0, n8, 1);
+  intface.linkNodes(n1, 0, n9, 1);
+  intface.linkNodes(n1, 0, n10, 0);
 
-  linkNodes(n8, 0, n11, 0, true);
-  linkNodes(n9, 0, n11, 1, true);
+  intface.linkNodes(n8, 0, n11, 0, true);
+  intface.linkNodes(n9, 0, n11, 1, true);
 
-  linkNodes(n11, 0, n10, 0, true);
+  intface.linkNodes(n11, 0, n10, 0, true);
 
-  linkNodes(n8, 0, n4, 0);
-  linkNodes(n10, 0, n5, 0);
-  linkNodes(n9, 0, n6, 0);
+  intface.linkNodes(n8, 0, n4, 0);
+  intface.linkNodes(n10, 0, n5, 0);
+  intface.linkNodes(n9, 0, n6, 0);
 
-  linkNodes(n2, 0, n9, 0);
-  draw.drawNodes();
+  intface.linkNodes(n2, 0, n9, 0);
 }
 
 //
