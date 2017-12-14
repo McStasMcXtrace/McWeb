@@ -59,80 +59,6 @@ function getNodeStateClass(state) {
   else throw "invalid value"
 }
 
-// factory functions
-function createAndPushNode(label, x, y, iangles, oangles, itooltip, otooltip, iconType) {
-  if (label != '') {
-    if (!iconType) iconType = '';
-    let anchors = [];
-    let n = null;
-    if (iconType == NodeIconType.CIRCE) {
-      n = new GraphicsNodeCircular(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else if (iconType == NodeIconType.CIRCLEPAD) {
-      n = new GraphicsNodeCircularPad(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else if (iconType == NodeIconType.SQUARE) {
-      n = new GraphicsNodeSquare(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else if (iconType == NodeIconType.FLUFFY) {
-      n = new GraphicsNodeFluffy(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else if (iconType == NodeIconType.FLUFFYPAD) {
-      n = new GraphicsNodeFluffyPad(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else if (iconType == NodeIconType.HEXAGONAL) {
-      n = new GraphicsNodeHexagonal(null, label, x, y);
-      for (var i=0;i<iangles.length;i++) {
-        anchors.push( new AnchorCircular(n, iangles[i], itooltip[i]) );
-      }
-      for (var i=0;i<oangles.length;i++) {
-        anchors.push( new AnchorCircular(n, oangles[i], otooltip[i]) );
-      }
-      n.setAnchors(anchors);
-    }
-    else throw "invalid node icon type";
-
-    draw.addNode_obj( n );
-    draw.drawNodes();
-    console.log("a node with label '" + label + "' was added")
-  }
-}
-
 // node type supplying graphical data
 class GraphicsNode {
   constructor(owner, label, x, y) {
@@ -654,6 +580,344 @@ class LinkDouble extends Link {
   }
 }
 
+// responsible for drawing, and acts as an interface
+class GraphDraw {
+  constructor(graphData, mouseAddLinkCB, delNodeCB) {
+    // pythonicism
+    self = this;
+
+    this.graphData = graphData; // this is needed for accessing anchors and nodes for simulations
+    this.mouseAddLinkCB =  mouseAddLinkCB; // this is the cb callled when anchors are dragged on top of one another
+    this.delNodeCB = delNodeCB;
+
+    this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
+    this.svg = d3.select('#svg_container')
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
+    this.svg
+      .on("click", function() {
+        let m = d3.mouse(this)
+        let svg_x = m[0];
+        let svg_y = m[1];
+        clickSvg(svg_x, svg_y);
+      } )
+
+    // force layout simulations
+    this.collideSim = d3.forceSimulation()
+      .force("collide",
+        d3.forceCollide(nodeRadius + 3)
+        .iterations(4)
+      )
+      .on("tick", this.update)
+      .stop();
+    this.centeringSim = d3.forceSimulation()
+      .force("centering",
+        d3.forceCenter(width/2, height/2)
+      )
+      .on("tick", this.update)
+      .stop();
+    this.pathSim = d3.forceSimulation()
+      .force("link",
+        d3.forceLink()
+          .strength(pathLinkStrength)
+          .distance( function(d) { return distance; } )
+      )
+      .force("pathcharge",
+        d3.forceManyBody()
+          .strength(pathChargeStrength)
+      )
+      .on("tick", this.update)
+      .stop();
+
+    this.draggable = null;
+    this.dragAnchor = null;
+    this.temp = null;
+
+    // root nodes for various item types (NOTE: the ordering matters)
+    this.linkGroup = this.svg.append("g");
+    this.splineGroup = this.svg.append("g");
+    this.nodeGroup = this.svg.append("g");
+    this.tooltip = this.svg.append("g")
+      .attr("opacity", 0);
+    this.tooltip.append("rect")
+      .attr("x", -30)
+      .attr("y", -13)
+      .attr("width", 60)
+      .attr("height", 26)
+      .attr("fill", 'white')
+      .attr("stroke", "black");
+    this.tooltip.append("text")
+      .attr("id", "tooltip_text")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle");
+    this.linkHelper = this.svg.append("g");
+
+    // specific selections
+    this.nodes = null;
+    this.paths = null;
+    this.anchors = null;
+    this.arrowHeads = null;
+  }
+  resetChargeSim() {
+    // the charge force seems to have to reset like this for some reason
+    self.distanceSim = d3.forceSimulation(self.graphData.nodes)
+      .force("noderepulsion",
+        d3.forceManyBody()
+          .strength( -40 )
+          .distanceMin(20)
+          .distanceMax(100))
+      //.on("tick", self.drawNodes)
+      .on("tick", self.update)
+      .stop();
+  }
+  resetPathSim() {
+    self.pathSim.stop();
+    self.pathSim.nodes(self.graphData.getAnchors());
+    self.pathSim.force("link").links(self.graphData.getForceLinks());
+  }
+  restartPathSim() {
+    // run the pathsim manually to avoid the animation
+    self.pathSim.alpha(1);
+    for (var i=0; i < 300; i++) {
+      self.pathSim.tick();
+    }
+    self.update();
+  }
+  restartChargeSim() {
+    self.distanceSim.stop();
+    self.distanceSim.alpha(1).restart();
+  }
+  restartCollideSim() {
+    self.collideSim.stop();
+    self.collideSim.nodes(self.graphData.nodes);
+    self.collideSim.alpha(1).restart();
+    // path anchors go into the center-sim only
+    self.centeringSim.stop();
+    self.centeringSim.nodes(self.graphData.nodes.concat(self.graphData.anchors));
+    self.centeringSim.alpha(1).restart();
+  }
+  dragged(d) {
+    // reheating collision protection is needed during long drags
+    if (self.collideSim.alpha() < 0.1) { self.restartCollideSim(); }
+
+    d.x += d3.event.dx;
+    d.y += d3.event.dy;
+  }
+  dragstarted(d) {
+    d.active = true;
+    self.restartCollideSim();
+  }
+  dragended(d) {
+    d.active = false;
+
+    // recalc node link path anchors here
+    d.links.forEach( function(l) {
+      l.recalcPathAnchors();
+    } )
+
+    // restart post-drag relevant layout sims
+    self.restartChargeSim();
+    self.resetPathSim(); // we need to reset, because the path anchors may have changed during recalcPathAnchors
+    self.restartPathSim();
+
+    self.drawNodes();
+  }
+  anchorMouseDown(d) {
+    self.dragAnchor = d;
+
+    self.svg
+      .on("mousemove", function() {
+        let p0 = [self.dragAnchor.x, self.dragAnchor.y];
+        let m = d3.mouse(self.svg.node());
+        self.linkHelper
+          .select("path")
+          .datum([p0, m])
+          .attr('d', d3.line()
+            .x( function(p) { return p[0]; } )
+            .y( function(p) { return p[1]; } )
+          );
+      } );
+    self.svg
+      .on("mouseup", function() {
+        self.linkHelper.selectAll("path").remove();
+        self.svg.on("mousemove", null);
+      } );
+    // draw initial line
+    let p0 = [d.x, d.y];
+    let m = d3.mouse(self.svg.node());
+    self.linkHelper
+      .append("path")
+      .classed("linkHelper", true)
+      .datum([p0, m])
+      .attr('d', d3.line()
+        .x( function(p) { return p[0]; } )
+        .y( function(p) { return p[1]; } )
+      );
+  }
+  anchorMouseUp(d, branch) {
+    let s = self.dragAnchor;
+
+    if (s && s != d && s.owner != d.owner)
+    {
+      self.mouseAddLinkCB(s, d);
+      /*
+      self.drawNodes();
+      self.resetPathSim();
+      self.restartPathSim();
+      */
+    }
+    self.dragAnchor = null;
+
+    // the s == d case triggers the node drawn to disappear, so redraw
+    self.drawNodes();
+  }
+  showTooltip(x, y, tip) {
+    if (tip == '') return;
+    self.tooltip
+      .attr("transform", "translate(" + (x+40) + "," + (y+25) + ")")
+      .style("opacity", 1)
+      .select("#tooltip_text")
+      .text(tip)
+  }
+  clearTooltip() {
+    self.tooltip
+      .style("opacity", 0);
+  }
+  update() {
+    self.draggable
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
+    self.nodes
+      .classed("selected", function(d) { return d.active; })
+
+    self.splines
+      .each( function(l, i) {
+        l.update(d3.select(this), i);
+      });
+
+    /*
+    // for DEBUG purposes
+    self.anchors
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+    */
+  }
+
+  drawNodes() {
+    // clear all nodes
+    if (self.draggable) self.draggable.remove();
+
+    // prepare node groups
+    self.draggable = self.nodeGroup.selectAll("g")
+      .data(self.graphData.nodes)
+      .enter()
+      .append("g")
+      .call( d3.drag()
+        .filter( function() {
+          return !d3.event.button && !d3.event.ctrlKey;
+        })
+        .on("start", self.dragstarted)
+        .on("drag", self.dragged)
+        .on("end", self.dragended)
+      )
+      .on("click", function () { self.delNodeCB( d3.select(this).datum() ); });
+
+    // draw anchor nodes
+    self.draggable.each( function(d, i) {
+      let branch = d3.select(this)
+        .append("g")
+        .selectAll("circle")
+        .data(d.anchors)
+        .enter()
+        .append("g");
+      branch
+        .append("circle")
+        .attr('r', anchorRadius)
+        // semi-static transform, which does not belong in update()
+        .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
+        .style("fill", "white")
+        .style("stroke", "#000")
+        .classed("hidden", function(d) { return d.isLinked; })
+        .on("mousedown", function(p) {
+          // these two lines will prevent drag behavior
+          d3.event.stopPropagation();
+          d3.event.preventDefault();
+          self.anchorMouseDown(p);
+        } )
+        .on("mouseup", function(p) {
+          self.anchorMouseUp(p);
+        } )
+        .on("mouseover", function(d) {
+          d3.select(this)
+            .classed("selected", true)
+            .classed("hidden", false)
+            .classed("visible", true);
+          self.showTooltip(d.x, d.y, d.type);
+        } )
+        .on("mouseout", function(d) {
+          d3.select(this)
+            .classed("selected", false)
+            .classed("hidden", function(d) { return d.isLinked; })
+            .classed("visible", false);
+          self.clearTooltip();
+        } )
+
+      branch
+        .each( function(d, i) {
+          d.drawArrowhead(d3.select(this), i).lower();
+        } );
+
+    });
+    // draw labels
+    self.draggable.append('text')
+      .text( function(d) { return d.label } )
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "20px")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .lower();
+
+    // draw nodes (by delegation & strategy)
+    this.nodes = self.draggable
+      .append("g")
+      .lower()
+      .each( function(d, i) {
+        d.draw(d3.select(this), i).lower();
+      });
+
+    // draw the splines
+    let links = self.graphData.links;
+
+    if (self.splines) self.splines.remove();
+    self.splines = self.splineGroup.selectAll("g")
+      .data(links)
+      .enter()
+      .append("g");
+
+    self.splines
+      .each( function(l, i) {
+        l.draw(d3.select(this), i);
+      });
+
+    /*
+    // DEBUG draw anchors
+    let anchors = self.graphData.anchors;
+    if (self.anchors) self.anchors.remove();
+    self.anchors = self.linkGroup.selectAll("circle")
+      .data(anchors)
+      .enter()
+      .append("circle")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; })
+      .attr("r", 5)
+      .attr("fill", "black");
+    */
+
+    // update data properties
+    self.update();
+  }
+}
+
 // node data manager, keeping this interface tight and providing convenient arrays for layout sims
 class GraphData {
   constructor() {
@@ -843,10 +1107,55 @@ class ConnectionTruthMcWeb {
     }
     */
   }
+  /*
+  _getClassName(typename) {
+    if (typename == "object") { return NodeObject; }
+    else if (typename == "function") { return NodeFunction; }
+    else if (typename == "ifunc") { return NodeIFunc; }
+    else if (typename == "idata") { return NodeIData; }
+    else if (typename == "functional") { return NodeFunctional; }
+    else throw "_getClassName: unknown typename"
+  }
+  */
+  _getClassName(typename) {
+    let ncs = self._nodeClasses();
+    let nt = ncs.map(cn => cn.typename);
+    let i = nt.indexOf(typename);
+    if (i >= 0) return ncs(i); else throw "_getClassName: unknown typename";
+  }
+  /*
+  _getPrefix(typename) {
+    if (typename == "object") { return "o"; }
+    else if (typename == "function") { return "f"; }
+    else if (typename == "ifunc") { return "if"; }
+    else if (typename == "idata") { return "id"; }
+    else if (typename == "functional") { return "op"; }
+    else throw "_getPrefix: unknown typename"
+  }
+  */
+  _getPrefix(typename) {
+    let ncs = self._nodeClasses();
+    let prefixes = ncs.map(cn => cn.prefix);
+    let typenames = ncs.map(cn => cn.typename);
+    let i = typenames.indexOf(typename);
+    if (i >= 0) return prefixes(i); else throw "_getClassName: unknown typename";
+  }
+  // register all node types here
+  _nodeClasses() {
+    return [
+      NodeObject,
+      NodeFunction,
+      NodeIData,
+      NodeIFunc,
+      NodeFunctional
+    ];
+  }
 }
 
 // high-level node types
 class Node {
+  static get typename() { throw "Node: static typename property must be overridden"; }
+  static get prefix() { throw "Node: static prefix property must be overridden"; }
   // F stands for functional, e.g. type lists for the "other" classification
   constructor (x, y, id, name, label, itypes, otypes, itypesF=[], otypesF=[]) {
     this.id = id;
@@ -917,8 +1226,10 @@ class Node {
 }
 
 class NodeFunction extends Node {
-  constructor(x, y, label, itypes, otypes) {
-    super(x, y, '', '', label, itypes, otypes, ['func'], ['func']);
+  static get typename() { return "function"; }
+  static get prefix() { return "op"; }
+  constructor(x, y, id, name, label, itypes, otypes) {
+    super(x, y, id, name, label, itypes, otypes, ['func'], ['func']);
     this.idxF = itypes.length + otypes.length -1;
   }
   _getGNType() {
@@ -942,16 +1253,20 @@ class NodeFunction extends Node {
 }
 
 class NodeIFunc extends NodeFunction {
+  static get typename() { return "ifunc"; }
+  static get prefix() { return "if"; }
   _getGNType() {
     return GraphicsNodeCircularPad;
   }
 }
 
 class NodeObject extends Node {
-  constructor(x, y, label) {
+  static get typename() { return "object"; }
+  static get prefix() { return "o"; }
+  constructor(x, y, id, name, label) {
     let itypes = ['obj'];
     let otypes = ['obj'];
-    super(x, y, '', '', label, itypes, otypes);
+    super(x, y, id, name, label, itypes, otypes);
   }
   _getGNType() {
     return GraphicsNodeFluffy;
@@ -981,14 +1296,18 @@ class NodeObject extends Node {
 }
 
 class NodeIData extends NodeObject {
+  static get typename() { return "idata"; }
+  static get prefix() { return "id"; }
   _getGNType() {
     return GraphicsNodeFluffyPad;
   }
 }
 
 class NodeFunctional extends Node {
-  constructor(x, y, label, itypesF, otypesF) {
-    super(x, y, '', '', label, [], [], itypesF, otypesF);
+  static get typename() { return "functional"; }
+  static get prefix() { return "op"; }
+  constructor(x, y, id, name, label, itypesF, otypesF) {
+    super(x, y, id, name, label, [], [], itypesF, otypesF);
   }
   _getGNType() {
     return GraphicsNodeSquare;
@@ -1001,347 +1320,17 @@ class NodeFunctional extends Node {
   }
 }
 
-
-// responsible for drawing, and acts as an interface
-class GraphDraw {
-  constructor(graphData) {
-    // pythonicism
-    self = this;
-
-    this.graphData = graphData; // this is needed for accessing anchors and nodes for simulations
-
-    this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
-    this.svg = d3.select('#svg_container')
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
-    this.svg
-      .on("click", function() {
-        let m = d3.mouse(this)
-        let svg_x = m[0];
-        let svg_y = m[1];
-        clickSvg(svg_x, svg_y);
-      } )
-
-    // force layout simulations
-    this.collideSim = d3.forceSimulation()
-      .force("collide",
-        d3.forceCollide(nodeRadius + 3)
-        .iterations(4)
-      )
-      .on("tick", this.update)
-      .stop();
-    this.centeringSim = d3.forceSimulation()
-      .force("centering",
-        d3.forceCenter(width/2, height/2)
-      )
-      .on("tick", this.update)
-      .stop();
-    this.pathSim = d3.forceSimulation()
-      .force("link",
-        d3.forceLink()
-          .strength(pathLinkStrength)
-          .distance( function(d) { return distance; } )
-      )
-      .force("pathcharge",
-        d3.forceManyBody()
-          .strength(pathChargeStrength)
-      )
-      .on("tick", this.update)
-      .stop();
-
-    this.draggable = null;
-    this.dragAnchor = null;
-    this.temp = null;
-
-    // root nodes for various item types (NOTE: the ordering matters)
-    this.linkGroup = this.svg.append("g");
-    this.splineGroup = this.svg.append("g");
-    this.nodeGroup = this.svg.append("g");
-    this.tooltip = this.svg.append("g")
-      .attr("opacity", 0);
-    this.tooltip.append("rect")
-      .attr("x", -30)
-      .attr("y", -13)
-      .attr("width", 60)
-      .attr("height", 26)
-      .attr("fill", 'white')
-      .attr("stroke", "black");
-    this.tooltip.append("text")
-      .attr("id", "tooltip_text")
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle");
-    this.linkHelper = this.svg.append("g");
-
-    // specific selections
-    this.nodes = null;
-    this.paths = null;
-    this.anchors = null;
-    this.arrowHeads = null;
-  }
-  resetChargeSim() {
-    // the charge force seems to have to reset like this for some reason
-    self.distanceSim = d3.forceSimulation(self.graphData.nodes)
-      .force("noderepulsion",
-        d3.forceManyBody()
-          .strength( -40 )
-          .distanceMin(20)
-          .distanceMax(100))
-      //.on("tick", self.drawNodes)
-      .on("tick", self.update)
-      .stop();
-  }
-  resetPathSim() {
-    self.pathSim.stop();
-    self.pathSim.nodes(self.graphData.getAnchors());
-    self.pathSim.force("link").links(self.graphData.getForceLinks());
-  }
-  restartPathSim() {
-    // run the pathsim manually to avoid the animation
-    self.pathSim.alpha(1);
-    for (var i=0; i < 300; i++) {
-      self.pathSim.tick();
-    }
-    self.update();
-  }
-  restartChargeSim() {
-    self.distanceSim.stop();
-    self.distanceSim.alpha(1).restart();
-  }
-  restartCollideSim() {
-    self.collideSim.stop();
-    self.collideSim.nodes(self.graphData.nodes);
-    self.collideSim.alpha(1).restart();
-    // path anchors go into the center-sim only
-    self.centeringSim.stop();
-    self.centeringSim.nodes(self.graphData.nodes.concat(self.graphData.anchors));
-    self.centeringSim.alpha(1).restart();
-  }
-  dragged(d) {
-    // reheating collision protection is needed during long drags
-    if (self.collideSim.alpha() < 0.1) { self.restartCollideSim(); }
-
-    d.x += d3.event.dx;
-    d.y += d3.event.dy;
-  }
-  dragstarted(d) {
-    d.active = true;
-    self.restartCollideSim();
-  }
-  dragended(d) {
-    d.active = false;
-
-    // recalc node link path anchors here
-    d.links.forEach( function(l) {
-      l.recalcPathAnchors();
-    } )
-
-    // restart post-drag relevant layout sims
-    self.restartChargeSim();
-    self.resetPathSim(); // we need to reset, because the path anchors may have changed during recalcPathAnchors
-    self.restartPathSim();
-
-    self.drawNodes();
-  }
-  anchorMouseDown(d) {
-    self.dragAnchor = d;
-
-    self.svg
-      .on("mousemove", function() {
-        let p0 = [self.dragAnchor.x, self.dragAnchor.y];
-        let m = d3.mouse(self.svg.node());
-        self.linkHelper
-          .select("path")
-          .datum([p0, m])
-          .attr('d', d3.line()
-            .x( function(p) { return p[0]; } )
-            .y( function(p) { return p[1]; } )
-          );
-      } );
-    self.svg
-      .on("mouseup", function() {
-        self.linkHelper.selectAll("path").remove();
-        self.svg.on("mousemove", null);
-      } );
-    // draw initial line
-    let p0 = [d.x, d.y];
-    let m = d3.mouse(self.svg.node());
-    self.linkHelper
-      .append("path")
-      .classed("linkHelper", true)
-      .datum([p0, m])
-      .attr('d', d3.line()
-        .x( function(p) { return p[0]; } )
-        .y( function(p) { return p[1]; } )
-      );
-  }
-  anchorMouseUp(d, branch) {
-    let s = self.dragAnchor;
-
-    if (s && s != d && s.owner != d.owner)
-    {
-      self.tryCreateLink(s, d);
-      self.drawNodes();
-      self.resetPathSim();
-      self.restartPathSim();
-    }
-    self.dragAnchor = null;
-
-    // the s == d case triggers the node drawn to disappear, so redraw
-    self.drawNodes();
-  }
-  showTooltip(x, y, tip) {
-    if (tip == '') return;
-    self.tooltip
-      .attr("transform", "translate(" + (x+40) + "," + (y+25) + ")")
-      .style("opacity", 1)
-      .select("#tooltip_text")
-      .text(tip)
-  }
-  clearTooltip() {
-    self.tooltip
-      .style("opacity", 0);
-  }
-  update() {
-    self.draggable
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; } );
-    self.nodes
-      .classed("selected", function(d) { return d.active; })
-
-    self.splines
-      .each( function(l, i) {
-        l.update(d3.select(this), i);
-      });
-
-    /*
-    // for DEBUG purposes
-    self.anchors
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
-    */
-  }
-
-  drawNodes() {
-    // clear all nodes
-    if (self.draggable) self.draggable.remove();
-
-    // prepare node groups
-    self.draggable = self.nodeGroup.selectAll("g")
-      .data(self.graphData.nodes)
-      .enter()
-      .append("g")
-      .call( d3.drag()
-        .filter( function() {
-          return !d3.event.button && !d3.event.ctrlKey;
-        })
-        .on("start", self.dragstarted)
-        .on("drag", self.dragged)
-        .on("end", self.dragended)
-      )
-      .on("click", function () { self.ctrlClickNode(d3.select(this).datum()); });
-
-    // draw anchor nodes
-    self.draggable.each( function(d, i) {
-      let branch = d3.select(this)
-        .append("g")
-        .selectAll("circle")
-        .data(d.anchors)
-        .enter()
-        .append("g");
-      branch
-        .append("circle")
-        .attr('r', anchorRadius)
-        // semi-static transform, which does not belong in update()
-        .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
-        .style("fill", "white")
-        .style("stroke", "#000")
-        .classed("hidden", function(d) { return d.isLinked; })
-        .on("mousedown", function(p) {
-          // these two lines will prevent drag behavior
-          d3.event.stopPropagation();
-          d3.event.preventDefault();
-          self.anchorMouseDown(p);
-        } )
-        .on("mouseup", function(p) {
-          self.anchorMouseUp(p);
-        } )
-        .on("mouseover", function(d) {
-          d3.select(this)
-            .classed("selected", true)
-            .classed("hidden", false)
-            .classed("visible", true);
-          self.showTooltip(d.x, d.y, d.type);
-        } )
-        .on("mouseout", function(d) {
-          d3.select(this)
-            .classed("selected", false)
-            .classed("hidden", function(d) { return d.isLinked; })
-            .classed("visible", false);
-          self.clearTooltip();
-        } )
-
-      branch
-        .each( function(d, i) {
-          d.drawArrowhead(d3.select(this), i).lower();
-        } );
-
-    });
-    // draw labels
-    self.draggable.append('text')
-      .text( function(d) { return d.label } )
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "20px")
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .lower();
-
-    // draw nodes (by delegation & strategy)
-    this.nodes = self.draggable
-      .append("g")
-      .lower()
-      .each( function(d, i) {
-        d.draw(d3.select(this), i).lower();
-      });
-
-    // draw the splines
-    let links = self.graphData.links;
-
-    if (self.splines) self.splines.remove();
-    self.splines = self.splineGroup.selectAll("g")
-      .data(links)
-      .enter()
-      .append("g");
-
-    self.splines
-      .each( function(l, i) {
-        l.draw(d3.select(this), i);
-      });
-
-    /*
-    // DEBUG draw anchors
-    let anchors = self.graphData.anchors;
-    if (self.anchors) self.anchors.remove();
-    self.anchors = self.linkGroup.selectAll("circle")
-      .data(anchors)
-      .enter()
-      .append("circle")
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; })
-      .attr("r", 5)
-      .attr("fill", "black");
-    */
-
-    // update data properties
-    self.update();
-  }
-}
-
 // a sort of controller object
 class GraphInterface {
   constructor() {
     this.graphData = new GraphData();
-    this.draw = new GraphDraw(this.graphData);
+    let linkCB = this.tryCreateLink.bind(this);
+    let delNodeCB = this.ctrlClickNode.bind(this);
+    this.draw = new GraphDraw(this.graphData, linkCB, delNodeCB);
     this.truth = ConnectionTruthMcWeb;
+
+    // this is an id, node dict, only for keeping track of the high-level nodes
+    this.idxs = {};
   }
   addNode_obj(node) {
     this.graphData.addNode(node);
@@ -1351,14 +1340,6 @@ class GraphInterface {
     this.truth.updateNodeState(node);
     this.draw.drawNodes();
   }
-  tryCreateLink(s, d) {
-    if (this.truth.canConnect(s, d)) {
-      let linkClass = this.truth.getLinkClass(s);
-      this.graphData.addLink(new linkClass(s, d));
-    }
-    this.truth.updateNodeState(s.owner);
-    this.truth.updateNodeState(d.owner);
-  }
   ctrlClickNode(n) {
     let neighbours = n.neighbours;
     this.graphData.rmNode(n);
@@ -1367,6 +1348,18 @@ class GraphInterface {
     }
     this.draw.drawNodes();
     this.draw.restartCollideSim();
+  }
+  tryCreateLink(s, d) {
+    if (this.truth.canConnect(s, d)) {
+      let linkClass = this.truth.getLinkClass(s);
+      this.graphData.addLink(new linkClass(s, d));
+      this.truth.updateNodeState(s.owner);
+      this.truth.updateNodeState(d.owner);
+
+      this.draw.drawNodes();
+      this.draw.resetPathSim();
+      this.draw.restartPathSim();
+    }
   }
   linkNodes(n1, idx1, n2, idx2, functional=false) {
     let a1 = null;
@@ -1379,7 +1372,32 @@ class GraphInterface {
       a2 = n2.getAnchor(idx2, 2);
     }
     this.tryCreateLink(a1, a2);
-    this.draw.drawNodes();
+  }
+  _getId(prefix) {
+    if (prefix in this.idxs)
+      return prefix + (this.idxs[prefix] += 1);
+    else
+      return prefix + (this.idxs[prefix] = 0);
+  }
+  // the real interface !
+  addNode(x, y, id, typeconf) {
+    if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(conf.basetype));
+    if (id in this.nodes) throw "addNode: id already exists";
+
+    let cn = this._getClassName(typename);
+  }
+  addNode(id, name, label, typename, itypes, otypes, x, y) {
+    if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(typename));
+    if (id in this.nodes) throw "addNode: id already exists";
+
+    // at this level, we assume that i/o types have been set implicitely by node type
+    let cn = this._getClassName(typename);
+    let n = new cn(x, y, id, name, label, itypes, otypes);
+
+    this.nodes[id] = n;
+  }
+  rmNode(id) {
+
   }
   addLink(id1, idx1, id2, idx2, functional=false) {
 
@@ -1387,13 +1405,6 @@ class GraphInterface {
   rmLink(id1, idx1, id2, idx2, functional=false) {
 
   }
-  addNode(id, name, label, type, x, y) {
-
-  }
-  rmNode(id) {
-
-  }
-
   move(id, x, y) {
 
   }
@@ -1402,46 +1413,65 @@ class GraphInterface {
   }
 }
 
+class WriteConf {
+  constructor() {
+    this.type = '';
+    this.basetype = '';
+    this.itypes = [];
+    this.otypes = [];
+    this.data = null;
+    this.static = false;
+    this.name = '';
+    this.label = '';
+  }
+  write() {
+    console.log(JSON.stringify(this, null, 2));
+  }
+}
+
 let intface = null;
 // entry point and, test setup
 function run() {
   intface = new GraphInterface();
 
-
   // test nodes
-  //drawTestNodes();
   drawMoreTestNodes();
+  //idxTest();
 }
-function drawTestNodes() {
-  let gia = intface.truth.getInputAngles;
-  let goa = intface.truth.getOutputAngles;
-  createAndPushNode("gauss", 100, 180, gia(3), goa(1), ['pg', 'pg2', 'pg2'], ['gauss'], NodeIconType.SQUARE );
-  createAndPushNode("en1", 100, 350, gia(1), [], ['gauss'], [], NodeIconType.HEXAGONAL);
-  createAndPushNode("pg", 50, 14, [], goa(1), [], ['pg'], NodeIconType.CIRCLEPAD);
-  createAndPushNode("pg2", 100, 24, gia(1), goa(2), [''], ['pg2', 'pg2'], NodeIconType.FLUFFYPAD);
-  createAndPushNode("pg3", 150, 34, [], goa(1), [], [''], NodeIconType.CIRCE);
 
-  let gfia = intface.truth.getFunctionalInputAngles;
-  let gfoa = intface.truth.getFunctionalOutputAngles;
-  createAndPushNode("f", 320, 200, [], gfoa(1), [], [''], NodeIconType.CIRCE);
-  createAndPushNode("op", 500, 220, gfia(1), [], [''], [], NodeIconType.SQUARE);
+function testConfWrite() {
+  let w = new WriteConf();
+  w.write();
+}
+
+// test functions
+function idxTest() {
+  let intf = new GraphInterface();
+  console.log(intf._getId("f"));
+  console.log(intf._getId("f"));
+  console.log(intf._getId("f"));
+
+  console.log(intf._getId("d"));
+  console.log(intf._getId("d"));
+  console.log(intf._getId("d"));
+  console.log(intf._getId("d"));
 }
 function drawMoreTestNodes() {
-  let n1 = new NodeObject(480, 128, 'data');
-  let n2 = new NodeObject(290, 250, 'pg');
-  let n3 = new NodeObject(143, 346, 'pc');
+  let n1 = new NodeObject(480, 128, '', '', 'data');
+  let n2 = new NodeObject(290, 250, '', '', 'pg');
+  let n3 = new NodeObject(143, 346, '', '', 'pc');
 
-  let n4 = new NodeObject(336, 610, 'plt_c');
-  let n5 = new NodeObject(539, 516, 'plt_fit');
-  let n6 = new NodeObject(443, 568, 'plt_g');
+  let n4 = new NodeObject(336, 610, '', '', 'plt_c');
+  let n5 = new NodeObject(539, 516, '', '', 'plt_fit');
+  let n6 = new NodeObject(443, 568, '', '', 'plt_g');
 
-  let n7 = new NodeFunction(390, 63, 'load', [], ['IData']);
+  let n7 = new NodeFunction(390, 63, '', '', 'load', [], ['IData']);
 
-  let n8 = new NodeIFunc(208, 449, 'const', ['pars', 'IData'], ['IData']);
-  let n9 = new NodeIFunc(311, 379, 'gauss', ['pars', 'IData'], ['IData']);
-  let n10 = new NodeIFunc(565, 355, 'fitfunc', ['IData'], ['IData']);
+  let n8 = new NodeIFunc(208, 449, '', '', 'const', ['pars', 'IData'], ['IData']);
+  let n9 = new NodeIFunc(311, 379, '', '', 'gauss', ['pars', 'IData'], ['IData']);
+  let n10 = new NodeIFunc(565, 355, '', '', 'fitfunc', ['IData'], ['IData']);
 
-  let n11 = new NodeFunctional(415, 433, '+', ['func','func'], ['func']);
+  let n11 = new NodeFunctional(415, 433, '', '', '+', ['func','func'], ['func']);
 
   nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11];
   for (var i=0;i<nodes.length;i++) {
