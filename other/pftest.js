@@ -1138,7 +1138,9 @@ class ConnectionTruthMcWeb {
     let prefixes = ncs.map(cn => cn.prefix);
     let typenames = ncs.map(cn => cn.typename);
     let i = typenames.indexOf(typename);
+    console.log(ncs);
     if (i >= 0) return prefixes(i); else throw "_getClassName: unknown typename";
+
   }
   // register all node types here
   _nodeClasses() {
@@ -1252,11 +1254,29 @@ class NodeFunction extends Node {
   }
 }
 
-class NodeIFunc extends NodeFunction {
-  static get typename() { return "ifunc"; }
+class NodeIFunc extends Node {
+  static get typename() { return "IFunc"; }
   static get prefix() { return "if"; }
+  constructor(x, y, id, name, label, itypes, otypes) {
+    super(x, y, id, name, label, itypes, otypes, ['IFunc'], ['IFunc']);
+  }
   _getGNType() {
     return GraphicsNodeCircularPad;
+  }
+  _getAnchorType() {
+    return AnchorCircular;
+  }
+  isConnected() {
+    let conn = this.gNode.getConnections();
+    // connectivity as a function
+    let subconn = conn.slice(0, this.idxF); // the pre-functional connections
+    return subconn.indexOf(false) == -1;
+    /*
+    // this would be the connectivity as a functional, but that is not always used
+    if (conn.length > this.idxF) {
+      return conn[this.idxF];
+    }
+    */
   }
 }
 
@@ -1385,16 +1405,11 @@ class GraphInterface {
     if (id in this.nodes) throw "addNode: id already exists";
 
     let cn = this._getClassName(typename);
-  }
-  addNode(id, name, label, typename, itypes, otypes, x, y) {
-    if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(typename));
-    if (id in this.nodes) throw "addNode: id already exists";
-
-    // at this level, we assume that i/o types have been set implicitely by node type
-    let cn = this._getClassName(typename);
     let n = new cn(x, y, id, name, label, itypes, otypes);
 
     this.nodes[id] = n;
+    this.addNode_obj(n.gNode);
+    return n;
   }
   rmNode(id) {
 
@@ -1435,12 +1450,17 @@ function run() {
   intface = new GraphInterface();
 
   // test nodes
-  drawMoreTestNodes();
+  drawMoreTestNodes_old();
   //idxTest();
 }
 
-function testConfWrite() {
+function confWriteTest() {
   let w = new WriteConf();
+  w.type = "gauss";
+  w.basetype = "ifunc";
+  w.itypes = [];
+  w.otypes = ["IData"];
+
   w.write();
 }
 
@@ -1456,7 +1476,7 @@ function idxTest() {
   console.log(intf._getId("d"));
   console.log(intf._getId("d"));
 }
-function drawMoreTestNodes() {
+function drawMoreTestNodes_old() {
   let n1 = new NodeObject(480, 128, '', '', 'data');
   let n2 = new NodeObject(290, 250, '', '', 'pg');
   let n3 = new NodeObject(143, 346, '', '', 'pc');
@@ -1471,11 +1491,12 @@ function drawMoreTestNodes() {
   let n9 = new NodeIFunc(311, 379, '', '', 'gauss', ['pars', 'IData'], ['IData']);
   let n10 = new NodeIFunc(565, 355, '', '', 'fitfunc', ['IData'], ['IData']);
 
-  let n11 = new NodeFunctional(415, 433, '', '', '+', ['func','func'], ['func']);
+  let n11 = new NodeFunctional(415, 433, '', '', '+', ['IFunc','IFunc'], ['IFunc']);
 
   nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11];
   for (var i=0;i<nodes.length;i++) {
     let n = nodes[i];
+    intface.addNode_obj(n.gNode);
     intface.addNode_obj(n.gNode);
   }
 
