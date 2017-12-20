@@ -609,14 +609,14 @@ class GraphDraw {
         d3.forceCollide(nodeRadius + 3)
         .iterations(4)
       )
-      .on("tick", this.update)
-      .stop();
+      .stop()
+      .on("tick", this.update);
     this.centeringSim = d3.forceSimulation()
       .force("centering",
         d3.forceCenter(width/2, height/2)
       )
-      .on("tick", this.update)
-      .stop();
+      .stop()
+      .on("tick", this.update);
     this.pathSim = d3.forceSimulation()
       .force("link",
         d3.forceLink()
@@ -627,8 +627,8 @@ class GraphDraw {
         d3.forceManyBody()
           .strength(pathChargeStrength)
       )
-      .on("tick", this.update)
-      .stop();
+      .stop()
+      .on("tick", this.update);
 
     this.draggable = null;
     this.dragAnchor = null;
@@ -667,9 +667,8 @@ class GraphDraw {
           .strength( -40 )
           .distanceMin(20)
           .distanceMax(100))
-      //.on("tick", self.drawNodes)
-      .on("tick", self.update)
-      .stop();
+      .stop()
+      .on("tick", self.update);
   }
   resetPathSim() {
     self.pathSim.stop();
@@ -758,15 +757,7 @@ class GraphDraw {
   anchorMouseUp(d, branch) {
     let s = self.dragAnchor;
 
-    if (s && s != d && s.owner != d.owner)
-    {
-      self.mouseAddLinkCB(s, d);
-      /*
-      self.drawNodes();
-      self.resetPathSim();
-      self.restartPathSim();
-      */
-    }
+    if (s && s != d && s.owner != d.owner) self.mouseAddLinkCB(s, d);
     self.dragAnchor = null;
 
     // the s == d case triggers the node drawn to disappear, so redraw
@@ -804,6 +795,8 @@ class GraphDraw {
   }
 
   drawNodes() {
+    console.log("drawNodes called")
+
     // clear all nodes
     if (self.draggable) self.draggable.remove();
 
@@ -1310,8 +1303,8 @@ class NodeFunctional extends Node {
 class GraphInterface {
   constructor() {
     this.graphData = new GraphData();
-    let linkCB = this.tryCreateLink.bind(this);
-    let delNodeCB = this.ctrlClickNode.bind(this);
+    let linkCB = this._tryCreateLink.bind(this);
+    let delNodeCB = this._delNodeAndLinks.bind(this);
     this.draw = new GraphDraw(this.graphData, linkCB, delNodeCB);
     this.truth = ConnectionTruthMcWeb;
 
@@ -1319,15 +1312,16 @@ class GraphInterface {
     // this is an id, node dict, only for keeping track of the high-level nodes
     this.idxs = {};
   }
-  addNode_obj(node) {
+  _addNodeObj(node, drawNodes=false) {
     this.graphData.addNode(node);
     this.draw.resetChargeSim();
     this.draw.restartCollideSim();
 
     this.truth.updateNodeState(node);
-    this.draw.drawNodes();
+
+    if (drawNodes) this.draw.drawNodes();
   }
-  ctrlClickNode(n) {
+  _delNodeAndLinks(n) {
     let neighbours = n.neighbours;
     this.graphData.rmNode(n);
     for (var i=0; i<neighbours.length; i++) {
@@ -1336,7 +1330,7 @@ class GraphInterface {
     this.draw.drawNodes();
     this.draw.restartCollideSim();
   }
-  tryCreateLink(s, d) {
+  _tryCreateLink(s, d) {
     if (this.truth.canConnect(s, d)) {
       let linkClass = this.truth.getLinkClass(s);
       this.graphData.addLink(new linkClass(s, d));
@@ -1348,7 +1342,7 @@ class GraphInterface {
       this.draw.restartPathSim();
     }
   }
-  linkNodes(n1, idx1, n2, idx2, functional=false) {
+  _linkNodes(n1, idx1, n2, idx2, functional=false) {
     let a1 = null;
     let a2 = null;
     if (!functional) {
@@ -1358,7 +1352,14 @@ class GraphInterface {
       a1 = n1.getAnchor(idx1, 3);
       a2 = n2.getAnchor(idx2, 2);
     }
-    this.tryCreateLink(a1, a2);
+
+    if (this.truth.canConnect(a1, a2)) {
+      let linkClass = this.truth.getLinkClass(a1);
+      this.graphData.addLink(new linkClass(a1, a2));
+      this.truth.updateNodeState(a1.owner);
+      this.truth.updateNodeState(a2.owner);
+    }
+    //this._tryCreateLink(a1, a2);
   }
   _getId(prefix) {
     if (prefix in this.idxs)
@@ -1366,7 +1367,18 @@ class GraphInterface {
     else
       return prefix + (this.idxs[prefix] = 0);
   }
-  // the real interface !
+
+  //
+  // id-based interface below
+  //
+
+  // this is used for reconstructing a "topological" graph, without positional coordinates or ids
+  addNodeSimple(typeconf) {
+    let x = int(width/2);
+    let y = int(height/2);
+    this.addNode(x, y, '', typeconf);
+  }
+  // construct a graph with definite positions and (optionaly) ids
   addNode(x, y, id, typeconf) {
     if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
     if (id in this.nodes) throw "addNode: id already exists";
@@ -1380,25 +1392,28 @@ class GraphInterface {
       typeconf.otypes  //
     );
     this.nodes[id] = n;
-    this.addNode_obj(n.gNode);
+    this._addNodeObj(n.gNode);
     return n;
   }
-  rmNode(id) {
-
+  rmNodeAndAttachedLinks(id) {
+    let n = this.nodes[id];
+    if (n) this._ctrlClickNode(n);
   }
   addLink(id1, idx1, id2, idx2, functional=false) {
     let n1 = this.nodes[id1];
     let n2 = this.nodes[id2];
-    this.linkNodes(n1, idx1, n2, idx2, functional);
-  }
-  rmLink(id1, idx1, id2, idx2, functional=false) {
-
-  }
-  move(id, x, y) {
-
+    this._linkNodes(n1, idx1, n2, idx2, functional);
   }
   run(id) {
+    // TODO: implement (jquery to django view)
+  }
+  updateUi() {
+    this.draw.drawNodes();
+  }
 
+  // from graph to graph description
+  extractGraphDefinition() {
+    // TODO: implement
   }
 }
 
@@ -1428,31 +1443,7 @@ function run() {
   //idxTest();
 }
 
-function confWriteTest() {
-  let w = new NodeConf();
-  w.type = "gauss";
-  w.basetype = "ifunc";
-  w.itypes = [];
-  w.otypes = ["IData"];
-
-  w.write();
-}
-function getConfObject() {
-
-}
-
 // test functions
-function idxTest() {
-  let intf = new GraphInterface();
-  console.log(intf._getId("f"));
-  console.log(intf._getId("f"));
-  console.log(intf._getId("f"));
-
-  console.log(intf._getId("d"));
-  console.log(intf._getId("d"));
-  console.log(intf._getId("d"));
-  console.log(intf._getId("d"));
-}
 function drawMoreTestNodes() {
   let conf = new NodeConf();
   conf.type = "obj";
@@ -1518,6 +1509,9 @@ function drawMoreTestNodes() {
   intface.addLink(n9.id, 0, n6.id, 0);
 
   intface.addLink(n2.id, 0, n9.id, 0);
+
+  //
+  intface.updateUi();
 }
 
 //
