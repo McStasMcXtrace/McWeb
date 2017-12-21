@@ -795,8 +795,6 @@ class GraphDraw {
   }
 
   drawNodes() {
-    console.log("drawNodes called")
-
     // clear all nodes
     if (self.draggable) self.draggable.remove();
 
@@ -1439,15 +1437,12 @@ function run() {
   intface = new GraphInterface();
 
   // test nodes
-  drawMoreTestNodes();
+  drawEvenMoreTestNodes();
   //idxTest();
 }
 
-// test functions
-function drawMoreTestNodes() {
-  let conf = new NodeConf();
-  conf.type = "obj";
-  conf.basetype = "object_base";
+function drawEvenMoreTestNodes() {
+  let conf = nodeTypes["obj"];
   conf.label = "data";
   let n1 = intface.addNode(480, 128, '', conf);
   conf.label = "pg";
@@ -1461,36 +1456,25 @@ function drawMoreTestNodes() {
   conf.label = "plt_g";
   let n6 = intface.addNode(443, 568, '', conf);
 
-  conf = new NodeConf();
-  conf.type = "func_load";
-  conf.basetype = "function_base";
+  conf = nodeTypes["func_load"];
   conf.label = "load";
-  conf.itypes = [];
   conf.otypes = ['IData'];
   let n7 = intface.addNode(390, 63, '', conf);
 
-  conf = new NodeConf();
-  conf.type = "ifunc_xx";
-  conf.basetype = "ifunc_base";
+  conf = nodeTypes["ifunc_const"];
   conf.label = "const";
-  conf.itypes = ['pars', 'IData'];
-  conf.otypes = ['IData'];
   let n8 = intface.addNode(208, 449, '', conf);
+  conf = nodeTypes["ifunc_gauss"];
   conf.label = "gauss";
-  conf.itypes = ['pars', 'IData'];
-  conf.otypes = ['IData'];
   let n9 = intface.addNode(311, 379, '', conf);
+  conf = nodeTypes["ifunc_custom"];
   conf.label = "fitfunc";
   conf.itypes = ['IData'];
   conf.otypes = ['IData'];
   let n10 = intface.addNode(565, 355, '', conf);
 
-  conf = new NodeConf();
+  conf = nodeTypes["functional_plus"];
   conf.type = "functional_plus";
-  conf.basetype = "functional_base";
-  conf.label = "+";
-  conf.itypes = ['IFunc','IFunc'];
-  conf.otypes = ['IFunc'];
   let n11 = intface.addNode(415, 433, '', conf);
 
   intface.addLink(n7.id, 0, n1.id, 0);
