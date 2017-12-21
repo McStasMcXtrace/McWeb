@@ -497,9 +497,6 @@ class Link {
     this.d1.owner.rmLink(this, false);
     this.d2.owner.rmLink(this, true);
   }
-  nodeNames() {
-    return [this.d1.owner.label, this.d2.owner.label];
-  }
 }
 
 class LinkSingle extends Link {
@@ -720,7 +717,7 @@ class GraphDraw {
     self.resetPathSim(); // we need to reset, because the path anchors may have changed during recalcPathAnchors
     self.restartPathSim();
 
-    self.drawNodes();
+    self.drawAll();
   }
   anchorMouseDown(d) {
     self.dragAnchor = d;
@@ -761,7 +758,7 @@ class GraphDraw {
     self.dragAnchor = null;
 
     // the s == d case triggers the node drawn to disappear, so redraw
-    self.drawNodes();
+    self.drawAll();
   }
   showTooltip(x, y, tip) {
     if (tip == '') return;
@@ -793,35 +790,16 @@ class GraphDraw {
       .attr("cy", function(d) { return d.y; });
     */
   }
-
-  drawNodes() {
-    // clear all nodes
-    if (self.draggable) self.draggable.remove();
-
-    // prepare node groups
-    self.draggable = self.nodeGroup.selectAll("g")
-      .data(self.graphData.nodes)
-      .enter()
-      .append("g")
-      .call( d3.drag()
-        .filter( function() {
-          return !d3.event.button && !d3.event.ctrlKey;
-        })
-        .on("start", self.dragstarted)
-        .on("drag", self.dragged)
-        .on("end", self.dragended)
-      )
-      .on("click", function () { self.delNodeCB( d3.select(this).datum() ); });
-
+  static drawNodes(branch) {
     // draw anchor nodes
-    self.draggable.each( function(d, i) {
-      let branch = d3.select(this)
+    branch.each( function(d, i) {
+      let sbranch = d3.select(this)
         .append("g")
         .selectAll("circle")
         .data(d.anchors)
         .enter()
         .append("g");
-      branch
+      sbranch
         .append("circle")
         .attr('r', anchorRadius)
         // semi-static transform, which does not belong in update()
@@ -853,14 +831,13 @@ class GraphDraw {
           self.clearTooltip();
         } )
 
-      branch
+      sbranch
         .each( function(d, i) {
           d.drawArrowhead(d3.select(this), i).lower();
         } );
-
     });
     // draw labels
-    self.draggable.append('text')
+    branch.append('text')
       .text( function(d) { return d.label } )
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
@@ -869,12 +846,33 @@ class GraphDraw {
       .lower();
 
     // draw nodes (by delegation & strategy)
-    this.nodes = self.draggable
+    return branch
       .append("g")
       .lower()
       .each( function(d, i) {
         d.draw(d3.select(this), i).lower();
       });
+  }
+  drawAll() {
+    // clear all nodes
+    if (self.draggable) self.draggable.remove();
+
+    // prepare node groups
+    self.draggable = self.nodeGroup.selectAll("g")
+      .data(self.graphData.nodes)
+      .enter()
+      .append("g")
+      .call( d3.drag()
+        .filter( function() {
+          return !d3.event.button && !d3.event.ctrlKey;
+        })
+        .on("start", self.dragstarted)
+        .on("drag", self.dragged)
+        .on("end", self.dragended)
+      )
+      .on("click", function () { self.delNodeCB( d3.select(this).datum() ); });
+
+    self.nodes = GraphDraw.drawNodes(self.draggable);
 
     // draw the splines
     let links = self.graphData.links;
@@ -917,7 +915,7 @@ class GraphData {
     this.anchors = [];
     this.forceLinks = [];
 
-    this.nodeLabels = [];
+    this.nodeIds = [];
   }
   // should be private
   updateAnchors() {
@@ -946,11 +944,12 @@ class GraphData {
     return this.forceLinks;
   }
   addNode(n) {
-    if (!this.nodeLabels.includes(n.label)) {
+    if (!this.nodeIds.includes(n.id)) {
       this.nodes.push(n);
-      this.nodeLabels.push(n.label);
+      this.nodeIds.push(n.label);
       this.anchors.push(n.centerAnchor);
     }
+    else throw "node of that id already exists as graph data"
   }
   rmNode(n) {
     let nl = n.links.length;
@@ -1099,13 +1098,13 @@ class ConnectionTruthMcWeb {
     */
   }
   static _getBaseNodeClassName(typename) {
-    let ncs = this._nodeClasses();
+    let ncs = this._nodeBaseClasses();
     let nt = ncs.map(cn => cn.typename);
     let i = nt.indexOf(typename);
     if (i >= 0) return ncs[i]; else throw "_getBaseNodeClassName: unknown typename";
   }
   static _getPrefix(typename) {
-    let ncs = this._nodeClasses();
+    let ncs = this._nodeBaseClasses();
     let prefixes = ncs.map(cn => cn.prefix);
     let typenames = ncs.map(cn => cn.typename);
     let i = typenames.indexOf(typename);
@@ -1113,7 +1112,7 @@ class ConnectionTruthMcWeb {
 
   }
   // register all node types here
-  static _nodeClasses() {
+  static _nodeBaseClasses() {
     return [
       NodeObject,
       NodeFunction,
@@ -1122,6 +1121,17 @@ class ConnectionTruthMcWeb {
       NodeFunctional
     ];
   }
+  static createNodeObject(typeconf, id, x=0, y=0) {
+    let cn =  ConnectionTruthMcWeb._getBaseNodeClassName(typeconf.basetype);
+    let n = new cn(x, y, id,
+      typeconf.name,
+      typeconf.label,
+      typeconf.itypes, // js doesn't seem to mind these sometimes-extra arguments
+      typeconf.otypes  //
+    );
+    return n
+  }
+
 }
 
 // high-level node types
@@ -1317,7 +1327,7 @@ class GraphInterface {
 
     this.truth.updateNodeState(node);
 
-    if (drawNodes) this.draw.drawNodes();
+    if (drawNodes) this.draw.drawAll();
   }
   _delNodeAndLinks(n) {
     let neighbours = n.neighbours;
@@ -1325,7 +1335,7 @@ class GraphInterface {
     for (var i=0; i<neighbours.length; i++) {
       this.truth.updateNodeState(neighbours[i])
     }
-    this.draw.drawNodes();
+    this.draw.drawAll();
     this.draw.restartCollideSim();
   }
   _tryCreateLink(s, d) {
@@ -1335,7 +1345,7 @@ class GraphInterface {
       this.truth.updateNodeState(s.owner);
       this.truth.updateNodeState(d.owner);
 
-      this.draw.drawNodes();
+      this.draw.drawAll();
       this.draw.resetPathSim();
       this.draw.restartPathSim();
     }
@@ -1372,23 +1382,15 @@ class GraphInterface {
 
   // this is used for reconstructing a "topological" graph, without positional coordinates or ids
   addNodeSimple(typeconf) {
-    let x = int(width/2);
-    let y = int(height/2);
-    this.addNode(x, y, '', typeconf);
+    let x = Math.floor(width/2);
+    let y = Math.floor(height/2);
+    this.addNode(typeconf, x, y, '');
   }
   // construct a graph with definite positions and (optionaly) ids
-  addNode(x, y, id, typeconf) {
+  addNode(typeconf, x, y, id) {
     if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
     if (id in this.nodes) throw "addNode: id already exists";
-
-    let cn = ConnectionTruthMcWeb._getBaseNodeClassName(typeconf.basetype);
-
-    let n = new cn(x, y, id,
-      typeconf.name,
-      typeconf.label,
-      typeconf.itypes, // js doesn't seem to mind these sometimes-extra arguments
-      typeconf.otypes  //
-    );
+    let n = ConnectionTruthMcWeb.createNodeObject(typeconf, id, x, y);
     this.nodes[id] = n;
     this._addNodeObj(n.gNode);
     return n;
@@ -1406,7 +1408,7 @@ class GraphInterface {
     // TODO: implement (jquery to django view)
   }
   updateUi() {
-    this.draw.drawNodes();
+    this.draw.drawAll();
   }
 
   // from graph to graph description
@@ -1435,47 +1437,48 @@ let intface = null;
 // entry point and, test setup
 function run() {
   intface = new GraphInterface();
+  menu = new NodeTypeMenu();
 
   // test nodes
   drawEvenMoreTestNodes();
-  //idxTest();
 }
 
 function drawEvenMoreTestNodes() {
-  let conf = nodeTypes["obj"];
+  //let conf = nodeTypes["obj"];
+  let conf = _getConfClone("obj");
   conf.label = "data";
-  let n1 = intface.addNode(480, 128, '', conf);
+  let n1 = intface.addNode(conf, 480, 128, '');
   conf.label = "pg";
-  let n2 = intface.addNode(290, 250, '', conf);
+  let n2 = intface.addNode(conf, 290, 250, '');
   conf.label = "pc";
-  let n3 = intface.addNode(143, 346, '', conf);
+  let n3 = intface.addNode(conf, 143, 346, '');
   conf.label = "plt_c";
-  let n4 = intface.addNode(336, 610, '', conf);
+  let n4 = intface.addNode(conf, 336, 610, '');
   conf.label = "plt_fit";
-  let n5 = intface.addNode(539, 516, '', conf);
+  let n5 = intface.addNode(conf, 539, 516, '');
   conf.label = "plt_g";
-  let n6 = intface.addNode(443, 568, '', conf);
+  let n6 = intface.addNode(conf, 443, 568, '');
 
-  conf = nodeTypes["func_load"];
+  conf = _getConfClone("func_load");
   conf.label = "load";
   conf.otypes = ['IData'];
-  let n7 = intface.addNode(390, 63, '', conf);
+  let n7 = intface.addNode(conf, 390, 63, '');
 
-  conf = nodeTypes["ifunc_const"];
+  conf = _getConfClone("ifunc_const");
   conf.label = "const";
-  let n8 = intface.addNode(208, 449, '', conf);
-  conf = nodeTypes["ifunc_gauss"];
+  let n8 = intface.addNode(conf, 208, 449, '');
+  conf = _getConfClone("ifunc_gauss");
   conf.label = "gauss";
-  let n9 = intface.addNode(311, 379, '', conf);
-  conf = nodeTypes["ifunc_custom"];
+  let n9 = intface.addNode(conf, 311, 379, '');
+  conf = _getConfClone("ifunc_custom");
   conf.label = "fitfunc";
   conf.itypes = ['IData'];
   conf.otypes = ['IData'];
-  let n10 = intface.addNode(565, 355, '', conf);
+  let n10 = intface.addNode(conf, 565, 355, '');
 
-  conf = nodeTypes["functional_plus"];
+  conf = _getConfClone("functional_plus");
   conf.type = "functional_plus";
-  let n11 = intface.addNode(415, 433, '', conf);
+  let n11 = intface.addNode(conf, 415, 433, '');
 
   intface.addLink(n7.id, 0, n1.id, 0);
   intface.addLink(n3.id, 0, n8.id, 0);
@@ -1501,39 +1504,98 @@ function drawEvenMoreTestNodes() {
 //
 // ui interaction
 //
-let nodeLabel = '';
-let iangles = [];
-let oangles = [];
-let itypes = [];
-let otypes = [];
-let clearTbxCB = null;
-let nodeIconType = null;
-
-function pushNodeRequest(label, n_inputs, n_outputs, iconType) {
-  nodeLabel = label;
-  nodeIconType = iconType;
-
-  let gia = draw.truth.getInputAngles;
-  let goa = draw.truth.getOutputAngles;
-  iangles = gia(n_inputs);
-  oangles = goa(n_outputs);
-
-  let ia = [];
-  for (var i=0;i<n_inputs;i++) { ia.push(i); }
-  itypes = ia;
-  let oa = [];
-  for (var i=0;i<n_outputs;i++) { oa.push(label); }
-  otypes = oa;
-}
-
-// this callback in connected somewhere in GraphDraw
+var selTpe = "";
 function clickSvg(x, y) {
-  if (nodeLabel == '') return;
+  if (selTpe == "") {
+    return;
+  }
+  let c = _getConfClone(selTpe);
+  c.label = c.type;
 
-  createAndPushNode(nodeLabel, x, y, iangles, oangles, itypes, otypes, nodeIconType);
+  intface.addNode(c, x, y, "");
+  intface.updateUi();
+  selTpe = "";
+}
+function _getConfClone(type) {
+  return Object.assign({}, nodeTypes[type]);
+}
+class NodeTypeMenu {
+  constructor() {
+    this.menus = [];
+    this.root = d3.select("#svg_menu");
 
-  nodeLabel = '';
-  if (clearTbxCB) {
-    clearTbxCB();
+    for (var type in nodeTypes) {
+      let c = _getConfClone(type);
+      this.createMenuItem(c);
+    }
+    this.selected = null;
+  }
+  createMenuItem(conf) {
+    conf.label = conf.type;
+    let n = ConnectionTruthMcWeb.createNodeObject(conf, "", 50, 50);
+    let branch = this.root
+      .append("div")
+      .style('width', "100px")
+      .style('height', "100px")
+      .classed("menuItem", true)
+      .append("svg")
+      .attr("width", 100)
+      .attr("height", 100)
+      .datum(conf)
+      .on("click", function(d) { console.log(d.type); selTpe = d.type; })
+      .append("g")
+      .datum(n.gNode)
+      .attr("transform", "translate(50, 60)");
+
+    this.drawMenuNode(branch);
+    //GraphDraw.drawNodes(branch)
+    //n.gNode.draw(branch);
+
+    this.menus.push(branch)
+    //  .append("svg")
+    //  .selectAll()
+    //  .data(conf)
+  }
+  drawMenuNode(branch) {
+    branch.each( function(d, i) {
+      let sbranch = d3.select(this)
+        .append("g")
+        .selectAll("circle")
+        .data(d.anchors)
+        .enter()
+        .append("g");
+      sbranch
+        .append("circle")
+        .attr('r', anchorRadius)
+        // semi-static transform, which does not belong in update()
+        .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
+        .style("fill", "white")
+        .style("stroke", "#000")
+      /* how should we draw the types ? 
+      sbranch
+        .text( function(d) { return d.label } )
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "20px")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+      */
+    });
+    // draw labels
+    branch.append('text')
+      .text( function(d) { return d.label } )
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "10px")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("transform", "translate(0, -45)" )
+      .lower();
+
+    // draw nodes (by delegation & strategy)
+    return branch
+      .append("g")
+      .lower()
+      .each( function(d, i) {
+        d.draw(d3.select(this), i).lower();
+      });
   }
 }

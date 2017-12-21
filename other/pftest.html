@@ -4,6 +4,7 @@
 <head>
   <script src="d3.v4.min.js"></script>
   <script src="pftest.js"></script>
+  <script src="nodetypes.js"></script>
   <style>
   .linkHelper {
     stroke: black;
@@ -62,13 +63,23 @@
     stroke: white;
     stroke-width: 2px;
   }
+  .menuItem {
+    border: 1px solid black;
+    margin-bottom: -1px;
+  }
+  .menuItemSelected {
+    border: 2px solid black;
+    margin-bottom: -1px;
+  }
   </style>
 </head>
 <body>
 
-<div id="wrapper" style="width: 800px; margin: auto;">
-
-<div id="svg_container" style="width: 790px; margin: auto;"></div>
+<div id="wrapper" style="width: 900px; margin: auto;">
+<table><tr><td>
+  <div id="svg_menu" style="height: 700px; overflow-y: auto; width: 112px;"></div></td><td>
+  <div id="svg_container" style="margin: auto; float: right;"></div>
+</td></tr></table>
 
 
 <script>
@@ -81,68 +92,6 @@ onUiChange = function() {
   pushNodeRequest(label, n_inputs, n_outputs, iconType)
 }
 </script>
-
-<!--
-<div id="controls">
-  <p>You may: Ctrl-click to delete, drag to re-arrange nodes,  drag anchors (small circles) to connect. Create nodes below.</p>
-  <fieldset>
-    <table>
-      <tr>
-        <td>Node icon type
-        </td>
-        <td>
-          <select id="iconTypeSelector" onChange="onUiChange();">
-            <option value="0">CIRCLE</option>
-            <option value="1">CIRCLEPAD</option>
-            <option value="2">SQUARE</option>
-            <option value="3">FLUFFY</option>
-            <option value="4">FLUFFYPAD</option>
-            <option value="5">HEXAGONAL</option>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Label the node and click above to create:
-        </td>
-        <td>
-          <input type="text" id="nodeName" onChange="onUiChange();">e.g. data</input>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Number of inputs:
-        </td>
-        <td>
-          <select id="numInputsSelector" onChange="onUiChange();">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Number of outputs:
-        </td>
-        <td>
-          <select id="numOutputsSelector" onChange="onUiChange();">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
-</div>
--->
 
 </div>
 
