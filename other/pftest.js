@@ -863,14 +863,15 @@ class GraphDraw {
       .enter()
       .append("g")
       .call( d3.drag()
-        .filter( function() {
-          return !d3.event.button && !d3.event.ctrlKey;
-        })
+        .filter( function() { return d3.event.button == 0 && !d3.event.ctrlKey; })
         .on("start", self.dragstarted)
         .on("drag", self.dragged)
         .on("end", self.dragended)
       )
-      .on("click", function () { self.delNodeCB( d3.select(this).datum() ); });
+      .on("contextmenu", function () { console.log("contextmenu"); d3.event.preventDefault(); })
+      .on("click", function () {
+        if (d3.event.ctrlKey) self.delNodeCB( d3.select(this).datum() );
+      });
 
     self.nodes = GraphDraw.drawNodes(self.draggable);
 
@@ -1533,6 +1534,7 @@ class NodeTypeMenu {
   createMenuItem(conf) {
     conf.label = conf.type;
     let n = ConnectionTruthMcWeb.createNodeObject(conf, "", 50, 50);
+
     let branch = this.root
       .append("div")
       .style('width', "100px")
@@ -1548,13 +1550,7 @@ class NodeTypeMenu {
       .attr("transform", "translate(50, 60)");
 
     this.drawMenuNode(branch);
-    //GraphDraw.drawNodes(branch)
-    //n.gNode.draw(branch);
-
-    this.menus.push(branch)
-    //  .append("svg")
-    //  .selectAll()
-    //  .data(conf)
+    this.menus.push(branch);
   }
   drawMenuNode(branch) {
     branch.each( function(d, i) {
@@ -1571,7 +1567,7 @@ class NodeTypeMenu {
         .attr("transform", function(p) { return "translate(" + p.localx + "," + p.localy + ")" } )
         .style("fill", "white")
         .style("stroke", "#000")
-      /* how should we draw the types ? 
+      /* how should we draw the types?
       sbranch
         .text( function(d) { return d.label } )
         .attr("font-family", "sans-serif")
