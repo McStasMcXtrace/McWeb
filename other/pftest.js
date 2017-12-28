@@ -73,6 +73,7 @@ class GraphicsNode {
 
     // graphics switch on this property, which is updated externally according to some rule
     this.state = NodeState.DISCONNECTED;
+    this.active = false;
 
     // properties held only to associate the high-level data with the graph structure
     this.data = null;
@@ -131,7 +132,7 @@ class GraphicsNode {
   draw(branch, i) {
     return branch
       .attr('stroke', "black")
-      .classed(getNodeStateClass(this.state), true);
+      .classed(getNodeStateClass(this.state), true)
   }
   // hooks for higher level nodes
   onConnect(link, isInput) {}
@@ -579,13 +580,14 @@ class LinkDouble extends Link {
 
 // responsible for drawing, and acts as an interface
 class GraphDraw {
-  constructor(graphData, mouseAddLinkCB, delNodeCB) {
+  constructor(graphData, mouseAddLinkCB, delNodeCB, selectNodeCB) {
     // pythonicism
     self = this;
 
     this.graphData = graphData; // this is needed for accessing anchors and nodes for simulations
     this.mouseAddLinkCB =  mouseAddLinkCB; // this is the cb callled when anchors are dragged on top of one another
     this.delNodeCB = delNodeCB;
+    this.selectNodeCB = selectNodeCB;
 
     this.color = d3.scaleOrdinal().range(d3.schemeCategory20);
     this.svg = d3.select('#svg_container')
@@ -594,6 +596,7 @@ class GraphDraw {
       .attr('height', height);
     this.svg
       .on("click", function() {
+        self.graphData.selectedNode = null;
         let m = d3.mouse(this)
         let svg_x = m[0];
         let svg_y = m[1];
@@ -701,12 +704,9 @@ class GraphDraw {
     d.y += d3.event.dy;
   }
   dragstarted(d) {
-    d.active = true;
     self.restartCollideSim();
   }
   dragended(d) {
-    d.active = false;
-
     // recalc node link path anchors here
     d.links.forEach( function(l) {
       l.recalcPathAnchors();
@@ -843,6 +843,7 @@ class GraphDraw {
       .attr("font-size", "20px")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
+      .style("cursor", "pointer")
       .lower();
 
     // draw nodes (by delegation & strategy)
@@ -863,14 +864,23 @@ class GraphDraw {
       .enter()
       .append("g")
       .call( d3.drag()
-        .filter( function() { return d3.event.button == 0 && !d3.event.ctrlKey; })
+        .filter( function() { return d3.event.button == 2 && !d3.event.ctrlKey; })
         .on("start", self.dragstarted)
         .on("drag", self.dragged)
         .on("end", self.dragended)
       )
       .on("contextmenu", function () { console.log("contextmenu"); d3.event.preventDefault(); })
       .on("click", function () {
-        if (d3.event.ctrlKey) self.delNodeCB( d3.select(this).datum() );
+        let node = d3.select(this).datum();
+        d3.event.stopPropagation();
+        if (d3.event.ctrlKey) {
+          self.delNodeCB( node );
+        }
+        else {
+          self.graphData.selectedNode = node;
+          self.selectNodeCB( node );
+          self.update();
+        }
       });
 
     self.nodes = GraphDraw.drawNodes(self.draggable);
@@ -917,6 +927,18 @@ class GraphData {
     this.forceLinks = [];
 
     this.nodeIds = [];
+
+    this._selectedNode = null;
+  }
+  set selectedNode(n) {
+    let m = this._selectedNode;
+    if (m) m.active = false;
+    this._selectedNode = n;
+    // n could be null - de-selection
+    if (n) n.active = true;
+  }
+  get selectedNode() {
+    return this._selectedNode;
   }
   // should be private
   updateAnchors() {
@@ -1314,12 +1336,26 @@ class GraphInterface {
     this.graphData = new GraphData();
     let linkCB = this._tryCreateLink.bind(this);
     let delNodeCB = this._delNodeAndLinks.bind(this);
-    this.draw = new GraphDraw(this.graphData, linkCB, delNodeCB);
+    let selNodeCB = this._selNodeCB.bind(this);
+    this.draw = new GraphDraw(this.graphData, linkCB, delNodeCB, selNodeCB);
     this.truth = ConnectionTruthMcWeb;
 
     this.nodes = {};
     // this is an id, node dict, only for keeping track of the high-level nodes
     this.idxs = {};
+
+    // related to node selections
+    this._selListn = [];
+  }
+  get selListn() { return this._selListn; }
+  // NOTE that node can be null, indicating a total de-selection
+  _selNodeCB(node) {
+    console.log(node.label, "-",  node.owner.id);
+    // TODO: finish
+    for (var i=0;i<this.selListn.length;i++) {
+      let l = this.selListn[i];
+      l(node);
+    }
   }
   _addNodeObj(node, drawNodes=false) {
     this.graphData.addNode(node);

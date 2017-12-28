@@ -11,33 +11,42 @@
     stroke-dasharray: 10,6;
     pointer-events: none;
   }
+
+  /* node states */
   .disconnected {
     stroke: black;
     stroke-dasharray: 10,6;
     fill-opacity: 1;
     stroke-opacity: 1;
     fill: lightgray;
+    cursor: pointer;
   }
   .passive {
     stroke: black;
     fill-opacity: 1;
     stroke-opacity: 1;
     fill: lightgray;
+    cursor: pointer;
   }
   .active {
     stroke: black;
     fill: white;
     /*opacity: .5;*/
     stroke-opacity: 1;
+    cursor: pointer;
   }
   .running {
     stroke: black;
     fill: orange;
     opacity: .8;
+    cursor: pointer;
   }
   .fail {
     fill: red;
+    cursor: pointer;
   }
+
+  /* connected to the "active" property on GraphicsNode */
   .selected {
     stroke: black;
     stroke-width: 2px;
