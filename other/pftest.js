@@ -593,6 +593,8 @@ class GraphDraw {
     this.svg
       .on("click", function() {
         self.graphData.selectedNode = null;
+        self.selectNodeCB( null );
+        self.update();
         let m = d3.mouse(this)
         let svg_x = m[0];
         let svg_y = m[1];
@@ -1341,7 +1343,6 @@ class GraphInterface {
   get selListn() { return this._selListn; }
   // NOTE that node can be null, indicating a total de-selection
   _selNodeCB(node) {
-
     for (var i=0;i<this.selListn.length;i++) {
       let l = this.selListn[i];
       l(node);
@@ -1540,7 +1541,6 @@ function run() {
   menu = new NodeTypeMenu();
 
   intface.selListn.push(function(node) {
-    console.log("CB")
     if (node) pushNodePropertiesToUi(node.owner);
     else clearNodeData();
   });
@@ -1599,7 +1599,7 @@ class NodeTypeMenu {
       .attr("width", 100)
       .attr("height", 100)
       .datum(conf)
-      .on("click", function(d) { console.log(d.type); selTpe = d.type; })
+      .on("click", function(d) { selTpe = d.type; })
       .append("g")
       .datum(n.gNode)
       .attr("transform", "translate(50, 60)");
