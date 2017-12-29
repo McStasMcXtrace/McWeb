@@ -74,10 +74,6 @@ class GraphicsNode {
     // graphics switch on this property, which is updated externally according to some rule
     this.state = NodeState.DISCONNECTED;
     this.active = false;
-
-    // properties held only to associate the high-level data with the graph structure
-    this.data = null;
-    this.config = null;
   }
   setAnchors(anchors) {
     if (this.anchors != null) throw "please set anchors only once, cleaning up makes a mess"
@@ -972,7 +968,7 @@ class GraphData {
       this.nodeIds.push(n.label);
       this.anchors.push(n.centerAnchor);
     }
-    else throw "node of that id already exists as graph data"
+    else throw "node of that id already exists"
   }
   rmNode(n) {
     let nl = n.links.length;
@@ -1096,43 +1092,29 @@ class ConnectionTruthMcWeb {
     }
   }
   static updateNodeState(node) {
-    // (label, x, y, iangles, oangles, itooltip, otooltip, iconType)
-    let high = node.owner;
-    if (high.isActive()) {
+    let o = node.owner;
+    if (o.isActive()) {
       node.state = NodeState.ACTIVE;
     }
-    else if (!high.isConnected()){
+    else if (!o.isConnected()){
       node.state = NodeState.DISCONNECTED;
     }
     else {
       node.state = NodeState.PASSIVE;
     }
-    /*
-    let conn = node.getConnections();
-    if (!node.isAllConnected()){
-      node.state = NodeState.DISCONNECTED;
-    }
-    else if (node.data != null) {
-      node.state = NodeState.ACTIVE;
-    }
-    else if (true) {
-      node.state = NodeState.PASSIVE;
-    }
-    */
   }
-  static _getBaseNodeClassName(typename) {
+  static _getBaseNodeClassName(basetype) {
     let ncs = this._nodeBaseClasses();
-    let nt = ncs.map(cn => cn.typename);
-    let i = nt.indexOf(typename);
-    if (i >= 0) return ncs[i]; else throw "_getBaseNodeClassName: unknown typename";
+    let nt = ncs.map(cn => cn.basetype);
+    let i = nt.indexOf(basetype);
+    if (i >= 0) return ncs[i]; else throw "_getBaseNodeClassName: unknown basetype";
   }
-  static _getPrefix(typename) {
+  static _getPrefix(basetype) {
     let ncs = this._nodeBaseClasses();
     let prefixes = ncs.map(cn => cn.prefix);
-    let typenames = ncs.map(cn => cn.typename);
-    let i = typenames.indexOf(typename);
-    if (i >= 0) return prefixes[i]; else throw "_getPrefix: unknown typename";
-
+    let basetypes = ncs.map(cn => cn.basetype);
+    let i = basetypes.indexOf(basetype);
+    if (i >= 0) return prefixes[i]; else throw "_getPrefix: unknown basetype";
   }
   // register all node types here
   static _nodeBaseClasses() {
@@ -1149,6 +1131,7 @@ class ConnectionTruthMcWeb {
     let n = new cn(x, y, id,
       typeconf.name,
       typeconf.label,
+      typeconf.type,
       typeconf.itypes, // js doesn't seem to mind these sometimes-extra arguments
       typeconf.otypes  //
     );
@@ -1159,13 +1142,14 @@ class ConnectionTruthMcWeb {
 
 // high-level node types
 class Node {
-  static get typename() { throw "Node: static typename property must be overridden"; }
-  static get prefix() { throw "Node: static prefix property must be overridden"; }
+  static get basetype() { throw "Node: basetype property must be overridden"; }
+  static get prefix() { throw "Node: prefix property must be overridden"; }
   // F stands for functional, e.g. type lists for the "other" classification
-  constructor (x, y, id, name, label, itypes, otypes, itypesF=[], otypesF=[]) {
+  constructor (x, y, id, name, label, type, itypes, otypes, itypesF=[], otypesF=[]) {
     this.id = id;
     this.name = name;
     this.label = label;
+    this.type = type;
     this.itypes = itypes;
     this.otypes = otypes;
     this.itypesF = itypesF;
@@ -1206,7 +1190,9 @@ class Node {
     throw "abstract method call";
   }
   isActive() {
-    return this.obj != null;
+    let val = this.obj != null;
+    console.log(val);
+    return val;
   }
   // order means itypes/otypes/itypesF/otypesF == 0/1/2/3
   getAnchor(idx, order) {
@@ -1231,10 +1217,11 @@ class Node {
 }
 
 class NodeFunction extends Node {
-  static get typename() { return "function_base"; }
+  static get basetype() { return "function_base"; }
+  get basetype() { return NodeFunction.basetype; } // js is not class-based
   static get prefix() { return "f"; }
-  constructor(x, y, id, name, label, itypes, otypes) {
-    super(x, y, id, name, label, itypes, otypes, ['func'], ['func']);
+  constructor(x, y, id, name, label, type, itypes, otypes) {
+    super(x, y, id, name, label, type, itypes, otypes, ['func'], ['func']);
     this.idxF = itypes.length + otypes.length -1;
   }
   _getGNType() {
@@ -1251,10 +1238,11 @@ class NodeFunction extends Node {
 }
 
 class NodeIFunc extends Node {
-  static get typename() { return "ifunc_base"; }
+  static get basetype() { return "ifunc_base"; }
+  get basetype() { return NodeIFunc.basetype; } // js is not class-based
   static get prefix() { return "if"; }
-  constructor(x, y, id, name, label, itypes, otypes) {
-    super(x, y, id, name, label, itypes, otypes, ['IFunc'], ['IFunc']);
+  constructor(x, y, id, name, label, type, itypes, otypes) {
+    super(x, y, id, name, label, type, itypes, otypes, ['IFunc'], ['IFunc']);
     this.idxF = itypes.length + otypes.length -1;
   }
   _getGNType() {
@@ -1271,12 +1259,13 @@ class NodeIFunc extends Node {
 }
 
 class NodeObject extends Node {
-  static get typename() { return "object_base"; }
+  static get basetype() { return "object_base"; }
+  get basetype() { return NodeObject.basetype; } // js is not class-based
   static get prefix() { return "o"; }
-  constructor(x, y, id, name, label) {
+  constructor(x, y, id, name, label, type) {
     let itypes = ['obj'];
     let otypes = ['obj'];
-    super(x, y, id, name, label, itypes, otypes);
+    super(x, y, id, name, label, type, itypes, otypes);
   }
   _getGNType() {
     return GraphicsNodeFluffy;
@@ -1306,7 +1295,8 @@ class NodeObject extends Node {
 }
 
 class NodeIData extends NodeObject {
-  static get typename() { return "idata_base"; }
+  static get basetype() { return "idata_base"; }
+  get basetype() { return NodeIData.basetype; } // js is not class-based
   static get prefix() { return "id"; }
   _getGNType() {
     return GraphicsNodeFluffyPad;
@@ -1314,10 +1304,11 @@ class NodeIData extends NodeObject {
 }
 
 class NodeFunctional extends Node {
-  static get typename() { return "functional_base"; }
+  static get basetype() { return "functional_base"; }
+  get basetype() { return NodeFunctional.basetype; } // js is not class-based
   static get prefix() { return "op"; }
-  constructor(x, y, id, name, label, itypesF, otypesF) {
-    super(x, y, id, name, label, [], [], itypesF, otypesF);
+  constructor(x, y, id, name, label, type, itypesF, otypesF) {
+    super(x, y, id, name, label, type, [], [], itypesF, otypesF);
   }
   _getGNType() {
     return GraphicsNodeSquare;
@@ -1350,8 +1341,7 @@ class GraphInterface {
   get selListn() { return this._selListn; }
   // NOTE that node can be null, indicating a total de-selection
   _selNodeCB(node) {
-    console.log(node.label, "-",  node.owner.id);
-    // TODO: finish
+
     for (var i=0;i<this.selListn.length;i++) {
       let l = this.selListn[i];
       l(node);
@@ -1452,6 +1442,17 @@ class GraphInterface {
   extractGraphDefinition() {
     // TODO: implement
   }
+
+  // straightforward data interaction
+  pushSelectedNodeLabel(text) {
+    this.graphData.selectedNode.label = text;
+    this.draw.drawAll();
+  }
+  pushSelectedNodeData(json) {
+    this.graphData.selectedNode.owner.obj = json;
+    this.truth.updateNodeState(this.graphData.selectedNode);
+    this.draw.drawAll();
+  }
 }
 
 class NodeConf {
@@ -1468,16 +1469,6 @@ class NodeConf {
   write() {
     console.log(JSON.stringify(this, null, 2));
   }
-}
-
-let intface = null;
-// entry point and, test setup
-function run() {
-  intface = new GraphInterface();
-  menu = new NodeTypeMenu();
-
-  // test nodes
-  drawEvenMoreTestNodes();
 }
 
 function drawEvenMoreTestNodes() {
@@ -1541,6 +1532,24 @@ function drawEvenMoreTestNodes() {
 //
 // ui interaction
 //
+let intface = null;
+let menu = null;
+// entry point and, test setup
+function run() {
+  intface = new GraphInterface();
+  menu = new NodeTypeMenu();
+
+  intface.selListn.push(function(node) {
+    console.log("CB")
+    if (node) pushNodePropertiesToUi(node.owner);
+    else clearNodeData();
+  });
+  // test nodes
+  drawEvenMoreTestNodes();
+  // {"bite": [1, 2, 3], "size": "JASON"}
+}
+
+
 var selTpe = "";
 function clickSvg(x, y) {
   if (selTpe == "") {
@@ -1556,10 +1565,20 @@ function clickSvg(x, y) {
 function _getConfClone(type) {
   return Object.assign({}, nodeTypes[type]);
 }
+pushLabelText = function() {
+  let text = document.getElementById("nodeLabel").value;
+  intface.pushSelectedNodeLabel(text);
+}
+pushDataJSON = function() {
+  let text = document.getElementById("nodeData").value;
+  intface.pushSelectedNodeData(JSON.parse(text));
+}
+
+
 class NodeTypeMenu {
   constructor() {
     this.menus = [];
-    this.root = d3.select("#svg_menu");
+    this.root = d3.select("#graph_menu");
 
     for (var type in nodeTypes) {
       let c = _getConfClone(type);

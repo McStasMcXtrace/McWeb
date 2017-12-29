@@ -84,31 +84,42 @@
 </head>
 <body>
 
-<div id="wrapper" style="width: 900px; margin: auto;">
-<table><tr><td>
-  <div id="svg_menu" style="height: 700px; overflow-y: auto; width: 112px;"></div></td><td>
-  <div id="svg_container" style="margin: auto; float: right;"></div>
-</td></tr></table>
-
-
 <script>
-onUiChange = function() {
-  let label = document.getElementById("nodeName").value;
-  let n_inputs = document.getElementById("numInputsSelector").value;
-  let n_outputs = document.getElementById("numOutputsSelector").value;
-  let iconType = document.getElementById("iconTypeSelector").value;
 
-  pushNodeRequest(label, n_inputs, n_outputs, iconType)
-}
 </script>
 
+<div id="wrapper" style="width: 900px; margin: auto;">
+<table><tr><td>
+  <div id="graph_menu" style="height: 700px; overflow-y: auto; width: 112px;"></div></td><td>
+  <div id="svg_container" style="margin: auto; float: right;"></div></td><td>
+  <div id="node_properties" style="height:700px; width: 330px;">
+    <fieldset><table>
+      <tr><td>id</td><td><label id="nodeId"></label></td></tr>
+      <tr><td>name</td><td><label id="nodeName"></label></td></tr>
+      <tr><td>label</td><td><input type="text" id="nodeLabel" onChange="pushLabelText();"/></td></tr>
+      <tr><td>data</td><td><input type="text" id="nodeData" onChange="pushDataJSON();"></td></tr>
+      <tr><td>---</td></tr>
+      <tr><td>type</td><td><label id="nodeType"></label></td></tr>
+    </table></fieldset>
+  </div>
+</td></tr></table>
 </div>
 
 <script>
-clearTbxCB = function() {
-  document.getElementById("nodeName").value = '';
-  document.getElementById("numInputsSelector").value = 0;
-  document.getElementById("numOutputsSelector").value = 0;
+clearNodeData = function() {
+  document.getElementById("nodeId").innerHTML = "";
+  document.getElementById("nodeName").innerHTML = "";
+  document.getElementById("nodeLabel").value = "";
+  document.getElementById("nodeData").value = "";
+  document.getElementById("nodeType").innerHTML = "";
+}
+pushNodePropertiesToUi = function(node) {
+  console.log(node.type);
+  document.getElementById("nodeId").innerHTML= node.id;
+  document.getElementById("nodeName").innerHTML = node.name;
+  document.getElementById("nodeLabel").value = node.label;
+  document.getElementById("nodeData").value = JSON.stringify(node.obj);
+  document.getElementById("nodeType").innerHTML = node.type + "(" + node.basetype + ")";
 }
 run();
 </script>
