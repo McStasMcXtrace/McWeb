@@ -77,6 +77,7 @@ class GraphicsNode {
   }
   setAnchors(anchors) {
     if (this.anchors != null) throw "please set anchors only once, cleaning up makes a mess"
+    ConnectionTruthMcWeb.assignIdxAndOrder(anchors);
     this.anchors = anchors;
   }
   isAllConnected() {
@@ -116,6 +117,18 @@ class GraphicsNode {
       }
     }
     return nbs;
+  }
+  get exitLinks() {
+    let exLinks = [];
+    let idxs = [];
+    let a = null;
+    let l = null;
+    for (var j=0;j<this.links.length;j++) {
+      l = this.links[j];
+      a = l.d1;
+      if (this.anchors.indexOf(a) != -1) exLinks.push(l);
+    }
+    return exLinks;
   }
   addLink(link, isInput) {
     this.links.push(link);
@@ -311,6 +324,11 @@ class Anchor {
     this.isLinked = false;
 
     this.arrowHead = null;
+
+    // these integers, reflecting anchor position on a node, are set externally
+    this.i_o = null;
+    this.idx = null;
+    this.order = null;
   }
   get x() { return this.owner.x + this.localx; }
   set x(value) { /* empty:)) */ }
@@ -1085,6 +1103,38 @@ class ConnectionTruthMcWeb {
     let ans = ( t1 && t2 || t3 && t4 ) && t5 && (t6 || t7 || t8);
     return ans;
   }
+  static assignIdxAndOrder(anchors) {
+    // this function assigns anchor positional properties, used for back-tracking graph structure
+    let i0 = anchors.filter(a => this.isInputAngle(a.angle));
+    let o0 = anchors.filter(a => this.isOutputAngle(a.angle));
+    let i1 = anchors.filter(a => this.isFunctionalInputAngle(a.angle));
+    let o1 = anchors.filter(a => this.isFunctionalOutputAngle(a.angle));
+    let a = null;
+    for (var j=0;j<i0.length;j++) {
+      a = i0[j];
+      a.i_o = 0;
+      a.idx = j;
+      a.order = 0;
+    }
+    for (var j=0;j<o0.length;j++) {
+      a = o0[j];
+      a.i_o = 1;
+      a.idx = j;
+      a.order = 0;
+    }
+    for (var j=0;j<i1.length;j++) {
+      a = i1[j];
+      a.i_o = 0;
+      a.idx = j;
+      a.order = 1;
+    }
+    for (var j=0;j<o1.length;j++) {
+      a = o1[j];
+      a.i_o = 1;
+      a.idx = j;
+      a.order = 1;
+    }
+  }
   static getLinkClass(a) {
     if (this.isInputAngle(a.angle) || this.isOutputAngle(a.angle)) return LinkSingle; else return LinkDouble;
   }
@@ -1439,7 +1489,47 @@ class GraphInterface {
   }
   // from graph to graph description
   extractGraphDefinition() {
-    // TODO: implement
+    let def = {};
+    def.nodes = {};
+    def.links = {};
+    // TODO: put the meta-properties here, s.a. version, date
+
+    let nodes = def.nodes;
+    let links = def.links;
+    let n = null;
+    for (let key in this.nodes) {
+      n = this.nodes[key];
+      nodes[n.id] = [n.gNode.x, n.gNode.y, n.id, n.name, n.label, n.type];
+      let elks = n.gNode.exitLinks;
+      if (elks.length == 0) continue;
+
+      links[n.id] = [];
+      let l = null;
+      for (var j=0;j<elks.length;j++) {
+        l = elks[j];
+        links[n.id].push([n.id, l.d1.idx, l.d2.owner.owner.id, l.d2.idx, l.d1.order]);
+      }
+    }
+    //console.log(JSON.stringify(def, null, 2));
+    console.log(JSON.stringify(def));
+  }
+  injectGraphDefinition(text) {
+    let def = JSON.parse(text);
+    let args = null;
+    for (let key in def.nodes) {
+      args = def.nodes[key];
+      this.node_add(args[0], args[1], args[2], args[3], args[4], args[5]);
+    }
+    let elinks = null;
+    for (let key in def.links) {
+      elinks = def.links[key];
+      for (var j=0;j<elinks.length;j++) {
+        args = elinks[j];
+        console.log(args);
+        this.link_add(args[0], args[1], args[2], args[3], args[4]);
+      }
+    }
+    this.updateUi();
   }
   pushSelectedNodeLabel(text) {
     this.node_label(this.graphData.selectedNode.owner.id, text);
@@ -1603,12 +1693,16 @@ function drawTestNodesFormally() {
   intface.updateUi();
 }
 
+function drawTestNodesByGraphDefinition() {
+  intface.injectGraphDefinition('{"nodes":{"o0":[480,128,"o0","","data","obj"],"o1":[290,250,"o1","","pg","obj"],"o2":[143,346,"o2","","pc","obj"],"o3":[336,610,"o3","","plt_c","obj"],"o4":[539,516,"o4","","plt_fit","obj"],"o5":[443,568,"o5","","plt_g","obj"],"f0":[390,63,"f0","","load","func_load"],"if0":[208,449,"if0","","const","ifunc_const"],"if1":[311,379,"if1","","gauss","ifunc_gauss"],"if2":[565,355,"if2","","fitfunc","ifunc_custom"],"op0":[415,433,"op0","","+","functional_plus"]},"links":{"o0":[["o0",0,"if0",1,0],["o0",0,"if1",1,0],["o0",0,"if2",0,0]],"o1":[["o1",0,"if1",0,0]],"o2":[["o2",0,"if0",0,0]],"f0":[["f0",0,"o0",0,0]],"if0":[["if0",0,"op0",0,1],["if0",0,"o3",0,0]],"if1":[["if1",0,"op0",1,1],["if1",0,"o5",0,0]],"if2":[["if2",0,"o4",0,0]],"op0":[["op0",0,"if2",0,1]]}}');
+}
+
 //
 // ui interaction
 //
 let intface = null;
 let menu = null;
-// entry point and, test setup
+// PROGRAM MAIN FUNCTION
 function run() {
   intface = new GraphInterface();
   menu = new NodeTypeMenu();
@@ -1617,10 +1711,12 @@ function run() {
     if (node) pushNodePropertiesToUi(node.owner);
     else clearNodeData();
   });
-  // test nodes
-  drawTestNodesFormally();
+
   //drawEvenMoreTestNodes();
-  // {"bite": [1, 2, 3], "size": "JASON"}
+  //drawTestNodesFormally();
+  drawTestNodesByGraphDefinition();
+
+  //intface.extractGraphDefinition();
 }
 
 

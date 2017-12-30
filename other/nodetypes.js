@@ -55,8 +55,8 @@ var nodeTypes = {
   "ifunc_custom" : {
     "type": "ifunc_custom",
     "basetype": "ifunc_base",
-    "itypes": [],
-    "otypes": [],
+    "itypes": ["IData"], // this is cheating
+    "otypes": ["IData"], // this is cheating
     "data": null,
     "static": false,
     "name": "",
