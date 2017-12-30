@@ -1480,12 +1480,37 @@ class GraphInterface {
     let n2 = this.nodes[id2];
     this._linkNodes(n1, idx1, n2, idx2, functional);
   }
+  pushSelectedNodeLabel(text) {
+    this.node_label(this.graphData.selectedNode.owner.id, text);
+  }
+  pushSelectedNodeData(json_txt) {
+    this.node_data(this.graphData.selectedNode.owner.id, json_txt);
+  }
 
   run(id) {
     // TODO: implement (jquery to django view)
   }
   updateUi() {
     this.draw.drawAll();
+  }
+  applyAtomicCommand(command, args) {
+    // TODO: test
+    if (command="node_add") {
+      this.node_add(args[0], args[1], args[2], args[3], args[4], args[5]);
+    }
+    else if (command="node_rm") {
+      this.node_add(args[0]);
+    }
+    else if (command="node_label") {
+      this.node_add(args[0], args[1]);
+    }
+    else if (command="node_data") {
+      this.node_add(args[0], args[1]);
+    }
+    else if (command="link_add") {
+      this.node_add(args[0], args[1], args[2], args[3], args[4]);
+    }
+    else throw "unknown command value";
   }
   // from graph to graph description
   extractGraphDefinition() {
@@ -1513,8 +1538,7 @@ class GraphInterface {
     //console.log(JSON.stringify(def, null, 2));
     console.log(JSON.stringify(def));
   }
-  injectGraphDefinition(text) {
-    let def = JSON.parse(text);
+  injectGraphDefinition(def) {
     let args = null;
     for (let key in def.nodes) {
       args = def.nodes[key];
@@ -1529,12 +1553,6 @@ class GraphInterface {
       }
     }
     this.updateUi();
-  }
-  pushSelectedNodeLabel(text) {
-    this.node_label(this.graphData.selectedNode.owner.id, text);
-  }
-  pushSelectedNodeData(json_txt) {
-    this.node_data(this.graphData.selectedNode.owner.id, json_txt);
   }
 
   // FORMAL INTERFACE
@@ -1693,7 +1711,9 @@ function drawTestNodesFormally() {
 }
 
 function drawTestNodesByGraphDefinition() {
-  intface.injectGraphDefinition('{"nodes":{"o0":[480,128,"o0","","data","obj"],"o1":[290,250,"o1","","pg","obj"],"o2":[143,346,"o2","","pc","obj"],"o3":[336,610,"o3","","plt_c","obj"],"o4":[539,516,"o4","","plt_fit","obj"],"o5":[443,568,"o5","","plt_g","obj"],"f0":[390,63,"f0","","load","func_load"],"if0":[208,449,"if0","","const","ifunc_const"],"if1":[311,379,"if1","","gauss","ifunc_gauss"],"if2":[565,355,"if2","","fitfunc","ifunc_custom"],"op0":[415,433,"op0","","+","functional_plus"]},"links":{"o0":[["o0",0,"if0",1,0],["o0",0,"if1",1,0],["o0",0,"if2",0,0]],"o1":[["o1",0,"if1",0,0]],"o2":[["o2",0,"if0",0,0]],"f0":[["f0",0,"o0",0,0]],"if0":[["if0",0,"op0",0,1],["if0",0,"o3",0,0]],"if1":[["if1",0,"op0",1,1],["if1",0,"o5",0,0]],"if2":[["if2",0,"o4",0,0]],"op0":[["op0",0,"if2",0,1]]}}');
+  text = '{"nodes":{"o0":[480,128,"o0","","data","obj"],"o1":[290,250,"o1","","pg","obj"],"o2":[143,346,"o2","","pc","obj"],"o3":[336,610,"o3","","plt_c","obj"],"o4":[539,516,"o4","","plt_fit","obj"],"o5":[443,568,"o5","","plt_g","obj"],"f0":[390,63,"f0","","load","func_load"],"if0":[208,449,"if0","","const","ifunc_const"],"if1":[311,379,"if1","","gauss","ifunc_gauss"],"if2":[565,355,"if2","","fitfunc","ifunc_custom"],"op0":[415,433,"op0","","+","functional_plus"]},"links":{"o0":[["o0",0,"if0",1,0],["o0",0,"if1",1,0],["o0",0,"if2",0,0]],"o1":[["o1",0,"if1",0,0]],"o2":[["o2",0,"if0",0,0]],"f0":[["f0",0,"o0",0,0]],"if0":[["if0",0,"op0",0,1],["if0",0,"o3",0,0]],"if1":[["if1",0,"op0",1,1],["if1",0,"o5",0,0]],"if2":[["if2",0,"o4",0,0]],"op0":[["op0",0,"if2",0,1]]}}';
+  let def = JSON.parse(text);
+  intface.injectGraphDefinition(def);
 }
 
 //
