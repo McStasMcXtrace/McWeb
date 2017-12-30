@@ -1,4 +1,4 @@
-// the ultimate node types json
+// The name and label properties contain convenient default values, and are optional
 var nodeTypes = {
   "obj" : {
     "type": "obj",

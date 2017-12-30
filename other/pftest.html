@@ -85,7 +85,12 @@
 <body>
 
 <script>
-
+lblDataFocus = function() {
+  let text = document.getElementById("nodeData").value;
+  if (text == "null") {
+    document.getElementById("nodeData").value = "";
+  }
+}
 </script>
 
 <div id="wrapper" style="width: 900px; margin: auto;">
@@ -97,7 +102,7 @@
       <tr><td>id</td><td><label id="nodeId"></label></td></tr>
       <tr><td>name</td><td><label id="nodeName"></label></td></tr>
       <tr><td>label</td><td><input type="text" id="nodeLabel" onChange="pushLabelText();"/></td></tr>
-      <tr><td>data</td><td><input type="text" id="nodeData" onChange="pushDataJSON();"></td></tr>
+      <tr><td>data</td><td><input type="text" id="nodeData" onChange="pushDataJSON();" onFocus="lblDataFocus();"></td></tr>
       <tr><td>---</td></tr>
       <tr><td>type</td><td><label id="nodeType"></label></td></tr>
     </table></fieldset>

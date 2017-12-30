@@ -1150,7 +1150,6 @@ class Node {
   constructor (x, y, id, name, label, type, itypes, otypes, itypesF=[], otypesF=[]) {
     this.id = id;
     this.name = name;
-    this.label = label;
     this.type = type;
     this.itypes = itypes;
     this.otypes = otypes;
@@ -1179,6 +1178,12 @@ class Node {
 
     this.gNode = n;
   }
+  get label() {
+    return this.gNode.label;
+  }
+  set label(value) {
+    if (value) this.gNode.label = value;
+  }
   static isAllConnected() {
     return this.gNode.isAllConnected();
   }
@@ -1193,7 +1198,6 @@ class Node {
   }
   isActive() {
     let val = this.obj != null;
-    console.log(val);
     return val;
   }
   // order means itypes/otypes/itypesF/otypesF == 0/1/2/3
@@ -1358,8 +1362,10 @@ class GraphInterface {
     if (drawNodes) this.draw.drawAll();
   }
   _delNodeAndLinks(n) {
-    let neighbours = n.neighbours;
+    let id = n.owner.id;
     this.graphData.rmNode(n);
+    delete this.nodes[id];
+    let neighbours = n.neighbours;
     for (var i=0; i<neighbours.length; i++) {
       this.truth.updateNodeState(neighbours[i])
     }
@@ -1367,6 +1373,7 @@ class GraphInterface {
     this.draw.restartCollideSim();
   }
   _tryCreateLink(s, d) {
+    // this function is intended to be used via the gui
     if (this.truth.canConnect(s, d)) {
       let linkClass = this.truth.getLinkClass(s);
       this.graphData.addLink(new linkClass(s, d));
@@ -1404,55 +1411,75 @@ class GraphInterface {
       return prefix + (this.idxs[prefix] = 0);
   }
 
-  //
-  // id-based interface below
-  //
-
-  // this is used for reconstructing a "topological" graph, without positional coordinates or ids
+  // INFORMAL INTERFACE
   addNodeSimple(typeconf) {
     let x = Math.floor(width/2);
     let y = Math.floor(height/2);
-    this.addNode(typeconf, x, y, '');
+    this.addNode(typeconf, x, y);
   }
   // construct a graph with definite positions and (optionaly) ids
-  addNode(typeconf, x, y, id) {
-    if (id == '') id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
-    if (id in this.nodes) throw "addNode: id already exists";
+  addNode(typeconf, x, y) {
+    let id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
     let n = ConnectionTruthMcWeb.createNodeObject(typeconf, id, x, y);
     this.nodes[id] = n;
     this._addNodeObj(n.gNode);
     return n;
-  }
-  rmNodeAndAttachedLinks(id) {
-    let n = this.nodes[id];
-    if (n) this._ctrlClickNode(n);
   }
   addLink(id1, idx1, id2, idx2, functional=false) {
     let n1 = this.nodes[id1];
     let n2 = this.nodes[id2];
     this._linkNodes(n1, idx1, n2, idx2, functional);
   }
+
   run(id) {
     // TODO: implement (jquery to django view)
   }
   updateUi() {
     this.draw.drawAll();
   }
-
   // from graph to graph description
   extractGraphDefinition() {
     // TODO: implement
   }
-
-  // straightforward data interaction
   pushSelectedNodeLabel(text) {
-    this.graphData.selectedNode.label = text;
+    this.node_label(this.graphData.selectedNode.owner.id, text);
+  }
+  pushSelectedNodeData(json_txt) {
+    this.node_data(this.graphData.selectedNode.owner.id, json_txt);
+  }
+
+  // FORMAL INTERFACE
+  node_add(x, y, id, name, label, type) {
+    // int, int, str, str, str, str
+    let conf = getConfClone(type);
+    conf.name = name;
+    conf.label = label;
+    return this.addNode(conf, x, y);
+  }
+  node_rm(id) {
+    // str
+    let n = this.nodes[id];
+    if (n) this._ctrlClickNode(n);
+  }
+  node_label(id, label) {
+    // str, str
+    let n = this.nodes[id];
+    n.gNode.label = label;
     this.draw.drawAll();
   }
-  pushSelectedNodeData(json) {
-    this.graphData.selectedNode.owner.obj = json;
-    this.truth.updateNodeState(this.graphData.selectedNode);
+  node_data(id, data) {
+    // str, str
+    let n = this.nodes[id];
+    n.obj = JSON.parse(data);
+    this.truth.updateNodeState(n.gNode);
     this.draw.drawAll();
+  }
+  link_add(id1, idx1, id2, idx2, ordr=0) {
+    // str, int, str, int, int
+    if (!(ordr in [0, 1])) throw "invalid order";
+    let n1 = this.nodes[id1];
+    let n2 = this.nodes[id2];
+    this._linkNodes(n1, idx1, n2, idx2, ordr==1);
   }
 }
 
@@ -1473,41 +1500,41 @@ class NodeConf {
 }
 
 function drawEvenMoreTestNodes() {
-  //let conf = nodeTypes["obj"];
-  let conf = _getConfClone("obj");
+  // construct example graph using the "informal" interface
+  let conf = getConfClone("obj");
   conf.label = "data";
-  let n1 = intface.addNode(conf, 480, 128, '');
+  let n1 = intface.addNode(conf, 480, 128);
   conf.label = "pg";
-  let n2 = intface.addNode(conf, 290, 250, '');
+  let n2 = intface.addNode(conf, 290, 250);
   conf.label = "pc";
-  let n3 = intface.addNode(conf, 143, 346, '');
+  let n3 = intface.addNode(conf, 143, 346);
   conf.label = "plt_c";
-  let n4 = intface.addNode(conf, 336, 610, '');
+  let n4 = intface.addNode(conf, 336, 610);
   conf.label = "plt_fit";
-  let n5 = intface.addNode(conf, 539, 516, '');
+  let n5 = intface.addNode(conf, 539, 516);
   conf.label = "plt_g";
-  let n6 = intface.addNode(conf, 443, 568, '');
+  let n6 = intface.addNode(conf, 443, 568);
 
-  conf = _getConfClone("func_load");
+  conf = getConfClone("func_load");
   conf.label = "load";
   conf.otypes = ['IData'];
-  let n7 = intface.addNode(conf, 390, 63, '');
+  let n7 = intface.addNode(conf, 390, 63);
 
-  conf = _getConfClone("ifunc_const");
+  conf = getConfClone("ifunc_const");
   conf.label = "const";
-  let n8 = intface.addNode(conf, 208, 449, '');
-  conf = _getConfClone("ifunc_gauss");
+  let n8 = intface.addNode(conf, 208, 449);
+  conf = getConfClone("ifunc_gauss");
   conf.label = "gauss";
-  let n9 = intface.addNode(conf, 311, 379, '');
-  conf = _getConfClone("ifunc_custom");
+  let n9 = intface.addNode(conf, 311, 379);
+  conf = getConfClone("ifunc_custom");
   conf.label = "fitfunc";
   conf.itypes = ['IData'];
   conf.otypes = ['IData'];
-  let n10 = intface.addNode(conf, 565, 355, '');
+  let n10 = intface.addNode(conf, 565, 355);
 
-  conf = _getConfClone("functional_plus");
+  conf = getConfClone("functional_plus");
   conf.type = "functional_plus";
-  let n11 = intface.addNode(conf, 415, 433, '');
+  let n11 = intface.addNode(conf, 415, 433);
 
   intface.addLink(n7.id, 0, n1.id, 0);
   intface.addLink(n3.id, 0, n8.id, 0);
@@ -1530,6 +1557,52 @@ function drawEvenMoreTestNodes() {
   intface.updateUi();
 }
 
+function drawTestNodesFormally() {
+  // construct example graph using the "informal" interface
+  let n1 = intface.node_add(480, 128, "o0", "", "data", "obj");
+  let n2 = intface.node_add(290, 250, "o1", "", "pg", "obj");
+  let n3 = intface.node_add(143, 346, "o2", "", "pc", "obj");
+  let n4 = intface.node_add(336, 610, "o3", "", "plt_c", "obj");
+  let n5 = intface.node_add(539, 516, "o4", "", "plt_fit", "obj");
+  let n6 = intface.node_add(443, 568, "o5", "", "plt_g", "obj");
+
+  let n7 = intface.node_add(390, 63, "f0", "", "load", "func_load");
+
+  let n8 = intface.node_add(208, 449,  "f1", "", "const", "ifunc_const");
+  let n9 = intface.node_add(311, 379, "f2", "", "gauss", "ifunc_gauss");
+
+  // A special case - the formal node graph interface can only be used with
+  // definite, "finished" node types, while we here construct a special one.
+  // Supposedly custom typing could be handled by a ui widget
+  conf = getConfClone("ifunc_custom");
+  conf.label = "fitfunc";
+  conf.itypes = ['IData'];
+  conf.otypes = ['IData'];
+  let n10 = intface.addNode(conf, 565, 355);
+
+  let n11 = intface.node_add(415, 433, "ft0", "", "+", "functional_plus");
+
+  intface.link_add(n7.id, 0, n1.id, 0);
+  intface.link_add(n3.id, 0, n8.id, 0);
+
+  intface.link_add(n1.id, 0, n8.id, 1);
+  intface.link_add(n1.id, 0, n9.id, 1);
+  intface.link_add(n1.id, 0, n10.id, 0);
+
+  intface.link_add(n8.id, 0, n11.id, 0, 1);
+  intface.link_add(n9.id, 0, n11.id, 1, 1);
+  intface.link_add(n11.id, 0, n10.id, 0, 1);
+
+  intface.link_add(n8.id, 0, n4.id, 0);
+  intface.link_add(n10.id, 0, n5.id, 0);
+  intface.link_add(n9.id, 0, n6.id, 0);
+
+  intface.link_add(n2.id, 0, n9.id, 0);
+
+  //
+  intface.updateUi();
+}
+
 //
 // ui interaction
 //
@@ -1545,24 +1618,25 @@ function run() {
     else clearNodeData();
   });
   // test nodes
-  drawEvenMoreTestNodes();
+  drawTestNodesFormally();
+  //drawEvenMoreTestNodes();
   // {"bite": [1, 2, 3], "size": "JASON"}
 }
 
 
 var selTpe = "";
-function clickSvg(x, y) {
+clickSvg = function(x, y) {
   if (selTpe == "") {
     return;
   }
-  let c = _getConfClone(selTpe);
+  let c = getConfClone(selTpe);
   c.label = c.type;
 
   intface.addNode(c, x, y, "");
   intface.updateUi();
   selTpe = "";
 }
-function _getConfClone(type) {
+getConfClone = function(type) {
   return Object.assign({}, nodeTypes[type]);
 }
 pushLabelText = function() {
@@ -1571,7 +1645,11 @@ pushLabelText = function() {
 }
 pushDataJSON = function() {
   let text = document.getElementById("nodeData").value;
-  intface.pushSelectedNodeData(JSON.parse(text));
+  if (text == "") {
+    text = "null";
+    document.getElementById("nodeData").value = text;
+  }
+  intface.pushSelectedNodeData(text);
 }
 
 
@@ -1581,7 +1659,7 @@ class NodeTypeMenu {
     this.root = d3.select("#graph_menu");
 
     for (var type in nodeTypes) {
-      let c = _getConfClone(type);
+      let c = getConfClone(type);
       this.createMenuItem(c);
     }
     this.selected = null;
