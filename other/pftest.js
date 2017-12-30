@@ -1525,7 +1525,6 @@ class GraphInterface {
       elinks = def.links[key];
       for (var j=0;j<elinks.length;j++) {
         args = elinks[j];
-        console.log(args);
         this.link_add(args[0], args[1], args[2], args[3], args[4]);
       }
     }
