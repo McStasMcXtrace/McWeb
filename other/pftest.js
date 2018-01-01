@@ -1455,10 +1455,18 @@ class GraphInterface {
     //this._tryCreateLink(a1, a2);
   }
   _getId(prefix) {
+    let id = null;
     if (prefix in this.idxs)
-      return prefix + (this.idxs[prefix] += 1);
+      id = prefix + (this.idxs[prefix] += 1);
     else
-      return prefix + (this.idxs[prefix] = 0);
+      id = prefix + (this.idxs[prefix] = 0);
+    while (id in this.nodes) {
+      if (prefix in this.idxs)
+        id = prefix + (this.idxs[prefix] += 1);
+      else
+        id = prefix + (this.idxs[prefix] = 0);
+    }
+    return id;
   }
 
   // INFORMAL INTERFACE
@@ -1468,8 +1476,13 @@ class GraphInterface {
     this.addNode(typeconf, x, y);
   }
   // construct a graph with definite positions and (optionaly) ids
-  addNode(typeconf, x, y) {
-    let id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
+  addNode(id, typeconf, x, y) {
+    let b1 = id == '';
+    let b2 = !id;
+    let b3 = id in this.nodes;
+    if ((id == '') || (!id) || (id in this.nodes)) {
+      id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
+    }
     let n = ConnectionTruthMcWeb.createNodeObject(typeconf, id, x, y);
     this.nodes[id] = n;
     this._addNodeObj(n.gNode);
@@ -1561,7 +1574,7 @@ class GraphInterface {
     let conf = getConfClone(type);
     conf.name = name;
     conf.label = label;
-    return this.addNode(conf, x, y);
+    return this.addNode(id, conf, x, y);
   }
   node_rm(id) {
     // str
@@ -1606,64 +1619,6 @@ class NodeConf {
   }
 }
 
-function drawEvenMoreTestNodes() {
-  // construct example graph using the "informal" interface
-  let conf = getConfClone("obj");
-  conf.label = "data";
-  let n1 = intface.addNode(conf, 480, 128);
-  conf.label = "pg";
-  let n2 = intface.addNode(conf, 290, 250);
-  conf.label = "pc";
-  let n3 = intface.addNode(conf, 143, 346);
-  conf.label = "plt_c";
-  let n4 = intface.addNode(conf, 336, 610);
-  conf.label = "plt_fit";
-  let n5 = intface.addNode(conf, 539, 516);
-  conf.label = "plt_g";
-  let n6 = intface.addNode(conf, 443, 568);
-
-  conf = getConfClone("func_load");
-  conf.label = "load";
-  conf.otypes = ['IData'];
-  let n7 = intface.addNode(conf, 390, 63);
-
-  conf = getConfClone("ifunc_const");
-  conf.label = "const";
-  let n8 = intface.addNode(conf, 208, 449);
-  conf = getConfClone("ifunc_gauss");
-  conf.label = "gauss";
-  let n9 = intface.addNode(conf, 311, 379);
-  conf = getConfClone("ifunc_custom");
-  conf.label = "fitfunc";
-  conf.itypes = ['IData'];
-  conf.otypes = ['IData'];
-  let n10 = intface.addNode(conf, 565, 355);
-
-  conf = getConfClone("functional_plus");
-  conf.type = "functional_plus";
-  let n11 = intface.addNode(conf, 415, 433);
-
-  intface.addLink(n7.id, 0, n1.id, 0);
-  intface.addLink(n3.id, 0, n8.id, 0);
-
-  intface.addLink(n1.id, 0, n8.id, 1);
-  intface.addLink(n1.id, 0, n9.id, 1);
-  intface.addLink(n1.id, 0, n10.id, 0);
-
-  intface.addLink(n8.id, 0, n11.id, 0, true);
-  intface.addLink(n9.id, 0, n11.id, 1, true);
-  intface.addLink(n11.id, 0, n10.id, 0, true);
-
-  intface.addLink(n8.id, 0, n4.id, 0);
-  intface.addLink(n10.id, 0, n5.id, 0);
-  intface.addLink(n9.id, 0, n6.id, 0);
-
-  intface.addLink(n2.id, 0, n9.id, 0);
-
-  //
-  intface.updateUi();
-}
-
 function drawTestNodesFormally() {
   // construct example graph using the "informal" interface
   let n1 = intface.node_add(480, 128, "o0", "", "data", "obj");
@@ -1685,7 +1640,7 @@ function drawTestNodesFormally() {
   conf.label = "fitfunc";
   conf.itypes = ['IData'];
   conf.otypes = ['IData'];
-  let n10 = intface.addNode(conf, 565, 355);
+  let n10 = intface.addNode('', conf, 565, 355);
 
   let n11 = intface.node_add(415, 433, "ft0", "", "+", "functional_plus");
 
@@ -1736,6 +1691,9 @@ function run() {
   drawTestNodesByGraphDefinition();
 
   //intface.extractGraphDefinition();
+
+  // this init is required if no test functions are run
+  intface.updateUi();
 }
 
 
@@ -1747,7 +1705,7 @@ clickSvg = function(x, y) {
   let c = getConfClone(selTpe);
   c.label = c.type;
 
-  intface.addNode(c, x, y, "");
+  intface.addNode('', c, x, y);
   intface.updateUi();
   selTpe = "";
 }
