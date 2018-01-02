@@ -1620,10 +1620,11 @@ class NodeConf {
 }
 
 class UndoRedoCommandStack {
-  constructor() {
+  constructor(maxSize=50) {
     this.synced = null; // last synced idx
     this.idx = -1; // undo stack index
     this.ur = []; // undo-redo stack
+    this.limit = maxSize; // stack maximum size
   }
   undo() {
     if (this.idx > 0) {
@@ -1636,6 +1637,11 @@ class UndoRedoCommandStack {
     }
   }
   newdo(doCmd, undoCmd) {
+    if (this.ur.length == this.limit) {
+      this.ur.splice(0,1); // delete first entry in a re-indexing way
+      this.idx -= 1;
+      if (this.synced) this.synced = Math.max(0, this.synced-1);
+    }
     this.idx += 1;
     this.ur.splice(this.idx);
     this.ur.push([doCmd, undoCmd]);
@@ -1651,7 +1657,7 @@ class UndoRedoCommandStack {
     if (this.synced > this.idx) {
       let ss = this.ur.slice(this.idx+1, this.synced);
       this.synced = this.idx+1;
-      return ss.map(x => x[1]);
+      return ss.map(x => x[1]).reverse();
     }
     // positive sync set
     else {
@@ -1687,7 +1693,8 @@ function run() {
   intface.updateUi();
 
   // more tests
-  //testUndoRedo();
+  testUndoRedo();
+  //testUndoRedoStackLimit();
 }
 
 

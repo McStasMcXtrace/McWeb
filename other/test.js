@@ -29,6 +29,7 @@ function testUndoRedo() {
   console.log(und.getSyncSet());
 
   console.log(und.undo());
+  console.log(und.undo());
   console.log(und.getSyncSet());
   console.log(und.getSyncSet());
 
@@ -38,6 +39,34 @@ function testUndoRedo() {
   console.log(und.undo());
 
   console.log(und.getSyncSet());
+}
+
+function testUndoRedoStackLimit() {
+  let und = new UndoRedoCommandStack(50);
+
+  for (var i=0; i<und.limit-5; i++) {
+    und.newdo(i, -i);
+  }
+  console.log(und.getSyncSet());
+  for (var i=und.limit-5; i<und.limit+5; i++) {
+    und.newdo(i, -i);
+  }
+
+  console.log(und.ur.length);
+  console.log(und.idx);
+  console.log(und.synced);
+
+  console.log(und.getSyncSet());
+  und.undo();
+  und.undo();
+  und.undo();
+  und.undo();
+  console.log(und.getSyncSet());
+  console.log(und.getSyncSet());
+
+  console.log(und.ur.length);
+  console.log(und.idx);
+  console.log(und.synced);
 }
 
 function drawTestNodesFormally() {
