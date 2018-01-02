@@ -2,7 +2,7 @@
 
 STARTDIR=`pwd`
 # Basic infrastructure
-apt-get -y install net-tools sudo openssh-server xbase-clients zip unzip
+apt-get -y install net-tools iproute2 sudo openssh-server xbase-clients zip unzip
 
 # Add nonfree and contrib repo
 sed -i.bak s/main/main\ contrib\ non-free/g /etc/apt/sources.list
