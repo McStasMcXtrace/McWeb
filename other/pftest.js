@@ -1625,6 +1625,7 @@ class UndoRedoCommandStack {
     this.idx = -1; // undo stack index
     this.ur = []; // undo-redo stack
     this.limit = maxSize; // stack maximum size
+    this.buffer = []; // sync-set buffer for data otherwise lost by the sequence "sync -> undo -> undo -> newdo -> sync"
   }
   undo() {
     if (this.idx > 0) {
@@ -1638,9 +1639,12 @@ class UndoRedoCommandStack {
   }
   newdo(doCmd, undoCmd) {
     if (this.ur.length == this.limit) {
-      this.ur.splice(0,1); // delete first entry in a re-indexing way
+      this.ur.splice(0, 1); // delete first entry and re-index
       this.idx -= 1;
       if (this.synced) this.synced = Math.max(0, this.synced-1);
+    }
+    if (this.idx < this.synced) { // buffer lost undo history
+      this.buffer = this.buffer.concat(this._getSyncSetNoBuffer());
     }
     this.idx += 1;
     this.ur.splice(this.idx);
@@ -1648,6 +1652,11 @@ class UndoRedoCommandStack {
     return [doCmd, undoCmd];
   }
   getSyncSet() {
+    let ss = this.buffer.concat(this._getSyncSetNoBuffer());
+    this.buffer = [];
+    return ss;
+  }
+  _getSyncSetNoBuffer() {
     // init synced variable
     if (!this.synced) {
       if (this.ur.length == 0) return [];
@@ -1693,8 +1702,9 @@ function run() {
   intface.updateUi();
 
   // more tests
-  testUndoRedo();
+  //testUndoRedo();
   //testUndoRedoStackLimit();
+  testUndoRedoDataBuffer();
 }
 
 

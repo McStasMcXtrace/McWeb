@@ -40,7 +40,6 @@ function testUndoRedo() {
 
   console.log(und.getSyncSet());
 }
-
 function testUndoRedoStackLimit() {
   let und = new UndoRedoCommandStack(50);
 
@@ -68,6 +67,31 @@ function testUndoRedoStackLimit() {
   console.log(und.idx);
   console.log(und.synced);
 }
+function testUndoRedoDataBuffer() {
+  let und = new UndoRedoCommandStack();
+
+  function doit() {
+    console.log(und.newdo('a', '-a'));
+    console.log(und.newdo('b', '-b'));
+    console.log(und.newdo('c', '-c'));
+    console.log(und.newdo('d', '-d'));
+    console.log(und.newdo('e', '-e'));
+
+    console.log(und.getSyncSet()); // set sync position to latest
+
+    console.log(und.undo()); // move to a parallel universe
+    console.log(und.undo());
+    console.log(und.undo());
+    console.log(und.newdo('x', '-x'));
+
+    console.log(und.getSyncSet()); // new sync set should include backtracked undos
+  }
+  doit();
+  console.log("");
+  console.log("");
+  doit();
+}
+
 
 function drawTestNodesFormally() {
   // construct example graph using the "informal" interface
