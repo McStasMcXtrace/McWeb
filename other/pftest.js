@@ -645,6 +645,7 @@ class GraphDraw {
       )
       .stop()
       .on("tick", this.update);
+    this.distanceSim = null;
 
     this.draggable = null;
     this.dragAnchor = null;
@@ -686,6 +687,10 @@ class GraphDraw {
       .stop()
       .on("tick", self.update);
   }
+  restartChargeSim() {
+    self.distanceSim.stop();
+    self.distanceSim.alpha(1).restart();
+  }
   resetPathSim() {
     self.pathSim.stop();
     self.pathSim.nodes(self.graphData.getAnchors());
@@ -698,10 +703,6 @@ class GraphDraw {
       self.pathSim.tick();
     }
     self.update();
-  }
-  restartChargeSim() {
-    self.distanceSim.stop();
-    self.distanceSim.alpha(1).restart();
   }
   restartCollideSim() {
     self.collideSim.stop();
@@ -990,7 +991,7 @@ class GraphData {
     }
     else throw "node of that id already exists"
   }
-  rmNode(n) {
+  rmNodeAndLinks(n) {
     let nl = n.links.length;
     let report = [];
     let l = null;
@@ -1001,6 +1002,10 @@ class GraphData {
     }
     remove(this.nodes, n);
     return report;
+  }
+  rmNodeSecure(n) {
+    if (n.links.length > 0) throw "some links persist on node, won't delete";
+    remove(this.nodes, n);
   }
   addLink(l) {
     this.links.push(l);
@@ -1412,16 +1417,20 @@ class GraphInterface {
   }
   _delNodeAndLinks(n) {
     if (n.gNode) n = n.gNode; // totally should be un-hacked
-    let id = n.owner.id;
-    let report = this.graphData.rmNode(n);
-    delete this.nodes[id];
-    let neighbours = n.neighbours;
-    for (var i=0; i<neighbours.length; i++) {
-      this.truth.updateNodeState(neighbours[i])
+    console.log(n);
+    // formalize "node cleanup" which is link removal
+    let l = null;
+    for (var i=0; i<n.links.length; i++) {
+      l = n.links[0];
+      this.link_rm(l.d1.owner.owner.id, l.d1.idx, l.d2.owner.owner.id, l.d2.idx, l.d1.order);
     }
+    // formalize the now clean node removal
+    let id = n.owner.id;
+    this.node_rm(id);
+
+    // ui related actions
     this.draw.drawAll();
     this.draw.restartCollideSim();
-    return report;
   }
   _tryCreateLink(s, d) {
     if (this.truth.canConnect(s, d)) {
@@ -1431,6 +1440,16 @@ class GraphInterface {
       this.draw.resetPathSim();
       this.draw.restartPathSim();
     }
+  }
+  // this is the ui-update-yourself way of pushing a new node from the gui
+  _addNodeFromGui(x, y, id, name, label, type) {
+    this.node_add(x, y, id, name, label, type);
+
+    this.draw.resetChargeSim();
+    this.draw.restartCollideSim();
+
+    let drawNodes = false;
+      if (drawNodes) this.draw.drawAll();
   }
   _getId(prefix) {
     let id = null;
@@ -1447,30 +1466,6 @@ class GraphInterface {
     return id;
   }
 
-  // INFORMAL INTERFACE
-  // construct a graph with definite positions and (optionaly) ids
-  addNode(id, typeconf, x, y) {
-    let b1 = id == '';
-    let b2 = !id;
-    let b3 = id in this.nodes;
-    if ((id == '') || (!id) || (id in this.nodes)) {
-      id = this._getId(ConnectionTruthMcWeb._getPrefix(typeconf.basetype));
-    }
-    let n = ConnectionTruthMcWeb.createNodeObject(typeconf, id, x, y);
-    this.nodes[id] = n;
-
-
-    this.graphData.addNode(n.gNode);
-    this.draw.resetChargeSim();
-    this.draw.restartCollideSim();
-
-    this.truth.updateNodeState(n.gNode);
-
-    let drawNodes = false;
-    if (drawNodes) this.draw.drawAll();
-
-    return n;
-  }
   pushSelectedNodeLabel(text) {
     this.node_label(this.graphData.selectedNode.owner.id, text);
   }
@@ -1532,22 +1527,40 @@ class GraphInterface {
     let args = cmd.slice(1);
     let command = cmd[0]
     if (command=="node_add") {
-      let conf = getConfClone(args[5]);
-      conf.name = args[3];
-      conf.label = args[4];
-      let n = this.addNode(args[2], conf, args[0], args[1]);
-      // tricky part: the given id may well be empty
-      cmd[3] = n.id;
-      return [cmd, ["node_rm", n.id]];
+      let x = args[0];
+      let y = args[1];
+      let id = args[2];
+      let name = args[3];
+      let label = args[4]
+      let type = args[5];
+
+      let conf = getConfClone(type);
+      conf.name = name;
+      conf.label = label;
+      if ((id == '') || (!id) || (id in this.nodes)) {
+        id = this._getId(ConnectionTruthMcWeb._getPrefix(conf.basetype));
+      }
+      let n = ConnectionTruthMcWeb.createNodeObject(conf, id, x, y);
+      this.nodes[id] = n;
+
+      this.graphData.addNode(n.gNode);
+      this.truth.updateNodeState(n.gNode);
+
+      return [["node_add", n.x, n.y, n.id, n.name, n.label, n.type], ["node_rm", n.id]];
     }
     else if (command=="node_rm") {
       let n = this.nodes[args[0]];
-      if (!n) return;
+      if (!n) throw "invalid node_rm command: node not found (by id)";
       let id = n.id;
-      let na_cmd = ["node_add", n.gNode.x, n.gNode.y, id, n.name, n.label, n.type];
-      let linksreport = this._delNodeAndLinks(n.gNode);
 
-      return [["node_rm", id], na_cmd]; // unfortunately we can't add more than one command (the "linksreport") at the time
+      // construct reverse command
+      let na_cmd = ["node_add", n.gNode.x, n.gNode.y, id, n.name, n.label, n.type];
+
+      // remove node traces
+      this.graphData.rmNodeSecure(n.gNode);
+      delete this.nodes[id];
+
+      return [["node_rm", id], na_cmd];
     }
     else if (command=="node_label") {
       this.node_label(args[0], args[1]);
@@ -1556,7 +1569,77 @@ class GraphInterface {
       this.node_data(args[0], args[1]);
     }
     else if (command=="link_add") {
-      this.link_add(args[0], args[1], args[2], args[3], args[4]);
+      let id1 = args[0];
+      let idx1 = args[1];
+      let id2 = args[2];
+      let idx2 = args[3];
+      let ordr = args[4];
+
+      // WARNING: non-general handling of order
+      if (!(ordr in [0, 1])) throw "invalid order";
+      let n1 = this.nodes[id1];
+      let n2 = this.nodes[id2];
+
+      // extract the proper link given input data
+      let a1 = null;
+      let a2 = null;
+      if (ordr==0) {
+        a1 = n1.getAnchor(idx1, 1);
+        a2 = n2.getAnchor(idx2, 0);
+      } else if (ordr==1) {
+        a1 = n1.getAnchor(idx1, 3);
+        a2 = n2.getAnchor(idx2, 2);
+      } else throw "extra-binary order connections not implemented"
+
+      // connect
+      if (this.truth.canConnect(a1, a2)) {
+        let linkClass = this.truth.getLinkClass(a1);
+        let l = new linkClass(a1, a2)
+        this.graphData.addLink(l);
+        n1.gNode.addLink(l, false);
+        n2.gNode.addLink(l, true);
+        this.truth.updateNodeState(a1.owner);
+        this.truth.updateNodeState(a2.owner);
+      }
+      return [["link_add"].concat(args), ["link_rm"].concat(args)];
+    }
+    else if (command=="link_rm") {
+      let id1 = args[0];
+      let idx1 = args[1];
+      let id2 = args[2];
+      let idx2 = args[3];
+      let ordr = args[4];
+
+      // 1) get the anchors of the link
+      if (!(ordr in [0, 1])) throw "invalid order";
+      let n1 = this.nodes[id1];
+      let n2 = this.nodes[id2];
+
+      let a1 = null;
+      let a2 = null;
+      if (ordr==0) {
+        a1 = n1.getAnchor(idx1, 1);
+        a2 = n2.getAnchor(idx2, 0);
+      } else if (ordr==1) {
+        a1 = n1.getAnchor(idx1, 3);
+        a2 = n2.getAnchor(idx2, 2);
+      } else throw "extra-binary order connections not implemented"
+
+      // 2) get the link given the anchors
+      let l = null;
+      for (var i=0;i<n1.gNode.links.length;i++) {
+        l = n1.gNode.links[i];
+        // search for the right l
+        if ((l.d1 == a1) && (l.d2 == a2)) break;
+      }
+
+      // 3) remove l!
+      if (!l) throw "could not find link to remove!"
+      n1.gNode.rmLink(l);
+      n2.gNode.rmLink(l);
+      this.graphData.rmLink(l);
+
+      return [["link_rm"].concat(args), ["link_add"].concat(args)];
     }
     else throw "unknown command value";
   }
@@ -1579,12 +1662,14 @@ class GraphInterface {
     this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   node_label(id, label) {
+    // TODO: impl undo
     // str, str
     let n = this.nodes[id];
     n.gNode.label = label;
     this.draw.drawAll();
   }
   node_data(id, data) {
+    // TODO: impl undo
     // str, str
     let n = this.nodes[id];
     n.obj = JSON.parse(data);
@@ -1593,27 +1678,13 @@ class GraphInterface {
   }
   link_add(id1, idx1, id2, idx2, ordr=0) {
     // str, int, str, int, int
-    if (!(ordr in [0, 1])) throw "invalid order";
-    let n1 = this.nodes[id1];
-    let n2 = this.nodes[id2];
-
-    // WARNING: non-general handling of "order" structure
-    let a1 = null;
-    let a2 = null;
-    if (ordr==0) {
-      a1 = n1.getAnchor(idx1, 1);
-      a2 = n2.getAnchor(idx2, 0);
-    } else if (ordr==1) {
-      a1 = n1.getAnchor(idx1, 3);
-      a2 = n2.getAnchor(idx2, 2);
-    } else throw "extra-binary order connections not implemented"
-
-    if (this.truth.canConnect(a1, a2)) {
-      let linkClass = this.truth.getLinkClass(a1);
-      this.graphData.addLink(new linkClass(a1, a2));
-      this.truth.updateNodeState(a1.owner);
-      this.truth.updateNodeState(a2.owner);
-    }
+    let cmd_rev = this._command(["link_add", id1, idx1, id2, idx2, ordr]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
+  }
+  link_rm(id1, idx1, id2, idx2, ordr=0) {
+    // str, int, str, int, int
+    let cmd_rev = this._command(["link_rm", id1, idx1, id2, idx2, ordr]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
 }
 
@@ -1716,6 +1787,8 @@ function run() {
   intface.updateUi();
 
   intface.undo();
+  intface.undo();
+  intface.undo();
   intface.redo();
 
   intface.updateUi();
@@ -1731,7 +1804,7 @@ clickSvg = function(x, y) {
   if (selTpe == "") {
     return;
   }
-  intface.node_add(x, y, "", "", selTpe, selTpe);
+  intface._addNodeFromGui(x, y, "", "", selTpe, selTpe);
   intface.updateUi();
   selTpe = "";
 }
