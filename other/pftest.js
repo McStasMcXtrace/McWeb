@@ -1548,7 +1548,7 @@ class GraphInterface {
       this.truth.updateNodeState(n.gNode);
       this.draw.resetChargeSim();
 
-      return [["node_add", n.x, n.y, n.id, n.name, n.label, n.type], ["node_rm", n.id]];
+      return [["node_add", n.gNode.x, n.gNode.y, n.id, n.name, n.label, n.type], ["node_rm", n.id]];
     }
     else if (command=="node_rm") {
       let n = this.nodes[args[0]];
@@ -1645,10 +1645,12 @@ class GraphInterface {
   undo() {
     let cmd = this.undoredo.undo();
     this._command(cmd);
+    this.updateUi();
   }
   redo() {
     let cmd = this.undoredo.redo();
     this._command(cmd);
+    this.updateUi();
   }
   node_add(x, y, id, name, label, type) {
     // int, int, str, str, str, str
@@ -1785,12 +1787,6 @@ function run() {
   // this init is required if no test functions are run
   intface.updateUi();
 
-  intface.undo();
-  intface.undo();
-  intface.undo();
-  intface.redo();
-
-  intface.updateUi();
   // more tests
   //testUndoRedo();
   //testUndoRedoStackLimit();

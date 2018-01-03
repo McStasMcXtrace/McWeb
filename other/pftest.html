@@ -92,9 +92,18 @@ lblDataFocus = function() {
     document.getElementById("nodeData").value = "";
   }
 }
+undoClick = function() {
+  intface.undo();
+}
+redoClick = function() {
+  intface.redo();
+}
 </script>
 
 <div id="wrapper" style="width: 900px; margin: auto;">
+<div id="buttons" style="width: 900px; height: 30px; margin: auto;">
+  <button onClick="undoClick();">Undo</button><button onClick="redoClick();">Redo</button>
+</div>
 <table><tr><td>
   <div id="graph_menu" style="height: 700px; overflow-y: auto; width: 112px;"></div></td><td>
   <div id="svg_container" style="margin: auto; float: right;"></div></td><td>
