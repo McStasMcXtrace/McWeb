@@ -1714,7 +1714,7 @@ class UndoRedoCommandStack {
     this.buffer = []; // sync-set buffer for data otherwise lost by the sequence "sync -> undo -> undo -> newdo -> sync"
   }
   undo() {
-    if (this.idx > 0) {
+    if (this.idx >= 0) {
       return this.ur[this.idx--][1];
     }
   }
