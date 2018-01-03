@@ -118,22 +118,22 @@ function drawTestNodesFormally() {
 
   let n11 = intface.node_add(415, 433, "ft0", "", "+", "functional_plus");
 
-  intface.link_add(n7.id, 0, n1.id, 0);
-  intface.link_add(n3.id, 0, n8.id, 0);
+  intface.link_add("f0", 0, "o0", 0);
+  intface.link_add("o2", 0, "f1", 0);
 
-  intface.link_add(n1.id, 0, n8.id, 1);
-  intface.link_add(n1.id, 0, n9.id, 1);
-  intface.link_add(n1.id, 0, n10.id, 0);
+  intface.link_add("o0", 0, "f1", 1);
+  intface.link_add("o0", 0, "f2", 1);
+  intface.link_add("o0", 0, "if0", 0); // arg3 would not be known ^^
 
-  intface.link_add(n8.id, 0, n11.id, 0, 1);
-  intface.link_add(n9.id, 0, n11.id, 1, 1);
-  intface.link_add(n11.id, 0, n10.id, 0, 1);
+  intface.link_add("f1", 0, "ft0", 0, 1);
+  intface.link_add("f2", 0, "ft0", 1, 1);
+  intface.link_add("ft0", 0, "if0", 0, 1);
 
-  intface.link_add(n8.id, 0, n4.id, 0);
-  intface.link_add(n10.id, 0, n5.id, 0);
-  intface.link_add(n9.id, 0, n6.id, 0);
+  intface.link_add("f1", 0, "o3", 0);
+  intface.link_add("if0", 0, "o4", 0);
+  intface.link_add("f2", 0, "o5", 0);
 
-  intface.link_add(n2.id, 0, n9.id, 0);
+  intface.link_add("o1", 0, "f2", 0);
 
   //
   intface.updateUi();

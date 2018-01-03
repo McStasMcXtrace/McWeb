@@ -890,7 +890,7 @@ class GraphDraw {
         let node = d3.select(this).datum();
         d3.event.stopPropagation();
         if (d3.event.ctrlKey) {
-          self.delNodeCB( node );
+          self.delNodeCB( node.owner );
         }
         else {
           self.graphData.selectedNode = node;
@@ -992,10 +992,15 @@ class GraphData {
   }
   rmNode(n) {
     let nl = n.links.length;
+    let report = [];
+    let l = null;
     for (var i=0; i<nl; i++) {
-      this.rmLink(n.links[0]);
+      l = n.links[0];
+      report.push(["link_add", l.d1.owner.id, l.d1.idx, l.d2.owner.id, l.d2.idx, l.d1.order]);
+      this.rmLink(l);
     }
     remove(this.nodes, n);
+    return report;
   }
   addLink(l) {
     this.links.push(l);
@@ -1387,9 +1392,12 @@ class GraphInterface {
     this.draw = new GraphDraw(this.graphData, linkCB, delNodeCB, selNodeCB);
     this.truth = ConnectionTruthMcWeb;
 
-    this.nodes = {};
     // this is an id, node dict, only for keeping track of the high-level nodes
+    this.nodes = {};
     this.idxs = {};
+
+    // undo-redo stack
+    this.undoredo = new UndoRedoCommandStack();
 
     // related to node selections
     this._selListn = [];
@@ -1402,18 +1410,10 @@ class GraphInterface {
       l(node);
     }
   }
-  _addNodeObj(node, drawNodes=false) {
-    this.graphData.addNode(node);
-    this.draw.resetChargeSim();
-    this.draw.restartCollideSim();
-
-    this.truth.updateNodeState(node);
-
-    if (drawNodes) this.draw.drawAll();
-  }
   _delNodeAndLinks(n) {
+    if (n.gNode) n = n.gNode; // totally should be un-hacked
     let id = n.owner.id;
-    this.graphData.rmNode(n);
+    let report = this.graphData.rmNode(n);
     delete this.nodes[id];
     let neighbours = n.neighbours;
     for (var i=0; i<neighbours.length; i++) {
@@ -1421,38 +1421,16 @@ class GraphInterface {
     }
     this.draw.drawAll();
     this.draw.restartCollideSim();
+    return report;
   }
   _tryCreateLink(s, d) {
-    // this function is intended to be used via the gui
     if (this.truth.canConnect(s, d)) {
-      let linkClass = this.truth.getLinkClass(s);
-      this.graphData.addLink(new linkClass(s, d));
-      this.truth.updateNodeState(s.owner);
-      this.truth.updateNodeState(d.owner);
+      this.link_add(s.owner.owner.id, s.idx, d.owner.owner.id, d.idx, s.order);
 
       this.draw.drawAll();
       this.draw.resetPathSim();
       this.draw.restartPathSim();
     }
-  }
-  _linkNodes(n1, idx1, n2, idx2, functional=false) {
-    let a1 = null;
-    let a2 = null;
-    if (!functional) {
-      a1 = n1.getAnchor(idx1, 1);
-      a2 = n2.getAnchor(idx2, 0);
-    } else {
-      a1 = n1.getAnchor(idx1, 3);
-      a2 = n2.getAnchor(idx2, 2);
-    }
-
-    if (this.truth.canConnect(a1, a2)) {
-      let linkClass = this.truth.getLinkClass(a1);
-      this.graphData.addLink(new linkClass(a1, a2));
-      this.truth.updateNodeState(a1.owner);
-      this.truth.updateNodeState(a2.owner);
-    }
-    //this._tryCreateLink(a1, a2);
   }
   _getId(prefix) {
     let id = null;
@@ -1470,11 +1448,6 @@ class GraphInterface {
   }
 
   // INFORMAL INTERFACE
-  addNodeSimple(typeconf) {
-    let x = Math.floor(width/2);
-    let y = Math.floor(height/2);
-    this.addNode(typeconf, x, y);
-  }
   // construct a graph with definite positions and (optionaly) ids
   addNode(id, typeconf, x, y) {
     let b1 = id == '';
@@ -1485,13 +1458,18 @@ class GraphInterface {
     }
     let n = ConnectionTruthMcWeb.createNodeObject(typeconf, id, x, y);
     this.nodes[id] = n;
-    this._addNodeObj(n.gNode);
+
+
+    this.graphData.addNode(n.gNode);
+    this.draw.resetChargeSim();
+    this.draw.restartCollideSim();
+
+    this.truth.updateNodeState(n.gNode);
+
+    let drawNodes = false;
+    if (drawNodes) this.draw.drawAll();
+
     return n;
-  }
-  addLink(id1, idx1, id2, idx2, functional=false) {
-    let n1 = this.nodes[id1];
-    let n2 = this.nodes[id2];
-    this._linkNodes(n1, idx1, n2, idx2, functional);
   }
   pushSelectedNodeLabel(text) {
     this.node_label(this.graphData.selectedNode.owner.id, text);
@@ -1505,25 +1483,6 @@ class GraphInterface {
   }
   updateUi() {
     this.draw.drawAll();
-  }
-  applyAtomicCommand(command, args) {
-    // TODO: test
-    if (command="node_add") {
-      this.node_add(args[0], args[1], args[2], args[3], args[4], args[5]);
-    }
-    else if (command="node_rm") {
-      this.node_add(args[0]);
-    }
-    else if (command="node_label") {
-      this.node_add(args[0], args[1]);
-    }
-    else if (command="node_data") {
-      this.node_add(args[0], args[1]);
-    }
-    else if (command="link_add") {
-      this.node_add(args[0], args[1], args[2], args[3], args[4]);
-    }
-    else throw "unknown command value";
   }
   // from graph to graph description
   extractGraphDefinition() {
@@ -1568,18 +1527,56 @@ class GraphInterface {
     this.updateUi();
   }
 
-  // FORMAL INTERFACE
+  // FORMAL INTERFACE (also required for undo-redo to work with your operations)
+  _command(cmd) {
+    let args = cmd.slice(1);
+    let command = cmd[0]
+    if (command=="node_add") {
+      let conf = getConfClone(args[5]);
+      conf.name = args[3];
+      conf.label = args[4];
+      let n = this.addNode(args[2], conf, args[0], args[1]);
+      // tricky part: the given id may well be empty
+      cmd[3] = n.id;
+      return [cmd, ["node_rm", n.id]];
+    }
+    else if (command=="node_rm") {
+      let n = this.nodes[args[0]];
+      if (!n) return;
+      let id = n.id;
+      let na_cmd = ["node_add", n.gNode.x, n.gNode.y, id, n.name, n.label, n.type];
+      let linksreport = this._delNodeAndLinks(n.gNode);
+
+      return [["node_rm", id], na_cmd]; // unfortunately we can't add more than one command (the "linksreport") at the time
+    }
+    else if (command=="node_label") {
+      this.node_label(args[0], args[1]);
+    }
+    else if (command=="node_data") {
+      this.node_data(args[0], args[1]);
+    }
+    else if (command=="link_add") {
+      this.link_add(args[0], args[1], args[2], args[3], args[4]);
+    }
+    else throw "unknown command value";
+  }
+  undo() {
+    let cmd = this.undoredo.undo();
+    this._command(cmd);
+  }
+  redo() {
+    let cmd = this.undoredo.redo();
+    this._command(cmd);
+  }
   node_add(x, y, id, name, label, type) {
     // int, int, str, str, str, str
-    let conf = getConfClone(type);
-    conf.name = name;
-    conf.label = label;
-    return this.addNode(id, conf, x, y);
+    let cmd_rev = this._command(["node_add", x, y, id, name, label, type]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   node_rm(id) {
     // str
-    let n = this.nodes[id];
-    if (n) this._ctrlClickNode(n);
+    let cmd_rev = this._command(["node_rm", id]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   node_label(id, label) {
     // str, str
@@ -1599,7 +1596,24 @@ class GraphInterface {
     if (!(ordr in [0, 1])) throw "invalid order";
     let n1 = this.nodes[id1];
     let n2 = this.nodes[id2];
-    this._linkNodes(n1, idx1, n2, idx2, ordr==1);
+
+    // WARNING: non-general handling of "order" structure
+    let a1 = null;
+    let a2 = null;
+    if (ordr==0) {
+      a1 = n1.getAnchor(idx1, 1);
+      a2 = n2.getAnchor(idx2, 0);
+    } else if (ordr==1) {
+      a1 = n1.getAnchor(idx1, 3);
+      a2 = n2.getAnchor(idx2, 2);
+    } else throw "extra-binary order connections not implemented"
+
+    if (this.truth.canConnect(a1, a2)) {
+      let linkClass = this.truth.getLinkClass(a1);
+      this.graphData.addLink(new linkClass(a1, a2));
+      this.truth.updateNodeState(a1.owner);
+      this.truth.updateNodeState(a2.owner);
+    }
   }
 }
 
@@ -1701,10 +1715,14 @@ function run() {
   // this init is required if no test functions are run
   intface.updateUi();
 
+  intface.undo();
+  intface.redo();
+
+  intface.updateUi();
   // more tests
   //testUndoRedo();
   //testUndoRedoStackLimit();
-  testUndoRedoDataBuffer();
+  //testUndoRedoDataBuffer();
 }
 
 
@@ -1713,10 +1731,7 @@ clickSvg = function(x, y) {
   if (selTpe == "") {
     return;
   }
-  let c = getConfClone(selTpe);
-  c.label = c.type;
-
-  intface.addNode('', c, x, y);
+  intface.node_add(x, y, "", "", selTpe, selTpe);
   intface.updateUi();
   selTpe = "";
 }
