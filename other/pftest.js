@@ -1004,7 +1004,7 @@ class GraphData {
     return report;
   }
   rmNodeSecure(n) {
-    if (n.links.length > 0) throw "some links persist on node, won't delete";
+    if (n.links.length > 0) throw "some links persist on node, won't delete " + n.owner.id;
     remove(this.nodes, n);
   }
   addLink(l) {
@@ -1417,10 +1417,11 @@ class GraphInterface {
   }
   _delNodeAndLinks(n) {
     if (n.gNode) n = n.gNode; // totally should be un-hacked
-    console.log(n);
+
     // formalize "node cleanup" which is link removal
     let l = null;
-    for (var i=0; i<n.links.length; i++) {
+    let numlinks = n.links.length;
+    for (var i=0; i<numlinks; i++) {
       l = n.links[0];
       this.link_rm(l.d1.owner.owner.id, l.d1.idx, l.d2.owner.owner.id, l.d2.idx, l.d1.order);
     }
@@ -1545,6 +1546,7 @@ class GraphInterface {
 
       this.graphData.addNode(n.gNode);
       this.truth.updateNodeState(n.gNode);
+      this.draw.resetChargeSim();
 
       return [["node_add", n.x, n.y, n.id, n.name, n.label, n.type], ["node_rm", n.id]];
     }
@@ -1596,8 +1598,6 @@ class GraphInterface {
         let linkClass = this.truth.getLinkClass(a1);
         let l = new linkClass(a1, a2)
         this.graphData.addLink(l);
-        n1.gNode.addLink(l, false);
-        n2.gNode.addLink(l, true);
         this.truth.updateNodeState(a1.owner);
         this.truth.updateNodeState(a2.owner);
       }
@@ -1632,7 +1632,6 @@ class GraphInterface {
         // search for the right l
         if ((l.d1 == a1) && (l.d2 == a2)) break;
       }
-
       // 3) remove l!
       if (!l) throw "could not find link to remove!"
       n1.gNode.rmLink(l);
