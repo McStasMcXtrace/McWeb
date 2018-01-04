@@ -1564,12 +1564,6 @@ class GraphInterface {
 
       return [["node_rm", id], na_cmd];
     }
-    else if (command=="node_label") {
-      this.node_label(args[0], args[1]);
-    }
-    else if (command=="node_data") {
-      this.node_data(args[0], args[1]);
-    }
     else if (command=="link_add") {
       let id1 = args[0];
       let idx1 = args[1];
@@ -1640,6 +1634,27 @@ class GraphInterface {
 
       return [["link_rm"].concat(args), ["link_add"].concat(args)];
     }
+    else if (command=="node_label") {
+      let id = args[0];
+      let label = args[1];
+      let n = this.nodes[id];
+      let prevlbl = n.label;
+      n.gNode.label = label;
+      this.draw.drawAll();
+
+      return [["node_label", id, label], ["node_label", id, prevlbl]];
+    }
+    else if (command=="node_data") {
+      let id = args[0];
+      let data = args[1];
+      let n = this.nodes[id];
+      let prevdata = n.obj;
+      n.obj = JSON.parse(data);
+      this.truth.updateNodeState(n.gNode);
+      this.draw.drawAll();
+
+      return [["node_data", id, data], ["node_data", id, prevdata]];
+    }
     else throw "unknown command value";
   }
   undo() {
@@ -1663,19 +1678,14 @@ class GraphInterface {
     this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   node_label(id, label) {
-    // TODO: impl undo
     // str, str
-    let n = this.nodes[id];
-    n.gNode.label = label;
-    this.draw.drawAll();
+    let cmd_rev = this._command(["node_label", id, label]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   node_data(id, data) {
-    // TODO: impl undo
     // str, str
-    let n = this.nodes[id];
-    n.obj = JSON.parse(data);
-    this.truth.updateNodeState(n.gNode);
-    this.draw.drawAll();
+    let cmd_rev = this._command(["node_data", id, data]);
+    this.undoredo.newdo(cmd_rev[0], cmd_rev[1]);
   }
   link_add(id1, idx1, id2, idx2, ordr=0) {
     // str, int, str, int, int
