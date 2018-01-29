@@ -9,7 +9,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 */6 * * * /srv/mcweb/McWeb/scripts/remind_admin.sh > /dev/null
 #
 # Daily moodle cron job
-0 6 * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php > /dev/null
+*/10 * * * * /usr/bin/php /srv/mcweb/moodle/admin/cli/cron.php > /dev/null
 #
 # Half-Hourly emptying of cache to attempt fixing image issues...
 3,33 * * * * /srv/mcweb/McWeb/scripts/moodle_clear_cache.sh > /dev/null
