@@ -40,14 +40,14 @@
             </tr>
             <tr>
                 <td><label>Comments</label></td>
-                <td style="text-align:left;"><input type="text" id="tbx_comments"/></td>
+                <td style="text-align:left;"><input type="text" name="tbx_comments" id="tbx_comments"/></td>
             </tr>
         </table>
         <input type="hidden" id="field_shortname_tmpl" name="field_shortname_tmpl"/>
     </fieldset>
 
     <fieldset style="margin:5px; text-align:right;">
-        <input id="cbx_release" type="checkbox" onchange="update_sn_tmpl();"><label style="margin-right:50px;">Release</label><br>
+        <input type="checkbox" name="cbx_release" id="cbx_release" onchange="update_sn_tmpl();"><label style="margin-right:50px;">Release</label><br>
         <input type="submit" value="Create template" style="margin-right:20px;">
     </fieldset>
 </form>
