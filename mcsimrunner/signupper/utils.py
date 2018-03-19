@@ -206,14 +206,18 @@ def get_courses():
         lst = []
         for c in mu.course_list():
             lst.append(c[1])
-        return lst
+        return _alphasort(lst)
     except:
         return []
+
+def _alphasort(lst):
+    return sorted(lst, key=lambda item: (int(item.partition(' ')[0])
+                               if item[0].isdigit() else float('inf'), item))
 
 def get_templates():
     ''' walks files on disk in the directory which is supposed to hold course templates '''
     for (a, b, files) in os.walk(mu.TEMPLATES_DIR):
-        return files
+        return _alphasort(files)
 
 def create_template(shortname, templatename):
     ''' safe proxy to moodleutils.course_backup '''
