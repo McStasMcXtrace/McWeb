@@ -25,7 +25,7 @@ import os
 import re
 
 import utils
-from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
+from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW, BASE_DIR
 from models import ContactEntry
 from ldaputils import ldaputils
 #from moodleutils import moodleutils as mu
@@ -581,16 +581,58 @@ def man_deleted(req, menu, post, base_context):
     context.update(base_context)
     return render(req, 'man_deleted.html', context)
 
+import logging
+logging.basicConfig(level=logging.INFO)
+import datetime
+_courselog = None
+
+def _log_templatecreated(shortnm, templatenm, comments, username):
+    global _courselog
+    if not _courselog:
+        _courselog= logging.getLogger('coursemanage')
+        hdlr = logging.FileHandler(os.path.join(BASE_DIR, 'coursemanage.log'))
+        formatter = logging.Formatter('%(message)s')
+        hdlr.setFormatter(formatter)
+        _courselog.addHandler(hdlr) 
+
+    _courselog.info("")
+    _courselog.info("Template created:")
+    _courselog.info("- datetime: %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _courselog.info("- shortname: %s" % shortnm)
+    _courselog.info("- template: %s" % templatenm)
+    _courselog.info("- comments: %s" % comments)
+    _courselog.info("- username: %s" % username)
+
+def _log_coursecreated(shortnm, templatenm, username):
+    global _courselog
+    if not _courselog:
+        _courselog= logging.getLogger('coursemanage')
+        hdlr = logging.FileHandler(os.path.join(BASE_DIR, 'coursemanage.log'))
+        formatter = logging.Formatter('%(message)s')
+        hdlr.setFormatter(formatter)
+        _courselog.addHandler(hdlr) 
+
+    _courselog.info("")
+    _courselog.info("Course created:")
+    _courselog.info("- datetime: %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _courselog.info("- shortname: %s" % shortnm)
+    _courselog.info("- template: %s" % templatenm)
+    _courselog.info("- username: %s" % username)
+
 def man_templates(req, menu, post, base_context):
     '''  '''
     if post == 'post':
         form = req.POST
         shortname = form['course_selector']
         tmplname =  form['field_shortname_tmpl']
+        comments = form['tbx_comments']
+        release = form.get('cbx_release', False)
+        # TODO implement 'release'-functionality
         m = re.match('\-\-\sselect\sfrom', shortname)
         if tmplname != '' and not m:
             ct_message = utils.create_template(shortname, tmplname)
             req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
+            _log_templatecreated(shortname, tmplname, comments, req.user.username)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
@@ -642,6 +684,7 @@ def man_courses(req, menu, post, base_context):
 
             # course create (before teach assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            _log_coursecreated(shortname, tmpl, req.user.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign a teacher
@@ -658,6 +701,7 @@ def man_courses(req, menu, post, base_context):
         elif len(users) > 0 and username == users[0].uid:
             # course create (before teacher assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            _log_coursecreated(shortname, tmpl, req.session.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign teacher
