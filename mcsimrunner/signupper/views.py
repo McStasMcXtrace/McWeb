@@ -701,7 +701,7 @@ def man_courses(req, menu, post, base_context):
         elif len(users) > 0 and username == users[0].uid:
             # course create (before teacher assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-            _log_coursecreated(shortname, tmpl, req.session.username)
+            _log_coursecreated(shortname, tmpl, req.user.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign teacher
