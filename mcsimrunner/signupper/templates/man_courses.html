@@ -2,7 +2,7 @@
 {% block content %}
 
 <div style="margin-left:auto;margin-right:auto;width:600px;">
-<form enctype="multipart/form-data" method="POST" action="{{ next }}">
+<form id="frm_course" enctype="multipart/form-data" method="POST" action="{{ next }}">
     <input type="hidden" name="ids" value="{{ ids }}">
     {% csrf_token %}
     <fieldset style="margin:5px;">
@@ -56,7 +56,7 @@
             </tr>
             <tr></tr>
             <tr>
-                <td style="text-align:left;" colspan="2"><div  style="margin-top:20px"><label>If teacher has no existing mcweb account, please enter below:</label></div><hr></td>
+                <td style="text-align:left;" colspan="2"><div style="margin-top:20px"><label>If teacher has no existing mcweb account, please enter below:</label></div><hr></td>
             </tr>
 
             <tr>
@@ -75,7 +75,7 @@
     </fieldset>
 
     <fieldset style="margin:5px; text-align:right;">
-        <input type="submit" value="Create course" style="margin-right:20px;">
+        <input type="button" value="Create course" style="margin-right:20px;" onclick="submit_check();">
     </fieldset>
 </form>
 
@@ -83,7 +83,18 @@
 
 </div>
 
-<script>update_sn();</script>
+<script>
+update_sn();
 
+function submit_check() {
+  if (document.getElementById('cbx_override').checked) {
+    let sn = document.getElementById('tbx_sn').value.toLowerCase();
+    let msg = 'This will override "' + sn + '" with the contents of the selected template. Are you sure?';
+    if (confirm(msg)) document.getElementById('frm_course').submit();
+  }
+  else
+    document.getElementById('frm_course').submit();
+}
+</script>
 
 {% endblock %}
