@@ -590,10 +590,10 @@ def man_templates(req, menu, post, base_context):
         m = re.match('\-\-\sselect\sfrom', shortname)
 
         if tmplname != '' and not m:
+            utils.push_files_to_subfolder_if_release(tmplname)
             ct_message = utils.create_template(shortname, tmplname)
             req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
             utils.log_templatecreated(shortname, tmplname, comments, req.user.username)
-            utils.push_files_to_subfolder_if_release(tmplname)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
