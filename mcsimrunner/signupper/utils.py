@@ -274,6 +274,13 @@ def create_course_from_template(templatename, shortname, fullname):
     else:
         return 'could not get new course id'
 
+def update_course_from_template(templatename, shortname):
+    course_id = get_course_id(shortname)
+    if course_id:
+        return mu.course_restore_e(backupname=templatename, course_id=course_id)
+    else:
+        return 'course id does not exist'
+
 def get_signup(username):
     ''' a simple db search filter '''
     qs = Signup.objects.filter(username=username)

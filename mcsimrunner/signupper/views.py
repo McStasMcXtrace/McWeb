@@ -617,8 +617,20 @@ def man_courses(req, menu, post, base_context):
         site = form['tbx_site']
         shortname = form['field_shortname']
         title = form['tbx_title']
+        override = form.get('cbx_override', False)
 
         m = re.match('\-\-\sselect\sfrom', shortname)
+        
+        # override section
+        if override and shortname != '' and not m:
+            try:
+                status = utils.update_course_from_template(templatename=tmpl, shortname=shortname)
+                req.session['message'] = 'Course "%s" OVERRIDE update or create attempted (no teacher) with message "%s".' % (shortname, status)
+            except Exception as e:
+                req.session['message'] = '"%s"' % e.__str__()
+            return redirect("/manage/%s" % menu)
+
+        # regular section
         if site != '' and shortname != '' and title != '' and not m:
             pass
         else:
@@ -629,7 +641,7 @@ def man_courses(req, menu, post, base_context):
         firstname = form['tbx_firstname']
         lastname = form['tbx_lastname']
         email = form['tbx_email']
-
+        
         # double-check that a user has been selected
         if username == '':
             req.session['message'] = 'Please assign a teacher for the course.'

@@ -19,9 +19,15 @@
     {
         tbx_site = document.getElementById('tbx_site');
         tbx_sn = document.getElementById('tbx_sn');
-        var date = new Date();
-        document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        let override = document.getElementById('cbx_override').checked;
+        if (override) {
+          document.getElementById('lbl_sngen').innerHTML = tbx_sn.value.toLowerCase();
+          document.getElementById('field_shortname').value = tbx_sn.value.toLowerCase();
+        } else {
+          var date = new Date();
+          document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+          document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        }
     }
     var update_sn_tmpl = function()
     {
