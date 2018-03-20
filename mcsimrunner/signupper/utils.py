@@ -6,10 +6,13 @@ import subprocess
 from models import Signup
 from datetime import datetime
 import os
+import re
+import logging
 from django.utils import timezone
 from ldaputils import ldaputils
 from moodleutils import moodleutils as mu
 from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_NOTIFY_ROOT_URL, MCWEB_SSP_URL
+from signupper.moodleutils.moodleutils import TEMPLATES_DIR
 
 def get_random_passwd():
     ''' get a random password from the shell using makepasswd '''
@@ -217,7 +220,18 @@ def _alphasort(lst):
 def get_templates():
     ''' walks files on disk in the directory which is supposed to hold course templates '''
     for (a, b, files) in os.walk(mu.TEMPLATES_DIR):
-        return _alphasort(files)
+        mbzfiles = [f for f in files if re.match(".*.mbz", f)]
+        return _alphasort(mbzfiles)
+
+def push_files_to_subfolder_if_release(tmplname):
+    if not re.search("_release_", tmplname):
+        return
+    basename = re.match("(.*)_[0-9]+", tmplname).group(1)
+    for f in get_templates():
+        if re.search(basename, f):
+            if not os.path.exists(os.path.join(TEMPLATES_DIR, "trashcan")):
+                os.makedirs(os.path.join(TEMPLATES_DIR, "trashcan"))
+            os.rename(os.path.join(TEMPLATES_DIR, f), os.path.join(TEMPLATES_DIR, "trashcan", f))
 
 def create_template(shortname, templatename):
     ''' safe proxy to moodleutils.course_backup '''
@@ -244,7 +258,6 @@ def get_course_id(shortname):
             course_id = c[0]
         elif shortname == c[1]:
             raise Exception("something is terribly wrong in moodle")
-
     return course_id
 
 def create_course_from_template(templatename, shortname, fullname):
@@ -312,3 +325,41 @@ def purgeusers(signups):
         return 'Errors were encountered for some signups: \n'.join(errors)
     else:
         return 'purge successful'
+
+_courselog = None
+def log_templatecreated(shortnm, templatenm, comments, username):
+    global _courselog
+    if not _courselog:
+        logging.basicConfig(level=logging.INFO)
+        _courselog= logging.getLogger('coursemanage')
+        hdlr = logging.FileHandler(os.path.join(TEMPLATES_DIR, 'coursemanage.log'))
+        formatter = logging.Formatter('%(message)s')
+        hdlr.setFormatter(formatter)
+        _courselog.addHandler(hdlr) 
+
+    _courselog.info("")
+    _courselog.info("Template created at: %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _courselog.info("- by user: %s" % username)
+    _courselog.info("- with shortname: %s" % shortnm)
+    _courselog.info("- from template: %s" % templatenm)
+    _courselog.info("- comments: %s" % comments)
+
+def log_coursecreated(shortnm, templatenm, username):
+    global _courselog
+    if not _courselog:
+        logging.basicConfig(level=logging.INFO)
+        _courselog= logging.getLogger('coursemanage')
+        hdlr = logging.FileHandler(os.path.join(TEMPLATES_DIR, 'coursemanage.log'))
+        formatter = logging.Formatter('%(message)s')
+        hdlr.setFormatter(formatter)
+        _courselog.addHandler(hdlr) 
+
+    _courselog.info("")
+    _courselog.info("Course created at: %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _courselog.info("- by user: %s" % username)
+    _courselog.info("- with shortname: %s" % shortnm)
+    _courselog.info("- from template: %s" % templatenm)
+
+def get_log_text():
+    return open(os.path.join(TEMPLATES_DIR, 'coursemanage.log')).read()
+

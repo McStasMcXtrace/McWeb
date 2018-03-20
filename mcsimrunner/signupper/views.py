@@ -587,13 +587,13 @@ def man_templates(req, menu, post, base_context):
         shortname = form['course_selector']
         tmplname =  form['field_shortname_tmpl']
         comments = form['tbx_comments']
-        release = form.get('cbx_release', False)
-        # TODO implement 'release'-functionality
         m = re.match('\-\-\sselect\sfrom', shortname)
+
         if tmplname != '' and not m:
             ct_message = utils.create_template(shortname, tmplname)
             req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
-            mu.log_templatecreated(shortname, tmplname, comments, req.user.username)
+            utils.log_templatecreated(shortname, tmplname, comments, req.user.username)
+            utils.push_files_to_subfolder_if_release(tmplname)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
@@ -645,7 +645,7 @@ def man_courses(req, menu, post, base_context):
 
             # course create (before teach assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-            mu.log_coursecreated(shortname, tmpl, req.user.username)
+            utils.log_coursecreated(shortname, tmpl, req.user.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign a teacher
@@ -662,7 +662,7 @@ def man_courses(req, menu, post, base_context):
         elif len(users) > 0 and username == users[0].uid:
             # course create (before teacher assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-            mu.log_coursecreated(shortname, tmpl, req.session.username)
+            utils.log_coursecreated(shortname, tmpl, req.session.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign teacher
