@@ -753,5 +753,5 @@ def man_upload(req, menu, post, base_context):
     return render(req, 'man_upload.html', context)
 
 def log(req):
-    return HttpResponse("<pre>" + mu.get_log_text() + "</pre>")
+    return HttpResponse("<pre>" + utils.get_log_text() + "</pre>")
 

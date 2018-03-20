@@ -340,8 +340,8 @@ def log_templatecreated(shortnm, templatenm, comments, username):
     _courselog.info("")
     _courselog.info("Template created at: %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     _courselog.info("- by user: %s" % username)
-    _courselog.info("- with shortname: %s" % shortnm)
-    _courselog.info("- from template: %s" % templatenm)
+    _courselog.info("- from course with shortname: %s" % shortnm)
+    _courselog.info("- to template: %s" % templatenm)
     _courselog.info("- comments: %s" % comments)
 
 def log_coursecreated(shortnm, templatenm, username):
@@ -355,10 +355,10 @@ def log_coursecreated(shortnm, templatenm, username):
         _courselog.addHandler(hdlr) 
 
     _courselog.info("")
-    _courselog.info("Course created at: %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    _courselog.info("- by user: %s" % username)
-    _courselog.info("- with shortname: %s" % shortnm)
-    _courselog.info("- from template: %s" % templatenm)
+    _courselog.info("  Course created at: %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _courselog.info("  - by user: %s" % username)
+    _courselog.info("  - from template: %s" % templatenm)
+    _courselog.info("  - to shortname: %s" % shortnm)
 
 def get_log_text():
     return open(os.path.join(TEMPLATES_DIR, 'coursemanage.log')).read()
