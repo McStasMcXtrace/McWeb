@@ -255,10 +255,9 @@ def man_selfsignups(req, menu, post, base_context):
             row.append(CellInfo(s.lastname, 3, txt=True))
             row.append(CellInfo(s.email, 4, txt=True))
             row.append(CellInfo(s.username, 5, txt=True))
-            row.append(CellInfo(s.password, 6))
-            row.append(CellInfo(s.institution_tpe, 7, txt=True))
-            row.append(CellInfo(s.country, 8, txt=True))
-            row.append(CellInfo(s.description, 9, txt=True))
+            row.append(CellInfo(s.institution_tpe, 6, txt=True))
+            row.append(CellInfo(s.country, 7, txt=True))
+            row.append(CellInfo(s.description, 8, txt=True))
 
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
@@ -286,9 +285,9 @@ def man_bulk_signup(req, menu, post, base_context):
             signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
             signup.email = form.get('%s_%d' % (str(signup.id), 4))
             signup.username = form.get('%s_%d' % (str(signup.id), 5))
-            signup.institution_tpe = form.get('%s_%d' % (str(signup.id), 7))
-            signup.country = form.get('%s_%d' % (str(signup.id), 8))
-            signup.description = form.get('%s_%d' % (str(signup.id), 9))
+            signup.institution_tpe = form.get('%s_%d' % (str(signup.id), 6))
+            signup.country = form.get('%s_%d' % (str(signup.id), 7))
+            signup.description = form.get('%s_%d' % (str(signup.id), 8))
             signup.save()
 
         # get bulk action
@@ -359,10 +358,9 @@ def man_bulk_signup(req, menu, post, base_context):
             row.append(CellInfo(s.lastname, 3, txt=True))
             row.append(CellInfo(s.email, 4, txt=True))
             row.append(CellInfo(s.username, 5, txt=True))
-            row.append(CellInfo(s.password, 6))
-            row.append(CellInfo(s.institution_tpe, 7, txt=True))
-            row.append(CellInfo(s.country, 8, txt=True))
-            row.append(CellInfo(s.description, 9, txt=True))
+            row.append(CellInfo(s.institution_tpe, 6, txt=True))
+            row.append(CellInfo(s.country, 7, txt=True))
+            row.append(CellInfo(s.description, 8, txt=True))
 
             rows_ids.append([row, str(s.id)])
             ids.append(s.id)
@@ -433,10 +431,9 @@ def man_users(req, menu, post, base_context):
         row.append(CellInfo(s.lastname, 3))
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
-        row.append(CellInfo(s.password, 6))
-        row.append(CellInfo(s.institution_tpe, 7))
-        row.append(CellInfo(s.country, 8))
-        row.append(CellInfo(s.description, 9))
+        row.append(CellInfo(s.institution_tpe, 6))
+        row.append(CellInfo(s.country, 7))
+        row.append(CellInfo(s.description, 8))
 
         rows_ids.append([row, str(s.id)])
 
@@ -502,10 +499,9 @@ def man_limbos(req, menu, post, base_context):
         row.append(CellInfo(s.lastname, 3))
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
-        row.append(CellInfo(s.password, 6))
-        row.append(CellInfo(s.institution_tpe, 7))
-        row.append(CellInfo(s.country, 8))
-        row.append(CellInfo(s.description, 9))
+        row.append(CellInfo(s.institution_tpe, 6))
+        row.append(CellInfo(s.country, 7))
+        row.append(CellInfo(s.description, 8))
 
         rows_ids.append([row, str(s.id)])
 
@@ -533,6 +529,8 @@ def man_disabled(req, menu, post, base_context):
                 signup.password = utils.get_random_passwd()
                 ldaputils.addsignup(signup)
                 utils.notify_signup(signup)
+                signup.password = ''
+                signup.save()
 
             req.session['message'] = 'Selected signups were re-activated and notified.'
         elif action == 'purge':
@@ -561,10 +559,9 @@ def man_disabled(req, menu, post, base_context):
         row.append(CellInfo(s.lastname, 3))
         row.append(CellInfo(s.email, 4))
         row.append(CellInfo(s.username, 5))
-        row.append(CellInfo(s.password, 6))
-        row.append(CellInfo(s.institution_tpe, 7))
-        row.append(CellInfo(s.country, 8))
-        row.append(CellInfo(s.description, 9))
+        row.append(CellInfo(s.institution_tpe, 6))
+        row.append(CellInfo(s.country, 7))
+        row.append(CellInfo(s.description, 8))
 
         rows_ids.append([row, str(s.id)])
 
@@ -684,6 +681,8 @@ def man_courses(req, menu, post, base_context):
                 t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail, is_in_ldap=True)
                 t.save()
                 utils.adduser(t)
+                t.password = ''
+                t.save()
                 teacher = t
                 req.session['message'] = req.session['message'] + '\n ' + 'WARNING: ldap and signup db data inconsistence, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t_data.cn, t_data.sn, t_data.mail)
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
