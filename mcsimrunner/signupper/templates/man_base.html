@@ -19,16 +19,24 @@
     {
         tbx_site = document.getElementById('tbx_site');
         tbx_sn = document.getElementById('tbx_sn');
-        var date = new Date();
-        document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        let override = document.getElementById('cbx_override').checked;
+        if (override) {
+          document.getElementById('lbl_sngen').innerHTML = tbx_sn.value.toLowerCase();
+          document.getElementById('field_shortname').value = tbx_sn.value.toLowerCase();
+        } else {
+          var date = new Date();
+          document.getElementById('lbl_sngen').innerHTML = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+          document.getElementById('field_shortname').value = tbx_site.value.toLowerCase() + "_" + tbx_sn.value.toLowerCase() + "_" + date.yyyymmdd();
+        }
     }
     var update_sn_tmpl = function()
     {
         tbx = document.getElementById('tbx_sn_tmpl');
         var date = new Date();
-        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
-        document.getElementById('field_shortname_tmpl').value = tbx.value.toLowerCase() + "_" + date.yyyymmdd();
+        let release = ""
+        if (document.getElementById('cbx_release').checked) release = "release_";
+        document.getElementById('lbl_sngen_tmpl').innerHTML = tbx.value.toLowerCase() + "_" + release + date.yyyymmdd();
+        document.getElementById('field_shortname_tmpl').value = tbx.value.toLowerCase() + "_" + release + date.yyyymmdd();
     }
     var update_cbxs = function()
     {
@@ -73,6 +81,7 @@
                 </td>
             </tr>
             <tr>
+
                 <td id="footer_td">
                 </td>
             </tr>

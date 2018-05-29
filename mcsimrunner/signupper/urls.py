@@ -15,6 +15,7 @@ urlpatterns = [
     # signup and course management module
     url(r'^superlogin/?$', views.superlogin, name="superlogin" ),
     url(r'^manage/?$', views.manage, name="manage" ),
+    url(r'^manage/log/?$', views.log, name="log" ),
     url(r'^manage/(?P<menu>[\w]+)/(?P<post>[\w]+)$', views.manage, name="manage" ),
     url(r'^manage/(?P<menu>[\w]+)/?$', views.manage, name="manage" ),
 ]

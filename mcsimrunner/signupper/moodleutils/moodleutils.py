@@ -38,7 +38,6 @@ def adduser(firstname, lastname, username, email):
         print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
-        raise Exception(com[1])
 
 def enrol_user(username, course_sn, teacher=False):
     '''  '''
