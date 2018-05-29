@@ -208,9 +208,9 @@ def man_selfsignups(req, menu, post, base_context):
             signup.lastname = form.get('%s_%d' % (str(signup.id), 3))
             signup.email = form.get('%s_%d' % (str(signup.id), 4))
             signup.username = form.get('%s_%d' % (str(signup.id), 5))
-            signup.institution_tpe = form.get('%s_%d' % (str(signup.id), 7))
-            signup.country = form.get('%s_%d' % (str(signup.id), 8))
-            signup.description = form.get('%s_%d' % (str(signup.id), 9))
+            signup.institution_tpe = form.get('%s_%d' % (str(signup.id), 6))
+            signup.country = form.get('%s_%d' % (str(signup.id), 7))
+            signup.description = form.get('%s_%d' % (str(signup.id), 8))
             signup.save()
 
         # get bulk action
