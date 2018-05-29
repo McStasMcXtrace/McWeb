@@ -41,7 +41,7 @@ def num_signups(req):
     all = Signup.objects.all()
     active = [s for s in all if s.state() == 3]
     num_active = len(active)
-    return HttpResponse('Status: %d active accounts' % num_active)
+    return HttpResponse('Status: %d registered users' % num_active)
 
 def signup(req):
     ''' signup form to be embedded into the wordpress demo site '''
