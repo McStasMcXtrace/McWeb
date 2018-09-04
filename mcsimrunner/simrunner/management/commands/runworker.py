@@ -358,28 +358,46 @@ def get_and_start_new_simrun():
         
     return simrun
 
+def cache_check(simrun):
+    simrun_matches = SimRun.objects.filter(was_run=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, neutrons = simrun.neutrons)
+    if len(simrun_matches) > 0:
+        simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
+        process = subprocess.Popen("cp -rp " + simrun_matches[0].data_folder + " " + simrun.data_folder,
+                                                                  stdout=subprocess.PIPE,
+                                                                  stderr=subprocess.PIPE,
+                                                                  shell=True)
+        (stdout, stderr) = process.communicate()
+        simrun.complete = simrun_matches[0].complete
+        simrun.save()
+        return True
+    else:
+        return False
+
 def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''
     try:
         # check simrun object age
         check_age(simrun, max_mins=3600)
+
+        # check for existing, similar simruns for reuse
+        if not cache_check(simrun):
+            # init processing
+            init_processing(simrun)
         
-        # init processing
-        init_processing(simrun)
+            # process
+            mcrun(simrun)
+            mcdisplay_webgl(simrun)
+            mcdisplay(simrun)
+            mcplot(simrun)
         
-        # process
-        mcrun(simrun)
-        mcdisplay_webgl(simrun)
-        mcdisplay(simrun)
-        mcplot(simrun)
+            # post-processing
+            maketar(simrun)
         
-        # post-processing
-        maketar(simrun)
-        
-        # finish
-        simrun.complete = timezone.now()
-        simrun.save()
-        
+            # finish
+            simrun.complete = timezone.now()
+            simrun.was_run = True
+            simrun.save()
+
         logging.info('done (%s secs).' % (simrun.complete - simrun.started).seconds)
     
     except Exception as e:
