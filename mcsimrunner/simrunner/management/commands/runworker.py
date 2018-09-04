@@ -386,6 +386,8 @@ def threadwork(simrun, semaphore):
         
             # process
             mcrun(simrun)
+            simrun.was_run = True
+        
             mcdisplay_webgl(simrun)
             mcdisplay(simrun)
             mcplot(simrun)
@@ -393,10 +395,9 @@ def threadwork(simrun, semaphore):
             # post-processing
             maketar(simrun)
         
-            # finish
-            simrun.complete = timezone.now()
-            simrun.was_run = True
-            simrun.save()
+        # finish
+        simrun.complete = timezone.now()
+        simrun.save()
 
         logging.info('done (%s secs).' % (simrun.complete - simrun.started).seconds)
     
