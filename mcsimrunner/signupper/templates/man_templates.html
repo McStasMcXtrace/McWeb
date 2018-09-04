@@ -5,11 +5,11 @@
 
 <fieldset style="margin:5px;">
     <legend>Existing templates</legend>
-    {% for t in templates %}
     <ul style="list-style-type: none; padding: 3px; margin: 0px; margin-top: 5px;">
+      {% for t in templates %}
         <li><label>{{ t }}</label></li>
-    </ul>
     {% endfor %}
+  </ul>
 </fieldset>
 
 <form enctype="multipart/form-data" method="POST" action="{{ next }}">
@@ -20,7 +20,7 @@
         <table>
             <legend>New template</legend>
             <tr>
-                <td style="width:500px;"><label>Create from course</label></td>
+              <td style="width:500px;"><label>Source</label></td>
                 <td style="text-align:left;">
                     <select style="min-width:200px;" name="course_selector">
                         <option>-- select from the list below --</option>
@@ -38,11 +38,16 @@
                 <td style="text-align:left;"><label>-></label></td>
                 <td style="text-align:left;"><label id="lbl_sngen_tmpl" name="lbl_sngen_tmpl"></label></td>
             </tr>
+            <tr>
+                <td><label>Comments</label></td>
+                <td style="text-align:left;"><input type="text" name="tbx_comments" id="tbx_comments"/></td>
+            </tr>
         </table>
         <input type="hidden" id="field_shortname_tmpl" name="field_shortname_tmpl"/>
     </fieldset>
 
     <fieldset style="margin:5px; text-align:right;">
+        <input type="checkbox" name="cbx_release" id="cbx_release" onchange="update_sn_tmpl();"><label style="margin-right:50px;">Release</label><br>
         <input type="submit" value="Create template" style="margin-right:20px;">
     </fieldset>
 </form>
@@ -50,5 +55,8 @@
 <p style="margin-left: 5px;">NOTE: Template creation may take up to a few minutes.</p>
 
 </div>
+
+<script>update_sn_tmpl();</script>
+
 
 {% endblock %}

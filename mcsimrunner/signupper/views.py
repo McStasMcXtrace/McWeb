@@ -25,12 +25,11 @@ import os
 import re
 
 import utils
-from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW
+from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW, BASE_DIR
 from models import ContactEntry
 from ldaputils import ldaputils
-#from moodleutils import moodleutils as mu
 from collections import OrderedDict
-
+from moodleutils import moodleutils as mu
 
 ####################################################
 #                  Demo site                       #
@@ -584,10 +583,14 @@ def man_templates(req, menu, post, base_context):
         form = req.POST
         shortname = form['course_selector']
         tmplname =  form['field_shortname_tmpl']
+        comments = form['tbx_comments']
         m = re.match('\-\-\sselect\sfrom', shortname)
+
         if tmplname != '' and not m:
+            utils.push_files_to_subfolder_if_release(tmplname)
             ct_message = utils.create_template(shortname, tmplname)
             req.session['message'] = 'Template "%s" creation from course "%s" with message "%s".' % (tmplname, shortname, ct_message)
+            utils.log_templatecreated(shortname, tmplname, comments, req.user.username)
         else:
             req.session['message'] = 'Please select a proper course and a template name.'
         return redirect("/manage/%s" % menu)
@@ -611,8 +614,20 @@ def man_courses(req, menu, post, base_context):
         site = form['tbx_site']
         shortname = form['field_shortname']
         title = form['tbx_title']
+        override = form.get('cbx_override', False)
 
         m = re.match('\-\-\sselect\sfrom', shortname)
+        
+        # override section
+        if override and shortname != '' and not m:
+            try:
+                status = utils.update_course_from_template(templatename=tmpl, shortname=shortname)
+                req.session['message'] = 'Course "%s" OVERRIDE update or create attempted (no teacher) with message "%s".' % (shortname, status)
+            except Exception as e:
+                req.session['message'] = '"%s"' % e.__str__()
+            return redirect("/manage/%s" % menu)
+
+        # regular section
         if site != '' and shortname != '' and title != '' and not m:
             pass
         else:
@@ -623,7 +638,7 @@ def man_courses(req, menu, post, base_context):
         firstname = form['tbx_firstname']
         lastname = form['tbx_lastname']
         email = form['tbx_email']
-
+        
         # double-check that a user has been selected
         if username == '':
             req.session['message'] = 'Please assign a teacher for the course.'
@@ -639,6 +654,7 @@ def man_courses(req, menu, post, base_context):
 
             # course create (before teach assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            utils.log_coursecreated(shortname, tmpl, req.user.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign a teacher
@@ -655,6 +671,7 @@ def man_courses(req, menu, post, base_context):
         elif len(users) > 0 and username == users[0].uid:
             # course create (before teacher assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+            utils.log_coursecreated(shortname, tmpl, req.user.username)
             req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
 
             # assign teacher
@@ -745,3 +762,7 @@ def man_upload(req, menu, post, base_context):
                }
     context.update(base_context)
     return render(req, 'man_upload.html', context)
+
+def log(req):
+    return HttpResponse("<pre>" + utils.get_log_text() + "</pre>")
+
