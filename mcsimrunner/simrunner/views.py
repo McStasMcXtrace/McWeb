@@ -127,7 +127,7 @@ def instrument(req, group_name, instr_name=None, menu=False):
                                             'instr_image': instr.image,
                                             'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
                                             'show_menu': menu, 'instr_urlbit': instr_urlbit, 
-                                            'gravity_visible' : not instr.is_mcxtrace })
+                                            'gravity_visible' : not instr.is_mcxtrace, 'force_run' : instr.always_simulate })
 
 @login_required    
 def instrument_post(req):
@@ -141,7 +141,8 @@ def instrument_post(req):
     scanpoints = form.get('scanpoints')
     seed = form.get('seed')
     gravity = bool(form.get('gravity'))
-    
+    recalc = bool(form.get('force_recalc'))
+
     params_default = json.loads(form.get('params_jsonified'))
     params=[]
     for p in params_default: 
@@ -152,7 +153,7 @@ def instrument_post(req):
     simrun = SimRun(group_name=group_name, instr_displayname=instr_displayname, 
                     owner_username=owner_username,
                     neutrons=neutrons, scanpoints=scanpoints, seed=seed, gravity=gravity,
-                    params=params)
+                    params=params, force_run=recalc)
     simrun.save()
     return redirect('simrun', sim_id=simrun.id)
 
@@ -167,18 +168,19 @@ def simrun(req, sim_id):
         return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
     
     if simrun.complete:
-        # generate data browser (TODO: make sure static page generation only happens once)
-        lin_log_html = 'lin_log_url: impl.'
-        gen = McStaticDataBrowserGenerator()
-        gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
-                              'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
-                              'lin_log_html': lin_log_html,
-                              'data_folder': simrun.data_folder})
+        if simrun.was_run:
+            # generate data browser (TODO: make sure static page generation only happens once)
+            lin_log_html = 'lin_log_url: impl.'
+            gen = McStaticDataBrowserGenerator()
+            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
+                                  'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
+                                  'lin_log_html': lin_log_html,
+                                  'data_folder': simrun.data_folder})
 
-        if simrun.scanpoints == 1:
-            gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
-        else:
-            gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
+            if simrun.scanpoints == 1:
+                gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+            else:
+                gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
         # redirect to static
         return redirect('/%s/browse.html' % simrun.data_folder)
     

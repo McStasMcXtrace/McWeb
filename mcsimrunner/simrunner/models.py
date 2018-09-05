@@ -20,6 +20,7 @@ class Instrument(Model):
     displayname = CharField(max_length=200)
     docs = TextField()
     is_mcxtrace = BooleanField(default=False)
+    always_simulate = BooleanField(default=False)
     
     params_str = CharField(max_length=1000)
 
@@ -49,7 +50,10 @@ class SimRun(Model):
     scanpoints = PositiveIntegerField(default=1)
     gravity = BooleanField(default=False)
     params_str = CharField(max_length=1000)
-    
+
+    force_run = BooleanField(default=False)
+    was_run = BooleanField(default=False)
+
     # meta-fields below this line
     created = DateTimeField('date created', default=timezone.now)
     started = DateTimeField('date started', blank=True, null=True)
