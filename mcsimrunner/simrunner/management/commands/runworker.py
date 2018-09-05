@@ -362,10 +362,17 @@ def cache_check(simrun):
     simrun_matches = SimRun.objects.filter(was_run=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, neutrons__gte = simrun.neutrons)
     if len(simrun_matches) > 0:
         simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
-        process = subprocess.Popen("cp -rp " + simrun_matches[0].data_folder + " " + simrun.data_folder,
+        # Simple unix cp -r of data directory
+        process = subprocess.Popen("cp -r " + simrun_matches[0].data_folder + " " + simrun.data_folder,
                                                                   stdout=subprocess.PIPE,
                                                                   stderr=subprocess.PIPE,
                                                                   shell=True)
+        (stdout, stderr) = process.communicate()
+        # Run stream editor to replace "Completed" label with "Loaded cache data from"
+        process = subprocess.Popen("sed -i.bak s\"/Completed/Loaded\ cache\ data\ from/\" " + simrun.data_folder + "/browse.html",
+                                                                                                     stdout=subprocess.PIPE,
+                                                                                                     stderr=subprocess.PIPE,
+                                                                                                     shell=True)
         (stdout, stderr) = process.communicate()
         simrun.complete = simrun_matches[0].complete
         simrun.save()
