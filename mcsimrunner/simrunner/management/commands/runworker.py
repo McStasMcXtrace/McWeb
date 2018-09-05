@@ -369,7 +369,7 @@ def cache_check(simrun):
                                                                   shell=True)
         (stdout, stderr) = process.communicate()
         # Run stream editor to replace "Completed" label with "Loaded cache data from"
-        process = subprocess.Popen("sed -i.bak s\"/Completed/Loaded\ cache\ data\ from/\" " + simrun.data_folder + "/browse.html",
+        process = subprocess.Popen("sed -i.bak s\"/Completed/Loaded\ cache\ data\ from/\" " + simrun.data_folder + "/browse*.html",
                                                                                                      stdout=subprocess.PIPE,
                                                                                                      stderr=subprocess.PIPE,
                                                                                                      shell=True)
