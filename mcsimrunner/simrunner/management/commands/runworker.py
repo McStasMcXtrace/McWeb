@@ -367,9 +367,7 @@ def cache_check(simrun):
                                                                   stderr=subprocess.PIPE,
                                                                   shell=True)
         (stdout, stderr) = process.communicate()
-        simrun.data_files = simrun_matches[0].data_files
-        simrun.plot_files = simrun_matches[0].plot_files
-        simrun.plot_files_log = simrun_matches[0].plot_files_log
+        simrun.complete = simrun_matches[0].complete
         simrun.save()
         return True
     else:
