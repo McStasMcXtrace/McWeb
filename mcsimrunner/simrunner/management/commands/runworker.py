@@ -380,7 +380,7 @@ def threadwork(simrun, semaphore):
         check_age(simrun, max_mins=3600)
 
         # check for existing, similar simruns for reuse
-        if not cache_check(simrun):
+        if simrun.force_run or not cache_check(simrun):
             # init processing
             init_processing(simrun)
         
