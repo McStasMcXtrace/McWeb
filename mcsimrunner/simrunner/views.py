@@ -127,7 +127,7 @@ def instrument(req, group_name, instr_name=None, menu=False):
                                             'instr_image': instr.image,
                                             'scanpoints': scanpoints, 'neutrons': neutrons, 'seed': seed, 'params': params, 'params_jsonified': json.dumps(params),
                                             'show_menu': menu, 'instr_urlbit': instr_urlbit, 
-                                            'gravity_visible' : not instr.is_mcxtrace })
+                                            'gravity_visible' : not instr.is_mcxtrace, 'force_run' : instr.always_simulate })
 
 @login_required    
 def instrument_post(req):
@@ -142,7 +142,7 @@ def instrument_post(req):
     seed = form.get('seed')
     gravity = bool(form.get('gravity'))
     recalc = bool(form.get('force_recalc'))
-    
+
     params_default = json.loads(form.get('params_jsonified'))
     params=[]
     for p in params_default: 

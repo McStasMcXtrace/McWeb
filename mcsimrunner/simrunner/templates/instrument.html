@@ -110,7 +110,8 @@
             <legend>Start simulation run</legend>
             <div id="submit-wrapper">
               <button type="submit">Launch</button><br>
-	      (<input type="checkbox" name="force_recalc" id="force_recalc"/> force recalculation)</td>
+	      (<input type="checkbox" name="force_recalc" id="force_recalc" {% if force_run %} checked disabled {% endif %} /> ensure recalculation)</td>
+
             </div>
         </fieldset>
 	

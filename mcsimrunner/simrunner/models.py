@@ -20,6 +20,7 @@ class Instrument(Model):
     displayname = CharField(max_length=200)
     docs = TextField()
     is_mcxtrace = BooleanField(default=False)
+    always_simulate = BooleanField(default=False)
     
     params_str = CharField(max_length=1000)
 
