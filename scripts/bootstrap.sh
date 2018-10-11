@@ -73,6 +73,7 @@ sudo -u www-data -H virtualenv mcvenv
 sudo -u www-data cp mcvenv/bin/activate mcvenv_finishup
 echo pip install -I Django==1.8.2 >> mcvenv_finishup
 echo pip install simplejson django_auth_ldap uwsgi python-ldap >> mcvenv_finishup
+# TODO: we need django-auth-ldap==1.2.7
 sudo -u www-data bash mcvenv_finishup
 
 sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
