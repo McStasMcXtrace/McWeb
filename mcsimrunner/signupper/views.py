@@ -227,8 +227,8 @@ def man_selfsignups(req, menu, post, base_context):
                 req.session['message'] = 'Signups were added and enroled.'
 
         elif action == 'delete':
-            for signup in objs:
-                signup.delete()
+            for i in range(len(objs)):
+                objs[0].delete()
             req.session['message'] = 'Selected entries were deleted.'
 
         return redirect('/manage/%s' % menu)
