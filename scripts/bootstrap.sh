@@ -69,31 +69,33 @@ sudo chmod g+w /srv/moodledata/repository/uploads
 
 # Bootstrap McWeb via sudo / git
 cd /srv/mcweb
-sudo -u www-data -H virtualenv mcvenv
+sudo -H -u www-data virtualenv mcvenv
 sudo -u www-data cp mcvenv/bin/activate mcvenv_finishup
-echo pip install -I Django==1.8.2 >> mcvenv_finishup
-echo pip install simplejson django_auth_ldap uwsgi python-ldap >> mcvenv_finishup
-sudo -u www-data bash mcvenv_finishup
+echo pip install -I Django==1.8.2 django-auth-ldap==1.2.7 simplejson python-ldap >> mcvenv_finishup
+#echo pip install -I django-auth-ldap==1.2.7 >> mcvenv_finishup
+echo pip install uwsgi  >> mcvenv_finishup
+sudo -H -u www-data  bash mcvenv_finishup
 
-sudo -u www-data git clone https://github.com/McStasMcXtrace/McWeb
+sudo -H -u www-data  git clone https://github.com/McStasMcXtrace/McWeb
 
 # Pick and pull the STABLE branch
 cd McWeb
-sudo -u www-data git checkout MCWEB_STABLE_2.0
-sudo -u www-data git pull
+sudo -H -u www-data  git checkout MCWEB_STABLE_2.0
+sudo -H -u www-data  git pull
 
 # Moodle
 cd /srv/mcweb
-sudo -u www-data git clone https://github.com/moodle/moodle.git
+sudo -H -u www-data  git clone https://github.com/moodle/moodle.git
 cd moodle
-sudo -u www-data git checkout `cat ../McWeb/scripts/MOODLE_PREFERRED_VERSION `
+sudo -H -u www-data  git checkout `cat ../McWeb/scripts/MOODLE_PREFERRED_VERSION `
 cd /srv/mcweb
 sudo -u www-data cp McWeb/bootstrap_data/moodle/* /srv/mcweb/moodle-course-templates/
 
 # Moosh
 cd /srv/mcweb
-sudo -u www-data git clone https://github.com/tmuras/moosh.git
+sudo -H -u www-data  git clone https://github.com/tmuras/moosh.git
 cd moosh
+
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
 php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php
@@ -106,7 +108,7 @@ cd /srv/mcweb
 sudo -u www-data git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git mediawiki
 sudo -u www-data ln -s mediawiki wiki
 cd mediawiki
-sudo -u www-data git checkout 1.26.4
+sudo -H -u www-data  git checkout 1.26.4
 sudo -u www-data php ../moosh/composer.phar install --no-dev
 
 # Mathjax for use with mediawiki
@@ -206,7 +208,7 @@ fi
 
 # Self-service-password
 cd /srv/mcweb
-sudo -u www-data git clone https://github.com/ltb-project/self-service-password.git ssp
+sudo -H -u www-data  git clone https://github.com/ltb-project/self-service-password.git ssp
 cd ssp/conf
 sed -i "s/\$ldap_binddn = \"cn=manager,dc=example,dc=com\";/\$ldap_binddn = \"${LDAPADMIN}\";/g" config.inc.php
 sed -i "s/\$ldap_bindpw = \"secret\";/\$ldap_bindpw = \"${LDAP_PASS}\";/g" config.inc.php
@@ -224,7 +226,7 @@ chown www-data:www-data landing/index.html
 
 cd /srv/mcweb
 sudo -u www-data mkdir McWeb/mcsimrunner/sim/intro-ns
-sudo -u www-data cp /usr/share/mcstas/2.4.1/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
+sudo -u www-data cp /usr/share/mcstas/2.5/examples/templateSANS.instr /srv/mcweb/McWeb/mcsimrunner/sim/intro-ns/SANSsimple.instr
 sudo -u www-data cp mcvenv/bin/activate McWeb_finishup
 echo cd McWeb/mcsimrunner/ >> McWeb_finishup
 echo python manage.py migrate >> McWeb_finishup
@@ -260,7 +262,7 @@ echo echo Django upload pass: $UPLOADPASS >>  McWeb_finishup
 echo echo >>  McWeb_finishup 
 echo crontab /srv/mcweb/McWeb/scripts/cronjobs.txt >> McWeb_finishup 
 
-sudo -u www-data bash McWeb_finishup
+sudo -H -u www-data  bash McWeb_finishup
 /etc/init.d/uwsgi_mcweb start
 
 cat /srv/mcweb/McWeb/scripts/nginx-default > /etc/nginx/sites-enabled/default
