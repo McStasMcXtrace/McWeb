@@ -17,6 +17,13 @@ cd $STARTDIR
 
 # Base packages for McCode + MPI
 apt-get -y install mcstas-suite-perl mcstas-suite-python mcxtrace-suite-perl mcxtrace-suite-python openmpi-bin libopenmpi-dev
+# Ensure we use mcdoc.pl rather than python version
+ln -sf /usr/share/mcstas/2.5/bin/mcdoc.pl /usr/bin/mcdoc
+# Ensure mcplot.pl uses "proper" PGPLOT rather than GIZA
+cd /usr/lib/x86_64-linux-gnu
+sudo ln -sf ../libpgplot.so libpgplot.so.0
+sudo ln -sf ../libcpgplot.so libcpgplot.so.0
+cd $STARTDIR
 
 # MySQL
 echo "deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7" > /etc/apt/sources.list.d/mysql.list
