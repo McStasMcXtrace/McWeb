@@ -48,7 +48,23 @@ def plot_file(f, log=False):
         else:    
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
     return (stdoutdata, stderrdata)
+
+def sweep_zip_gen(f,dirname):
+    ''' generate monitor zip file in sweep case '''
+    p = os.path.basename(f)
+    p_zip = os.path.splitext(p)[0] + '.zip'
+
+    logging.info('sweep_zip_gen: %s in %s ' % (p, dirname))
     
+    cmd = 'find mcstas/ -name ' + p + '| sort | xargs zip -r ' + p_zip
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+	                       shell=True, cwd=dirname)
+    (stdoutdata, stderrdata) = process.communicate()
+    return (stdoutdata, stderrdata)
+
+
 def rename_mcstas_to_mccode(simrun):
     ''' run before mcplot to avoid issues with old versions of mcstas '''
     for token in ['.sim', '.dat']:
@@ -65,6 +81,7 @@ def get_monitor_files(mccode_sim):
 
 def mcplot(simrun):
     ''' generates plots from simrun output data '''
+    ''' also spawns monitor zip file creation in case of scan sweep '''
     rename_mcstas_to_mccode(simrun)
     
     try:
@@ -124,6 +141,8 @@ def mcplot(simrun):
                         plot_files.append(p)
                         plot_files_log.append(p_log)
                         data_files.append(d)
+            for f in datfiles:
+                sweep_zip_gen(f,simrun.data_folder)
                 
         else:
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
