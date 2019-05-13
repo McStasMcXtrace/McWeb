@@ -63,6 +63,8 @@ def sweep_zip_gen(f,dirname):
                                stderr=subprocess.PIPE,
 	                       shell=True, cwd=dirname)
     (stdoutdata, stderrdata) = process.communicate()
+    _log(stdoutdata)
+    _log(stderrdata)
     return (stdoutdata, stderrdata)
 
 
@@ -479,24 +481,24 @@ def work(threaded=True, semaphore=None):
             if not simrun:
                 _log("idle...")
 
-_log = None
+_wlog = None
 def _log(msg):
-    global _log
-    if not _log:
-        _log = logging.getLogger('worker')
+    global _wlog
+    if not _wlog:
+        _wlog = logging.getLogger('worker')
         hdlr = logging.FileHandler('worker.log')
         hdlr.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
 
         hdlr2 = logging.StreamHandler(sys.stdout)
         hdlr2.level = logging.INFO
         hdlr2.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
-        _log.addHandler(hdlr)
-        _log.addHandler(hdlr2)
+        _wlog.addHandler(hdlr)
+        _wlog.addHandler(hdlr2)
 
-        _log.info("")
-        _log.info("")
-        _log.info("%%  starting McWeb worker log session  %%")
-    _log.info(msg)
+        _wlog.info("")
+        _wlog.info("")
+        _wlog.info("%%  starting McWeb worker log session  %%")
+    _wlog.info(msg)
 
 class Command(BaseCommand):
     ''' django simrun processing command "runworker" '''
