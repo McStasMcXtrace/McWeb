@@ -23,7 +23,7 @@ def mkdir_p(path):
 
 def make_html_docs(group):
     ''' run mcdoc in instrument group folder, move html files to static/doc/..., create links back to the instr files '''
-    cmd = 'mcdoc -t .' 
+    cmd = 'mcdoc.pl -t .' 
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
@@ -94,7 +94,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr):
     if process.returncode != 0:
         raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
     
-    cmd2 = 'mcdoc -t ./' + os.path.basename(instr_displayname)
+    cmd2 = 'mcdoc.pl -t ./' + os.path.basename(instr_displayname)
     process2 = subprocess.Popen(cmd2, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
