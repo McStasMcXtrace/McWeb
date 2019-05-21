@@ -57,7 +57,7 @@ def sweep_zip_gen(f,dirname):
 
     _log('sweep_zip_gen: %s in %s ' % (p, dirname))
     
-    cmd = 'find mcstas/ -name ' + p + '| sort | xargs zip -r ' + p_zip
+    cmd = 'find mcstas/ -name ' + p + '| sort -V | xargs zip -r ' + p_zip
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
