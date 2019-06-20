@@ -12,7 +12,6 @@ import tarfile
 import threading
 import logging
 import re
-from sets import Set
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -32,40 +31,10 @@ def maketar(simrun):
             tar.add(simrun.data_folder, arcname=os.path.basename(simrun.data_folder))
     except:
         raise Exception('tarfile fail')
-
+    
 def plot_file(f, log=False):
-    def smart_force_filename(dname, force_fname, dl_before):
-        '''
-        Renames any one file that was created in directory dirname, to fname, 
-        unless it already has the correct name.
-
-        dname:         directory that was changed
-        force_fname:   any singular dir addition will be forced to this name
-        dl_before:     os.dirlist() result before the change happened
-
-        returns: the diffed filename if a force namechange was made, otherwise None
-        '''
-        
-        # TODO/NOTE: gize outputs two files named *0000.png and *0001.png, but never the end product.
-        # A further investigation of server-side behavior is required...
-        s1 = Set(dl_before)
-        s2 = Set(os.listdir(dname))
-        diff = s2 - s1
-        if len(diff) == 1:
-            diffed_fname = diff.pop()
-            if diffed_fname == force_fname:
-                return
-            p1 = os.path.join(dname, diffed_fname)
-            p2 = os.path.join(dname, force_fname+ '.png')
-            os.rename(p1, p2)
-            return diffed_fname
-
     f_dirname=os.path.dirname(f)
     f_filename=os.path.basename(f)
-
-    # prep use of smart_force_filename
-    dirlist_before = os.listdir(f_dirname)
-    
     cmd = '%s %s' % (MCPLOT_CMD,f_filename)
     if log:
         cmd = '%s %s' % (MCPLOT_LOGCMD,f_filename)
@@ -74,16 +43,11 @@ def plot_file(f, log=False):
                                stderr=subprocess.PIPE,
                                shell=True, cwd=f_dirname)
     (stdoutdata, stderrdata) = process.communicate()
-
-    oldname_or_None = smart_force_filename(f_dirname, f + ".png", dirlist_before)
-    if oldname_or_None:
-        _log("forced mcplot output file name from %s to %s" % (oldname_or_None, f + ".png"))
-
     if os.path.isfile( f + '.png'):
         if log:
-            os.rename(f + '.png', os.path.splitext(os.path.splitext(f)[0])[0] +'_log.png')
+            os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '_log.png')
         else:    
-            os.rename(f + '.png', os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
+            os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
     return (stdoutdata, stderrdata)
 
 def sweep_zip_gen(f,dirname):
