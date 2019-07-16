@@ -611,64 +611,60 @@ def man_courses(req, menu, post, base_context):
         form = req.POST
 
         tmpl = form['tmpl_selector']
-        site = form['tbx_site']
         shortname = form['field_shortname']
         title = form['tbx_title']
-        override = form.get('cbx_override', False)
-
-        m = re.match('\-\-\sselect\sfrom', shortname)
-        
-        # override section
-        if override and shortname != '' and not m:
-            try:
-                status = utils.update_course_from_template(templatename=tmpl, shortname=shortname)
-                req.session['message'] = 'Course "%s" OVERRIDE update or create attempted (no teacher) with message "%s".' % (shortname, status)
-            except Exception as e:
-                req.session['message'] = '"%s"' % e.__str__()
-            return redirect("/manage/%s" % menu)
-
-        # regular section
-        if site != '' and shortname != '' and title != '' and not m:
-            pass
-        else:
-            req.session['message'] = 'Please select a proper template and a course name.'
-            return redirect("/manage/%s" % menu)
-
+        if title == '':
+            title = "empty"
         username = form['tbx_username']
         firstname = form['tbx_firstname']
         lastname = form['tbx_lastname']
         email = form['tbx_email']
-        
+
+        # sanity check template selected
+        if re.match('\-\-\sselect\sfrom', tmpl):
+            req.session['message'] = 'Please select a course template.'
+            return redirect("/manage/%s" % menu)
+
+        # sanity check shortname exists
+        if shortname == '':
+            req.session['message'] = 'Please use a proper shortname.'
+            return redirect("/manage/%s" % menu)
+
         # double-check that a user has been selected
         if username == '':
             req.session['message'] = 'Please assign a teacher for the course.'
             return redirect("/manage/%s" % menu)
 
+        # search registered ldap users for 'username'
         users = ldaputils.listusers(uid=username)
-        if firstname != '' or email != '':
-            # sanity check for existence, do not proceed
-            if len(users) != 0:
+
+        # new teacher branch
+        if firstname != '' or lastname != '' or email != '':
+            # sanity check for existence
+            if len(users) == 1:
                 t = users[0]
                 req.session['message'] = 'User %s already exists with "%s %s, %s", please clear the name and email fields.' % (username, t.cn, t.sn, t.mail)
                 return redirect("/manage/%s" % menu)
+            else:
+                # course create (before teach assignment) and schedule course restore job
+                status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
+                utils.log_coursecreated(shortname, tmpl, req.user.username)
+                req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
+    
+                # assign a teacher
+                if firstname == '' or email == '':
+                    req.session['message'] = req.session['message'] + '\n ' + 'New user creation requires a name and an email.'
+                    return redirect("/manage/%s" % menu)
+                teacher = Signup(username=username, firstname=firstname, lastname=lastname, email=email, password=utils.get_random_passwd(), courses=[shortname])
+                teacher.save()
+    
+                utils.adduser(teacher)
+                utils.enroluser(teacher, course_sn=shortname, teacher=True)
+    
+                req.session['message'] = req.session['message'] + '\n ' + 'New user %s has been created.' % username
 
-            # course create (before teach assignment) and schedule course restore job
-            status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
-            utils.log_coursecreated(shortname, tmpl, req.user.username)
-            req.session['message'] = 'Course "%s" creation with teacher "%s" and message "%s".' % (shortname, username, status)
-
-            # assign a teacher
-            if firstname == '' or email == '':
-                req.session['message'] = req.session['message'] + '\n ' + 'New user creation requires a name and an email.'
-                return redirect("/manage/%s" % menu)
-            teacher = Signup(username=username, firstname=firstname, lastname=lastname, email=email, password=utils.get_random_passwd(), courses=[shortname])
-            teacher.save()
-
-            utils.adduser(teacher)
-            utils.enroluser(teacher, course_sn=shortname, teacher=True)
-
-            req.session['message'] = req.session['message'] + '\n ' + 'New user %s has been created.' % username
-        elif len(users) > 0 and username == users[0].uid:
+        # existing teacher branch
+        elif len(users) == 1:
             # course create (before teacher assignment) and schedule course restore job
             status = utils.create_course_from_template(templatename=tmpl, shortname=shortname, fullname=title)
             utils.log_coursecreated(shortname, tmpl, req.user.username)
@@ -677,6 +673,7 @@ def man_courses(req, menu, post, base_context):
             # assign teacher
             teacher = utils.get_signup(username)
             if not teacher:
+                # user exists only in ldap, create a signup
                 t_data = users[0]
                 t = Signup(username=username, firstname=t_data.cn, lastname=t_data.sn, email=t_data.mail, is_in_ldap=True)
                 t.save()
@@ -684,8 +681,10 @@ def man_courses(req, menu, post, base_context):
                 t.password = ''
                 t.save()
                 teacher = t
-                req.session['message'] = req.session['message'] + '\n ' + 'WARNING: ldap and signup db data inconsistence, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t_data.cn, t_data.sn, t_data.mail)
+                req.session['message'] = req.session['message'] + '\n ' + 'WARNING: username existed only in ldap, proceeding with teacher "%s", "%s", "%s", "%s".' % (username, t_data.cn, t_data.sn, t_data.mail)
             utils.enroluser(teacher, course_sn=shortname, teacher=True)
+
+        # invalid username branch
         else:
             # username does not exist, but user did not enter name etc.
             req.session['message'] = 'Username "%s" not found. Please enter the name and email of the teacher of this course, and a new user will be created.' % username
