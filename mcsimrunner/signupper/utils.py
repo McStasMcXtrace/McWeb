@@ -76,7 +76,7 @@ def notifyuser(fullname, username, email, password, courses):
 
         courses_text = '\nYou have been enroled in the following courses:\n'
         for c in courses_info:
-            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_EMAIL_URL, c[0])
+            courses_text = courses_text + '\n%s: %s/moodle/course/view.php?id=%s' % (c[2], MCWEB_NOTIFY_ROOT_URL, c[0])
         courses_text = courses_text + '\n'
 
     body = '''
