@@ -172,7 +172,8 @@ def simrun(req, sim_id):
             # generate data browser (TODO: make sure static page generation only happens once)
             lin_log_html = 'lin_log_url: impl.'
             gen = McStaticDataBrowserGenerator()
-            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
+            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                                  'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
                                   'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                                   'lin_log_html': lin_log_html,
                                   'data_folder': simrun.data_folder})

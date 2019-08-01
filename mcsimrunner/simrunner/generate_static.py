@@ -10,7 +10,7 @@ from django.template.loader import get_template
 
 class McStaticDataBrowserGenerator():
     ''' implements functionality to generate static html site for data browsing '''   
-     
+
     __base_c_dict = None
     def set_base_context(self, dict):
         ''' sets the dict that is passed to every context '''
@@ -20,68 +20,69 @@ class McStaticDataBrowserGenerator():
         d = self.__base_c_dict.copy()
         d.update(dict)
         return Context(d) 
-    
-    def generate_browsepage(self, data_folder, png_files, dat_files):
-        ''' png_files AND dat_files must be of the correct path relative to data_folder 
+
+    def generate_browsepage(self, data_folder, plot_files, dat_files):
+        ''' plot_files AND dat_files must be of the correct path relative to data_folder 
             note: having dat_files be relative paths reduces assumptions and increases flexibility
         '''
         # get data for browse.html
         html_png_dat = []
-        for i in range(len(png_files)):
-            png = png_files[i]
+        for i in range(len(plot_files)):
+            png = plot_files[i]
             dat = dat_files[i]
-            html = splitext(png_files[i])[0] + '.html'
+            html = splitext(plot_files[i])[0] + '_w.html'
             html_png_dat.append([html, png, dat])
-            
+
         # create twin data for log
         html_png_dat_log = []
-        for i in range(len(png_files)):
-            png = splitext(png_files[i])[0] + '_log.png'
+        for i in range(len(plot_files)):
+            png = splitext(plot_files[i])[0] + '_log.' + splitext(plot_files[i])[1]
             dat = dat_files[i]
-            html = splitext(png_files[i])[0] + '_log.html'
+            html = splitext(plot_files[i])[0] + '_log_w.html'
             html_png_dat_log.append([html, png, dat])
-        
+
         # 1) write <monitor>.html:
-        
+
         # prepare strings
-        png_base = map(lambda p: basename(p), png_files)
+        png_base = map(lambda p: basename(p), plot_files)
         dat_base = map(lambda d: basename(d), dat_files)
-        html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '.html')), png_files)
-        
+        html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')), plot_files)
+        html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')), plot_files)
+
         # get template for <monitor>.html
         t = get_template('static_monitor.html')
 
         # write <monitor>.html and <monitor>_log.html for each png/dat file
-        for i in range(len(png_files)):
+        for i in range(len(plot_files)):
             png_dat = [png_base[i], dat_base[i]]
-            
-            c = Context({'png_dat': png_dat, 'twin_html': basename(splitext(html_paths[i])[0] + '_log.html'), 'lin_or_log': 'log'})
+
+            c = Context({'png_dat': png_dat, 'twin_html': basename(html_paths_log[i]), 'lin_or_log': 'log'})
             write_html(html_paths[i], t.render(c))
-            
+
             # log versions of monitor files
             png_dat_log = [splitext(png_base[i])[0] + '_log.png', dat_base[i]]
-            
+
             c = Context({'png_dat': png_dat_log, 'twin_html': basename(html_paths[i]), 'lin_or_log': 'lin'})
-            write_html(splitext(html_paths[i])[0] + '_log.html', t.render(c))
-        
+            write_html(html_paths_log[i], t.render(c))
+
         # 2) write browse.html
-        
+
         t = get_template('static_browse.html')
         c = self.get_context({'html_png_dat': html_png_dat, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'})
         write_html(join(data_folder, 'browse.html'), t.render(c))
-        
+
         c = self.get_context({'html_png_dat': html_png_dat_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
         write_html(join(data_folder, 'browse_log.html'), t.render(c))
-        
+
     def generate_browsepage_sweep(self, data_folder, png_files, dat_files, scanpoints):
         ''' as above, but handles the simulation scan case '''
         # prepare strings
         png_base = map(lambda p: basename(p), png_files)
         dat_base = map(lambda d: basename(d), dat_files)
         html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '.html')), png_files)
-        
+
         # 1) write <monitor>.html:
-        
+
         # write <monitor>.html for each png/dat file
         t = get_template('static_monitor.html')
         for j in range(scanpoints):
@@ -90,98 +91,98 @@ class McStaticDataBrowserGenerator():
                     continue
                 png = png_base[i].replace('/0/', '/%s/' % str(j))
                 dat = dat_base[i].replace('/0/', '/%s/' % str(j))
-                
+
                 png_dat = [png, dat]
                 c = Context({'png_dat': png_dat, 'twin_html': basename(splitext(html_paths[i].replace('/0/', '/%s/' % str(j)))[0] + '_log.html'), 'lin_or_log': 'log'})
                 write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), t.render(c))
-                
+
                 # write twin - log scale
                 png_dat = [splitext(png)[0] + '_log.png', dat]
                 c = Context({'png_dat': png_dat, 'twin_html': basename(html_paths[i].replace('/0/', '/%s/' % str(j))), 'lin_or_log': 'lin'})
                 write_html(splitext(html_paths[i].replace('/0/', '/%s/' % str(j)))[0] + '_log.html', t.render(c))
-                
+
         # special case: mccode.dat : sweep overview
         png_dat = [png_base[0], dat_base[0]]
         c = Context({'png_dat': png_dat})
         write_html(html_paths[0], t.render(c))
-        
+
         # log twin for that..
         png_dat = [splitext(png_base[0])[0] + '_log.png', dat_base[0]]
         c = Context({'png_dat': png_dat})
         write_html(splitext(html_paths[0])[0] + '_log.html', t.render(c))
-        
+
         # 2 write <monitor>_ss.html
-        
+
         # get data for each monitor_ss.html and write it immediately
         t = get_template('static_monitor_sweep.html')
         for i in range(len(png_files)):
             if i == 0:
                 continue
-            
+
             # lin versions
             html_png_dat = []
             monitor_name = splitext(basename(png_files[i]))[0]
             for j in range(scanpoints):
                 png = png_files[i].replace('/0/', '/%s/' % str(j))
-                
+
                 dat = dat_files[i].replace('/0/', '/%s/' % str(j))
-                
+
                 html = splitext(png_files[i])[0] + '.html'
                 html = html.replace('/0/', '/%s/' % str(j))
-                
+
                 html_png_dat.append([html, png, dat])
-            
+
             # log
             html_png_dat_log = []
             monitor_name = splitext(basename(png_files[i]))[0]
             for j in range(scanpoints):
                 png = png_files[i].replace('/0/', '/%s/' % str(j))
-                
+
                 dat = dat_files[i].replace('/0/', '/%s/' % str(j))
-                
+
                 html = splitext(png_files[i])[0] + '.html'
                 html = html.replace('/0/', '/%s/' % str(j))
-                
+
                 html_png_dat_log.append([splitext(html)[0] + '_log.html', splitext(png)[0] + '_log.png', dat])
-                
+
             c = self.get_context({'monitor_name': monitor_name, 'html_png_dat': html_png_dat, 'twin_html': '%s_sweep_log.html' % monitor_name, 'lin_or_log': 'log'})
             write_html(join(data_folder, '%s_sweep.html' % monitor_name), t.render(c))
-            
+
             c = self.get_context({'monitor_name': monitor_name, 'html_png_dat': html_png_dat_log, 'twin_html': '%s_sweep.html' % monitor_name, 'lin_or_log': 'lin'})
             write_html(join(data_folder, '%s_sweep_log.html' % monitor_name), t.render(c))
-            
+
         # 3) write browse.html
-        
+
         # get data for browse_ss.html
         # the list html_name contains list of monitors (monitor.0 is html filepath,  monitor.1 is monitor displayname)
         sim_html = html_paths[0]
         sim_html_log = splitext(html_paths[0])[0] + '_log.html'
         sim_png = png_files[0]
         sim_png_log = splitext(png_files[0])[0] + '_log.png'
-        
+
         html_name = []
         for i in range(len(png_files)):
             if i == 0:
                 continue # avoid index 0 at all cost for sweeps!
-            
+
             monitor_name = splitext(basename(png_files[i]))[0]
             html_filepath = join(data_folder, '%s_sweep.html' % monitor_name)
             html_name.append([html_filepath, monitor_name])
-        
+
         html_name_log = []
         for i in range(len(png_files)):
             if i == 0:
                 continue # avoid index 0 at all cost for sweeps!
-            
+
             monitor_name = splitext(basename(png_files[i]))[0]
             html_filepath = join(data_folder, '%s_sweep_log.html' % monitor_name)
             html_name_log.append([html_filepath, monitor_name])
-        
+
         # write browse.html
         t = get_template('static_browse_sweep.html')
         c = self.get_context({'sim_html': sim_html, 'sim_png': sim_png, 'html_name': html_name, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'})
         write_html(join(data_folder, 'browse.html'), t.render(c))
-        
+
         # browse_log.html
         t = get_template('static_browse_sweep.html')
         c = self.get_context({'sim_html': sim_html_log, 'sim_png': sim_png_log, 'html_name': html_name_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
