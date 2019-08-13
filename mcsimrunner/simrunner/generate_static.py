@@ -80,7 +80,7 @@ class McStaticDataBrowserGenerator():
         plt_base = map(lambda p: basename(p), plot_files)
         dat_base = map(lambda d: basename(d), dat_files)
         html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')), plot_files)
-        html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], 'log_w.html')), plot_files)
+        html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')), plot_files)
 
         # 1) write <monitor>.html:
 
@@ -98,7 +98,7 @@ class McStaticDataBrowserGenerator():
                 write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), t.render(c))
 
                 # write twin - log scale
-                plt_dat = [splitext(plt)[0] + '_log.' + splitext(plt)[0], dat]
+                plt_dat = [splitext(plt)[0] + '_log' + splitext(plt)[1], dat]
                 c = Context({'png_dat': plt_dat, 'twin_html': basename(html_paths[i].replace('/0/', '/%s/' % str(j))), 'lin_or_log': 'lin'})
                 write_html(html_paths_log[i].replace('/0/', '/%s/' % str(j)), t.render(c))
 
@@ -108,7 +108,7 @@ class McStaticDataBrowserGenerator():
         write_html(html_paths[0], t.render(c))
 
         # log twin for that..
-        plt_dat = [splitext(plt_base[0])[0] + '_log.' + splitext(plt_base[0])[1], dat_base[0]]
+        plt_dat = [splitext(plt_base[0])[0] + '_log' + splitext(plt_base[0])[1], dat_base[0]]
         c = Context({'png_dat': plt_dat})
         write_html(splitext(html_paths[0])[0] + '_log.html', t.render(c))
 
@@ -154,7 +154,7 @@ class McStaticDataBrowserGenerator():
         sim_html = html_paths[0]
         sim_html_log = splitext(html_paths[0])[0] + '_log.html'
         sim_png = plot_files[0]
-        sim_png_log = splitext(plot_files[0])[0] + '_log.' + splitext(plot_files[0])[1]
+        sim_png_log = splitext(plot_files[0])[0] + '_log' + splitext(plot_files[0])[1]
 
         html_name = []
         for i in range(len(plot_files)):
