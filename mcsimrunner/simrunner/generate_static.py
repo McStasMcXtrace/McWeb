@@ -36,7 +36,7 @@ class McStaticDataBrowserGenerator():
         # create twin data for log
         html_png_dat_log = []
         for i in range(len(plot_files)):
-            png = splitext(plot_files[i])[0] + '_log.' + splitext(plot_files[i])[1]
+            png = splitext(plot_files[i])[0] + '_log' + splitext(plot_files[i])[1]
             dat = dat_files[i]
             html = splitext(plot_files[i])[0] + '_log_w.html'
             html_png_dat_log.append([html, png, dat])
@@ -60,7 +60,7 @@ class McStaticDataBrowserGenerator():
             write_html(html_paths[i], t.render(c))
 
             # log versions of monitor files
-            png_dat_log = [splitext(png_base[i])[0] + '_log.png', dat_base[i]]
+            png_dat_log = [splitext(png_base[i])[0] + '_log.html', dat_base[i]]
 
             c = Context({'png_dat': png_dat_log, 'twin_html': basename(html_paths[i]), 'lin_or_log': 'lin'})
             write_html(html_paths_log[i], t.render(c))
