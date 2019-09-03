@@ -168,7 +168,7 @@ def simrun(req, sim_id):
         return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
     
     if simrun.complete:
-        if simrun.was_run:
+        if simrun.enable_cachefrom:
             # generate data browser (TODO: make sure static page generation only happens once)
             lin_log_html = 'lin_log_url: impl.'
             gen = McStaticDataBrowserGenerator()
