@@ -1,13 +1,20 @@
 {% extends 'static_base.html' %}
 {% block content %}
 <legend>Data plots for {{ monitor_name }} (<a id="linlog" href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
+
 <ul class="gallery">
     {% for monitor in html_png_dat %}
-    <li class="thumb"><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" class="thumb"/></a></li>
+    <li class="thumb">
+      <!--<a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" class="thumb"/></a>-->
+      <a href="{{ monitor.0 }}" target="_blank" style="position:relative; display:inline-block;">
+        <div style="position:absolute; height:100%; width:100%; z-index:1; background:rgba(0,0,0,0.0);"></div>
+        <iframe style="width:290px;height:290px;" src="{{ monitor.1 }}" frameborder="0" allowfullscreen style=""z-index:2;></iframe>
+      </a>
+    </li>
     {% endfor %}
 </ul>
+
 <ul>
   <li><a href="{{ monitor_name }}.zip">Download {{ monitor_name }} ZIP archive</a></li>
 </ul>
 {% endblock %}
-

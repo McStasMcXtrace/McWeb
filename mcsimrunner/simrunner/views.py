@@ -168,11 +168,12 @@ def simrun(req, sim_id):
         return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
     
     if simrun.complete:
-        if simrun.was_run:
+        if simrun.enable_cachefrom:
             # generate data browser (TODO: make sure static page generation only happens once)
             lin_log_html = 'lin_log_url: impl.'
             gen = McStaticDataBrowserGenerator()
-            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname, 'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
+            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                                  'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
                                   'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                                   'lin_log_html': lin_log_html,
                                   'data_folder': simrun.data_folder})
