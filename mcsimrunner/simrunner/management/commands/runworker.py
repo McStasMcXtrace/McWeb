@@ -382,7 +382,7 @@ def get_and_start_new_simrun():
     return simrun
 
 def cache_check(simrun):
-    simrun_matches = SimRun.objects.filter(was_run=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, scanpoints=simrun.scanpoints, neutrons__gte = simrun.neutrons).order_by('-complete')
+    simrun_matches = SimRun.objects.filter(enable_cachefrom=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, scanpoints=simrun.scanpoints, neutrons__gte = simrun.neutrons).order_by('-complete')
     if len(simrun_matches) > 0:
         simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
         # Simple unix cp -r of data directory
@@ -416,7 +416,7 @@ def threadwork(simrun, semaphore):
         
             # process
             mcrun(simrun)
-            simrun.was_run = True
+            simrun.enable_cachefrom = True
         
             mcdisplay_webgl(simrun)
             mcdisplay(simrun)
