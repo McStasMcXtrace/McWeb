@@ -52,7 +52,7 @@ class SimRun(Model):
     params_str = CharField(max_length=1000)
 
     force_run = BooleanField(default=False)
-    was_run = BooleanField(default=False)
+    enable_cachefrom = BooleanField(default=False)
 
     # meta-fields below this line
     created = DateTimeField('date created', default=timezone.now)
