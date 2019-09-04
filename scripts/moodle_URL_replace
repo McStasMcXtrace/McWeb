@@ -1,10 +1,11 @@
 #!/bin/bash
-# Script to remove a "absolute-URL" prefix from a moodle mbz course backup
+# Script to replace absolute URL prefix with another absolute URL prefix from a moodle mbz course backup
 #
 # Takes three arguments:
 # 1) mbz filename (e.g. testlinks_20170823.mbz)
-# 2) The URL to remove, e.g. https://elearn1.fysik.dtu.dk/
-# 3) If a last argument is given, the modified archive replaces the original
+# 2) The source URL, e.g. https://elearn1.fysik.dtu.dk/wiki/
+# 3) The target URL, e.g. https://ucphmediawiki.esss.dk/ucph/
+# 4) If a last argument is given, the modified archive replaces the original
 # 
 # Work:
 # 0) Sanity checks and user confirmation
@@ -55,21 +56,21 @@ if [ -f "$MBZFILE_IN" ]; then
 	fi
 	# Create directory for the archive(s)
 	mkdir -p $MBZBASE
-	mkdir -p ${MBZBASE}_URLstrip
+	mkdir -p ${MBZBASE}_URLmod
 	cd $MBZBASE
 	tar xzf $WORKDIR/$MBZBASE.mbz
 	cd $WORKDIR
-	rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLstrip
+	rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLmod
 	# On OS X basename needs a suffix to .bak, we'll just remove these by the second find
-	find ${MBZBASE}_URLstrip -name url.xml -exec sed -i.bak "s+${URL}+${NEWURL}+g" \{\} \;
-	find ${MBZBASE}_URLstrip -name url.xml.bak -exec rm \{\} \;
+	find ${MBZBASE}_URLmod -name url.xml -exec sed -i.bak "s+${URL}+${NEWURL}+g" \{\} \;
+	find ${MBZBASE}_URLmod -name url.xml.bak -exec rm \{\} \;
 	echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
 	echo >> ${MBZBASE}_url.striplog
-	diff -r $MBZBASE ${MBZBASE}_URLstrip >> ${MBZBASE}_url.striplog
-	cd ${MBZBASE}_URLstrip
-	tar cfz ../${MBZBASE}_URLstrip.mbz *
+	diff -r $MBZBASE ${MBZBASE}_URLmod >> ${MBZBASE}_url.striplog
+	cd ${MBZBASE}_URLmod
+	tar cfz ../${MBZBASE}_URLmod.mbz *
 	cd ..
-	rm -rf $MBZBASE/ ${MBZBASE}_URLstrip/
+	rm -rf $MBZBASE/ ${MBZBASE}_URLmod/
     else
 	echo The file $MBZBASE.mbz is not in your current directory \($WORKDIR\), exiting
 	exit 1;
@@ -81,8 +82,8 @@ fi
 
 if [ ! "x$4" = "x" ]; then
     # No arguments
-    echo "Warning: \n  Replacing your initial achive ${MBZBASE}.mbz by ${MBZBASE}_URLstrip.mbz"
+    echo "Warning: \n  Replacing your initial achive ${MBZBASE}.mbz by ${MBZBASE}_URLmod.mbz"
     echo "(Leaving original with .org suffix)"
     mv ${MBZBASE}.mbz ${MBZBASE}.org
-    mv ${MBZBASE}_URLstrip.mbz ${MBZBASE}.mbz
+    mv ${MBZBASE}_URLmod.mbz ${MBZBASE}.mbz
 fi
