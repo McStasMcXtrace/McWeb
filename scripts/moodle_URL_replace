@@ -23,13 +23,19 @@ if [ "x$1" = "x" ]; then
 fi
 if [ "x$2" = "x" ]; then
     # No arguments
-    echo Please provide a modification URL file as argument \#2
+    echo Please provide a source URL file as argument \#2
+    exit 1;
+fi
+if [ "x$2" = "x" ]; then
+    # No arguments
+    echo Please provide a target URL file as argument \#3
     exit 1;
 fi
 
 MBZFILE_IN=$1
 MBZBASE=`basename $MBZFILE_IN .mbz`
 URL=$2
+NEWURL=$3
 WORKDIR=`pwd`
 
 if [ -f "$MBZFILE_IN" ]; then
@@ -38,37 +44,32 @@ if [ -f "$MBZFILE_IN" ]; then
 	# Sanity checks on the URL
 	regex='(https?)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	string='http://www.google.com/test/link.php'
-	if [[ $URL =~ $regex ]]; then 
-	    echo "URL $URL seems valid"
-	    # Check that trailing char is not a /
-	    i="$((${#URL}-1))"
-	    if [ "${URL:$i:1}" = "/" ]; then
-		echo -n "Warning: Stripping off the trailing / from $URL -> "
-		URL="${URL:0:$i}"
-		echo $URL
-		sleep 1
-	    fi
-	    # Create directory for the archive(s)
-	    mkdir -p $MBZBASE
-	    mkdir -p ${MBZBASE}_URLstrip
-	    cd $MBZBASE
-	    tar xzf $WORKDIR/$MBZBASE.mbz
-	    cd $WORKDIR
-	    rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLstrip
-	    # On OS X basename needs a suffix to .bak, we'll just remove these by the second find
-	    find ${MBZBASE}_URLstrip -name url.xml -exec sed -i.bak "s+${URL}++g" \{\} \;
-	    find ${MBZBASE}_URLstrip -name url.xml.bak -exec rm \{\} \;
-	    echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
-	    echo >> ${MBZBASE}_url.striplog
-	    diff -r $MBZBASE ${MBZBASE}_URLstrip >> ${MBZBASE}_url.striplog
-	    cd ${MBZBASE}_URLstrip
-	    tar cfz ../${MBZBASE}_URLstrip.mbz *
-	    cd ..
-	    rm -rf $MBZBASE/ ${MBZBASE}_URLstrip/
-	else
-	    echo "$URL does not look like a proper URL, exiting"
-	    exit 1;
+	echo "Warning: URL $URL assumed valid"
+	# Check that trailing char is not a /
+	i="$((${#URL}-1))"
+	if [ "${URL:$i:1}" = "/" ]; then
+	    echo -n "Warning: Stripping off the trailing / from $URL -> "
+	    URL="${URL:0:$i}"
+	    echo $URL
+	    sleep 1
 	fi
+	# Create directory for the archive(s)
+	mkdir -p $MBZBASE
+	mkdir -p ${MBZBASE}_URLstrip
+	cd $MBZBASE
+	tar xzf $WORKDIR/$MBZBASE.mbz
+	cd $WORKDIR
+	rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLstrip
+	# On OS X basename needs a suffix to .bak, we'll just remove these by the second find
+	find ${MBZBASE}_URLstrip -name url.xml -exec sed -i.bak "s+${URL}+${NEWURL}+g" \{\} \;
+	find ${MBZBASE}_URLstrip -name url.xml.bak -exec rm \{\} \;
+	echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
+	echo >> ${MBZBASE}_url.striplog
+	diff -r $MBZBASE ${MBZBASE}_URLstrip >> ${MBZBASE}_url.striplog
+	cd ${MBZBASE}_URLstrip
+	tar cfz ../${MBZBASE}_URLstrip.mbz *
+	cd ..
+	rm -rf $MBZBASE/ ${MBZBASE}_URLstrip/
     else
 	echo The file $MBZBASE.mbz is not in your current directory \($WORKDIR\), exiting
 	exit 1;
@@ -78,7 +79,7 @@ else
     exit 1;
 fi
 
-if [ ! "x$3" = "x" ]; then
+if [ ! "x$4" = "x" ]; then
     # No arguments
     echo "Warning: \n  Replacing your initial achive ${MBZBASE}.mbz by ${MBZBASE}_URLstrip.mbz"
     echo "(Leaving original with .org suffix)"
