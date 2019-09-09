@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head><title>mcweb: course manage login</title></head>
+<head>
+  <title>mcweb: course manage login</title>
+  <script>window.onload = function() { document.getElementById("username").focus(); }</script>
+</head>
 <body style="margin-left:auto;margin-right:auto;width:600px;">
     <form method="POST" action="{{ next }}">
     {% csrf_token %}
@@ -8,7 +11,7 @@
             <table  style='margin-left:auto; margin-right:auto;'>
                 <tr>
                     <td>Super-username:</td>
-                    <td><input type="text" name="username"></td>
+                    <td><input type="text" name="username" id="username"></td>
                 </tr>
                 <tr>
                     <td>Password:</td>
