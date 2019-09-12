@@ -71,16 +71,16 @@ def get_group_instrs(basedir):
     
     return grp_instr
 
-def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr):
+def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj):
     ''' returns params [[name, value]] list of list, from instr_displayname (relative path) '''
     MCCODE = MCRUN
-    instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr'
+    instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr_obj'
     
     # Check if this is McStas or McXtrace by a simple 
     for line in open(instr_file):
         if re.search('mcxtrace', line, re.IGNORECASE):
             MCCODE = MXRUN
-            instr.is_mcxtrace = True
+            instr_obj.is_mcxtrace = True
             break
     
     cmd = MCCODE + ' --mpi=1 ' + instr_displayname + " --info"
