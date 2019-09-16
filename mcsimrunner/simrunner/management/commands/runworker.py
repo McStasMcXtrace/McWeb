@@ -19,6 +19,7 @@ from simrunner.models import SimRun
 from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MCPLOT_USE_HTML_PLOTTER
 from mcweb.settings import MPI_PR_WORKER, MAX_THREADS, MCRUN, BASE_DIR
 import mcweb.settings as settings
+from simrunner.generate_static import McStaticDataBrowserGenerator
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -382,6 +383,10 @@ def get_and_start_new_simrun():
     return simrun
 
 def cache_check(simrun):
+    '''
+    Checks if a similar simrun exists and if this run is allows to be loaded from cache.
+    If so, it loads the cache and returns True, and False otherwise.
+    '''
     simrun_matches = SimRun.objects.filter(enable_cachefrom=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, scanpoints=simrun.scanpoints, neutrons__gte = simrun.neutrons).order_by('-complete')
     if len(simrun_matches) > 0:
         simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
@@ -402,6 +407,21 @@ def cache_check(simrun):
         return True
     else:
         return False
+
+def write_results(simrun):
+    ''' Generate data browser page. '''
+    lin_log_html = 'lin_log_url: impl.'
+    gen = McStaticDataBrowserGenerator()
+    gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                          'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
+                          'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
+                          'lin_log_html': lin_log_html,
+                          'data_folder': simrun.data_folder})
+
+    if simrun.scanpoints == 1:
+        gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+    else:
+        gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
 
 def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''
@@ -424,9 +444,10 @@ def threadwork(simrun, semaphore):
         
             # post-processing
             maketar(simrun)
+            simrun.complete = timezone.now()
+            write_results(simrun)
         
         # finish
-        simrun.complete = timezone.now()
         simrun.save()
 
         _log('done (%s secs).' % (simrun.complete - simrun.started).seconds)

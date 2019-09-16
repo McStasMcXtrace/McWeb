@@ -9,7 +9,6 @@ from django.http import HttpResponse
 from os.path import basename
 from models import InstrGroup, Instrument, SimRun
 import json
-from generate_static import McStaticDataBrowserGenerator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from mcweb.settings import DEFAULT_GROUP, DEFAULT_INSTR
 @xframe_options_exempt
@@ -159,35 +158,23 @@ def instrument_post(req):
 
 @login_required
 def simrun(req, sim_id):
-    ''' "%Y-%m-%d_%H:%M:%S" '''
+    ''' Simulation run waiting page. '''
     simrun = SimRun.objects.get(id=sim_id)
     
     if simrun.failed:
-        # TODO: make a static fail html page also named browse.html 
+        # TODO: make a static fail html page also named browse.html
         # TODO: ensure static page generation only happens once
         return render(req, 'fail.html', {'instr_displayname': simrun.instr_displayname, 'fail_str': simrun.fail_str, 'data_folder' : simrun.data_folder})
-    
-    if simrun.complete:
-        if simrun.enable_cachefrom:
-            # generate data browser (TODO: make sure static page generation only happens once)
-            lin_log_html = 'lin_log_url: impl.'
-            gen = McStaticDataBrowserGenerator()
-            gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
-                                  'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
-                                  'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
-                                  'lin_log_html': lin_log_html,
-                                  'data_folder': simrun.data_folder})
 
-            if simrun.scanpoints == 1:
-                gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
-            else:
-                gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
+    elif simrun.complete:
         # redirect to static
         return redirect('/%s/browse.html' % simrun.data_folder)
     
     # simrun live status 
-    return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
-                                       'neutrons': simrun.neutrons, 'seed': simrun.seed,
-                                       'scanpoints': simrun.scanpoints, 'params': simrun.params,
-                                       'status': simrun.status, 'date_time_created': timezone.localtime(simrun.created).strftime("%H:%M:%S"),
-                                       'data_folder' : simrun.data_folder})
+    else:
+        return render(req, 'status.html', {'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                                           'neutrons': simrun.neutrons, 'seed': simrun.seed,
+                                           'scanpoints': simrun.scanpoints, 'params': simrun.params,
+                                           'status': simrun.status, 'date_time_created': timezone.localtime(simrun.created).strftime("%H:%M:%S"),
+                                           'data_folder' : simrun.data_folder})
+
