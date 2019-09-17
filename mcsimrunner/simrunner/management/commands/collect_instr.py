@@ -11,6 +11,9 @@ import datetime
 import re
 from simrunner.models import InstrGroup, Instrument
 from mcweb.settings import MCRUN, MXRUN
+import logging
+import sys
+import traceback
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
@@ -126,78 +129,103 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
                     s.append(unit)
                     s.append(info)
             params.append(s)
-    
+
     # check uniqueness of params:
     params_4real = []
     for p in params:
         if p not in params_4real:
             params_4real.append(p)
-    
+
     return params_4real
+
 
 class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
-    
+
     def handle(self, *args, **options):
-        print "<pre>\n"
-        print datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y")
-        print 'collecting instruments one depth in sim/...'
-        
-        # error log
-        error_log = []
-        
-        grp_instr = get_group_instrs('sim/')
-        for g in grp_instr:
-            try:
-                group = InstrGroup.objects.get(name=g)
-                print "group %s exists in db" % g
-            except InstrGroup.DoesNotExist:
-                group = InstrGroup(name=g)
-                group.save()
-                print "group %s created" % g
-        
-            mkdir_p( "static/doc/%s" % g )
-            print "doc folder static/doc/%s touched" % g
+        # global exception logging block
+        try:
+            raise Exception("mega problem arose!!")
             
-            try:
-                make_html_docs(g)
-            except:
-                raise Exception('make_html_docs failed')
             
-            # instruments in group:
-            for i in grp_instr[g]:
-                
+
+            print "<pre>\n"
+            print datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y")
+            print 'collecting instruments one depth in sim/...'
+
+            # error log
+            error_log = []
+
+            grp_instr = get_group_instrs('sim/')
+            for g in grp_instr:
                 try:
-                    displayname = i
-                    name = g + "_" + i
-                    try: 
-                        instr = Instrument.objects.get(name=name)
-                        print "instrument %s exists in db" % i
-                    except Instrument.DoesNotExist:    
-                        instr = Instrument(group=group, name=name, displayname=displayname)
-                        print "instrument %s created" % i
-                    
-                    if os.path.isfile('sim/' + g + '/' + i + '.png'):
-                        instr.image = "/static/doc/" + g + "/" + i + ".png"
-                        shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
-                        print "Adding image for instrument %s" % i
-                    else:
-                        instr.image = '/static/noimage.png'
-                    
-                    # update instr params
-                    instr.params = get_instr_params_and_set_affiliation(g, i, instr)
-                    instr.save()
-                    print "instrument %s params updated" % i
-                except Exception as e:
-                    error_str = "instrument %s: %s" % (i, e.__str__())
-                    print error_str
-                    error_log.append(error_str)
-                    continue
-        
-        if len(error_log) > 0:
-            print
-            print "ERRORS: The following errors were encountered:"
-            print
-            print('\n'.join(error_log))
-        
-        print "</pre>\n"
+                    group = InstrGroup.objects.get(name=g)
+                    print "group %s exists in db" % g
+                except InstrGroup.DoesNotExist:
+                    group = InstrGroup(name=g)
+                    group.save()
+                    print "group %s created" % g
+
+                mkdir_p( "static/doc/%s" % g )
+                print "doc folder static/doc/%s touched" % g
+
+                try:
+                    make_html_docs(g)
+                except:
+                    raise Exception('make_html_docs failed')
+
+                # instruments in group:
+                for i in grp_instr[g]:
+
+                    try:
+                        displayname = i
+                        name = g + "_" + i
+                        try: 
+                            instr = Instrument.objects.get(name=name)
+                            print "instrument %s exists in db" % i
+                        except Instrument.DoesNotExist:    
+                            instr = Instrument(group=group, name=name, displayname=displayname)
+                            print "instrument %s created" % i
+
+                        if os.path.isfile('sim/' + g + '/' + i + '.png'):
+                            instr.image = "/static/doc/" + g + "/" + i + ".png"
+                            shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
+                            print "Adding image for instrument %s" % i
+                        else:
+                            instr.image = '/static/noimage.png'
+
+                        # update instr params
+                        instr.params = get_instr_params_and_set_affiliation(g, i, instr)
+                        instr.save()
+                        print "instrument %s params updated" % i
+                    except Exception as e:
+                        error_str = "instrument %s: %s" % (i, e.__str__())
+                        print error_str
+                        error_log.append(error_str)
+                        continue
+
+            if len(error_log) > 0:
+                print
+                print "ERRORS: The following errors were encountered:"
+                print
+                print('\n'.join(error_log))
+
+            print "</pre>\n"
+
+        # global exception logging, appends to file "collectinstr_fail.log
+        except Exception as e:
+            msg = traceback.format_exc()
+
+            _elog = logging.getLogger('collectinstr_fail')
+            hdlr = logging.FileHandler('collectinstr_fail.log')
+            hdlr.level = logging.ERROR
+            hdlr.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
+
+            hdlr2 = logging.StreamHandler(sys.stdout)
+            hdlr2.level = logging.ERROR
+            hdlr2.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
+
+            _elog.addHandler(hdlr)
+            _elog.addHandler(hdlr2)
+            _elog.error(msg)
+
