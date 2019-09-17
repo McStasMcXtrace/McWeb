@@ -145,9 +145,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # global exception logging block
         try:
-            raise Exception("mega problem arose!!")
-            
-            
 
             print "<pre>\n"
             print datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y")
