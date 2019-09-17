@@ -12,6 +12,7 @@ import tarfile
 import threading
 import logging
 import re
+import traceback
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -439,6 +440,7 @@ def threadwork(simrun, semaphore):
             raise e
         
         _log('fail: %s (%s)' % (e.__str__(), type(e).__name__))
+        _log_error(e)
 
     finally:
         _log("releasing semaphore")
@@ -473,9 +475,10 @@ def work(threaded=True, semaphore=None):
         except Exception as e:
             if e is ExitException:
                 raise e
-            
+
             _log('fail: %s (%s)' % (e.__str__(), type(e).__name__))
-        
+            _log_error(e)
+
         finally:
             simrun = get_and_start_new_simrun()
             if not simrun:
@@ -487,11 +490,11 @@ def _log(msg):
     if not _wlog:
         _wlog = logging.getLogger('worker')
         hdlr = logging.FileHandler('worker.log')
-        hdlr.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
+        hdlr.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s', '%Y%m%d_%H%M%S'))
 
         hdlr2 = logging.StreamHandler(sys.stdout)
         hdlr2.level = logging.INFO
-        hdlr2.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s'))
+        hdlr2.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s', '%Y%m%d_%H%M%S'))
         _wlog.addHandler(hdlr)
         _wlog.addHandler(hdlr2)
 
@@ -499,6 +502,25 @@ def _log(msg):
         _wlog.info("")
         _wlog.info("%%  starting McWeb worker log session  %%")
     _wlog.info(msg)
+
+_elog = None
+def _log_error(exception):
+    msg = traceback.format_exc()
+    global _elog
+    if not _elog:
+        _elog = logging.getLogger('runworker_unhandled')
+        hdlr = logging.FileHandler('runworker_unhandled.log')
+        hdlr.level = logging.ERROR
+        hdlr.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s', '%Y%m%d_%H%M%S'))
+
+        hdlr2 = logging.StreamHandler(sys.stdout)
+        hdlr2.level = logging.ERROR
+        hdlr2.setFormatter(logging.Formatter('%(threadName)-22s: %(message)s', '%Y%m%d_%H%M%S'))
+
+        _elog.addHandler(hdlr)
+        _elog.addHandler(hdlr2)
+    _elog.error(msg)
+
 
 class Command(BaseCommand):
     ''' django simrun processing command "runworker" '''
@@ -523,7 +545,7 @@ class Command(BaseCommand):
         except:
             raise ExitException('Could not find or create base data folder, exiting (%s).' % data_basedir)            
         
-        # graceful exiting
+        # global error handling
         try:
             # debug run
             if options['debug']:
@@ -552,4 +574,8 @@ class Command(BaseCommand):
             _log("exit exception raised, exiting (%s)" % e.__str__())
             print("")
             print("")
+
+        # global exception log to file
+        except Exception as e:
+            _log_error(e)
 
