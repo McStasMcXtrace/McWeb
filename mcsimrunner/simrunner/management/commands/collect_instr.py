@@ -1,6 +1,6 @@
 '''
-Collects all groups and instruments from disk and creates db objects. 
-Already existing groups are unchanged, and already existing instruments 
+Collects all groups and instruments from disk and creates db objects.
+Already existing groups are unchanged, and already existing instruments
 are updated with current params info.
 '''
 from django.core.management.base import BaseCommand
@@ -26,85 +26,86 @@ def mkdir_p(path):
 
 def make_html_docs(group):
     ''' run mcdoc in instrument group folder, move html files to static/doc/..., create links back to the instr files '''
-    cmd = 'mcdoc.pl -t .' 
-    process = subprocess.Popen(cmd, 
-                               stdout=subprocess.PIPE, 
+    cmd = 'mcdoc.pl -t .'
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
-                               shell=True, 
+                               shell=True,
                                cwd='sim/' + group)
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
         raise Exception('instrument doc generation error.')
 
     cmd = 'mv sim/' + group + '/*.html static/doc/' + group + '/'
-    process = subprocess.Popen(cmd, 
-                               stdout=subprocess.PIPE, 
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
-    
+
     cmd = 'ln -s $PWD/sim/' + group + '/*.instr static/doc/' + group + '/'
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
-        
+
 def get_group_instrs(basedir):
     ''' returns a dict of {group: [instr_files]}, assuming depth of one from basedir NOTE: "datafiles" is omited '''
     files_instr = []
     grp_instr = {}
     i = 0
     for (dirpath, dirname, files) in os.walk(basedir):
-        if i == 0: 
+        if i == 0:
             for d in dirname:
                 if not d == 'datafiles':
                     grp_instr[d] = []
                 else:
                     print('avoiding folder: datafiles')
-    
+
         for f in files:
             if os.path.splitext(f)[1] == '.instr':
                 files_instr.append(dirpath + '/' + f)
         i += 1
-    
+
     for f in files_instr:
         g = os.path.split(os.path.dirname(f))[1]
         grp_instr[g].append(os.path.splitext(os.path.basename(f))[0])
-    
+
     return grp_instr
 
 def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj):
     ''' returns params [[name, value]] list of list, from instr_displayname (relative path) '''
     MCCODE = MCRUN
-    instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr_obj'
-    
-    # Check if this is McStas or McXtrace by a simple 
+
+    instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr'
+
+    # Check if this is McStas or McXtrace by a simple
     for line in open(instr_file):
         if re.search('mcxtrace', line, re.IGNORECASE):
             MCCODE = MXRUN
             instr_obj.is_mcxtrace = True
             break
-    
+
     cmd = MCCODE + ' --mpi=1 ' + instr_displayname + " --info"
-    
-    process = subprocess.Popen(cmd, 
-                               stdout=subprocess.PIPE, 
+
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
-                               shell=True, 
+                               shell=True,
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
         raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
-    
+
     cmd2 = 'mcdoc.pl -t ./' + os.path.basename(instr_displayname)
-    process2 = subprocess.Popen(cmd2, 
-                               stdout=subprocess.PIPE, 
+    process2 = subprocess.Popen(cmd2,
+                               stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
-                               shell=True, 
+                               shell=True,
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata2, stderrdata2) = process2.communicate()
-    
+
     if process.returncode != 0:
         raise Exception('instrument doc retrieval error.')
     # get parameters from info
@@ -177,7 +178,8 @@ class Command(BaseCommand):
                     try:
                         displayname = i
                         name = g + "_" + i
-                        try: 
+
+                        try:
                             instr = Instrument.objects.get(name=name)
                             print "instrument %s exists in db" % i
                         except Instrument.DoesNotExist:    
