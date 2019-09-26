@@ -1,0 +1,89 @@
+#!/bin/bash
+# Script to replace absolute URL prefix with another absolute URL prefix from a moodle mbz course backup
+#
+# Takes three arguments:
+# 1) mbz filename (e.g. testlinks_20170823.mbz)
+# 2) The source URL, e.g. https://elearn1.fysik.dtu.dk/wiki/
+# 3) The target URL, e.g. https://ucphmediawiki.esss.dk/ucph/
+# 4) If a last argument is given, the modified archive replaces the original
+# 
+# Work:
+# 0) Sanity checks and user confirmation
+# 1) Unpack the archive
+# 2) Find url.xml files within the hierachy
+# 3) Use sed to strip off the URL
+# 4) Assemble a "status" logfile with the found differences
+# 5) Assemble a new mbz under a modified filename
+# 6) Cleanup and optionally move the modified archive in place of original
+
+# Check that we have an existent filename
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide an mbz file as argument \#1
+    exit 1;
+fi
+if [ "x$2" = "x" ]; then
+    # No arguments
+    echo Please provide a source URL file as argument \#2
+    exit 1;
+fi
+if [ "x$2" = "x" ]; then
+    # No arguments
+    echo Please provide a target URL file as argument \#3
+    exit 1;
+fi
+
+MBZFILE_IN=$1
+MBZBASE=`basename $MBZFILE_IN .mbz`
+URL=$2
+NEWURL=$3
+WORKDIR=`pwd`
+
+if [ -f "$MBZFILE_IN" ]; then
+    if [ -f "${MBZBASE}.mbz" ]; then
+	echo $MBZBASE.mbz is in $WORKDIR, good
+	# Sanity checks on the URL
+	regex='(https?)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+	string='http://www.google.com/test/link.php'
+	echo "Warning: URL $URL assumed valid"
+	# Check that trailing char is not a /
+	i="$((${#URL}-1))"
+	if [ "${URL:$i:1}" = "/" ]; then
+	    echo -n "Warning: Stripping off the trailing / from $URL -> "
+	    URL="${URL:0:$i}"
+	    echo $URL
+	    sleep 1
+	fi
+	# Create directory for the archive(s)
+	mkdir -p $MBZBASE
+	mkdir -p ${MBZBASE}_URLmod
+	cd $MBZBASE
+	tar xzf $WORKDIR/$MBZBASE.mbz
+	cd $WORKDIR
+	rsync -avz --delete $MBZBASE/ ${MBZBASE}_URLmod
+	# On OS X basename needs a suffix to .bak, we'll just remove these by the second find
+	find ${MBZBASE}_URLmod -name url.xml -exec sed -i.bak "s+${URL}+${NEWURL}+g" \{\} \;
+	find ${MBZBASE}_URLmod -name url.xml.bak -exec rm \{\} \;
+	echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
+	echo >> ${MBZBASE}_url.striplog
+	diff -r $MBZBASE ${MBZBASE}_URLmod >> ${MBZBASE}_url.striplog
+	cd ${MBZBASE}_URLmod
+	tar cfz ../${MBZBASE}_URLmod.mbz *
+	cd ..
+	rm -rf $MBZBASE/ ${MBZBASE}_URLmod/
+    else
+	echo The file $MBZBASE.mbz is not in your current directory \($WORKDIR\), exiting
+	exit 1;
+    fi
+else
+    echo $MBZFILE_IN not found, exiting
+    exit 1;
+fi
+
+if [ ! "x$4" = "x" ]; then
+    # No arguments
+    echo "Warning: \n  Replacing your initial achive ${MBZBASE}.mbz by ${MBZBASE}_URLmod.mbz"
+    echo "(Leaving original with .org suffix)"
+    mv ${MBZBASE}.mbz ${MBZBASE}.org
+    mv ${MBZBASE}_URLmod.mbz ${MBZBASE}.mbz
+fi

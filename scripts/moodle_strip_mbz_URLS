@@ -61,7 +61,9 @@ if [ -f "$MBZFILE_IN" ]; then
 	    echo URL-strip log for removal of $URL on $MBZFILE_in > ${MBZBASE}_url.striplog
 	    echo >> ${MBZBASE}_url.striplog
 	    diff -r $MBZBASE ${MBZBASE}_URLstrip >> ${MBZBASE}_url.striplog
-	    tar cfz ${MBZBASE}_URLstrip.mbz ${MBZBASE}_URLstrip
+	    cd ${MBZBASE}_URLstrip
+	    tar cfz ../${MBZBASE}_URLstrip.mbz *
+	    cd ..
 	    rm -rf $MBZBASE/ ${MBZBASE}_URLstrip/
 	else
 	    echo "$URL does not look like a proper URL, exiting"

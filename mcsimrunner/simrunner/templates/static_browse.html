@@ -1,9 +1,16 @@
 {% extends 'static_base.html' %}
 {% block content %}
 <legend>Data plots (<a id="linlog" href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
+
 <ul class="gallery">
-    {% for monitor in html_png_dat %}
-    <li class="thumb"><a href="{{ monitor.0 }}"><img src="{{ monitor.1 }}" class="thumb"/></a></li>
+    {% for monitor in html_png_dat %}<!--{{ monitor.0 }}   --   {{ monitor.1 }}-->
+    <li  class="thumb">
+      <a href="{{ monitor.0 }}" target="_blank" style="position:relative; display:inline-block;">
+        <div style="position:absolute; height:100%; width:100%; z-index:1; background:rgba(0,0,0,0.0);"></div>
+        <iframe style="width:290px;height:290px;" src="{{ monitor.1 }}" frameborder="0" allowfullscreen style=""z-index:2;></iframe>
+      </a>
+    </li>
     {% endfor %}
 </ul>
+
 {% endblock %}

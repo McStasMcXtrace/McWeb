@@ -17,9 +17,10 @@ import traceback
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from simrunner.models import SimRun
-from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD
+from mcweb.settings import STATIC_URL, SIM_DIR, DATA_DIRNAME, MCRUN_OUTPUT_DIRNAME, MCPLOT_CMD, MCPLOT_LOGCMD, MCPLOT_USE_HTML_PLOTTER
 from mcweb.settings import MPI_PR_WORKER, MAX_THREADS, MCRUN, BASE_DIR
 import mcweb.settings as settings
+from simrunner.generate_static import McStaticDataBrowserGenerator
 
 class ExitException(Exception):
     ''' used to signal a runworker shutdown, rather than a simrun object fail-time and -string '''
@@ -87,59 +88,60 @@ def mcplot(simrun):
     ''' generates plots from simrun output data '''
     ''' also spawns monitor zip file creation in case of scan sweep '''
     rename_mcstas_to_mccode(simrun)
-    
+    plotfiles_ext = "html" if MCPLOT_USE_HTML_PLOTTER else "png"
+
     try:
         if simrun.scanpoints > 1:
             # init
             plot_files = []
             plot_files_log = []
             data_files = []
-            
+
             # plot and store mccode.dat, which must exist
             f = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, 'mccode.dat')
-            
+
             plot_file(f)
             p = os.path.basename(f)
-            p = os.path.splitext(p)[0] + '.png'
+            p = os.path.splitext(p)[0] + '.' + plotfiles_ext
             p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
             plot_files.append(p)
-            
+
             plot_file(f, log=True)
             p_log = os.path.basename(f)
-            p_log = os.path.splitext(p_log)[0] + '.png'
+            p_log = os.path.splitext(p_log)[0] + '.' + plotfiles_ext
             p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, p_log)
             plot_files_log.append(p_log)
-            
+
             d = os.path.basename(f)
             d = os.path.join(MCRUN_OUTPUT_DIRNAME, d)
             data_files.append(d)
-            
+
             _log('plot_linlog: %s' % p)
-            
+
             for i in range(simrun.scanpoints):
                 if i > 0:
                     _log('plot_linlog (scanpoint index %d)...' % i)
-                
+
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
-                
+
                 datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
                 datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
-                
+
                 for f in datfiles:
                     plot_file(f)
                     plot_file(f, log=True)
-                    
+
                     p = os.path.basename(f)
-                    p = os.path.splitext(p)[0] + '.png'
+                    p = os.path.splitext(p)[0] + '.' + plotfiles_ext
                     p = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p)
-                    
+
                     p_log = os.path.basename(f)
-                    p_log = os.path.splitext(p_log)[0] + '.png'
+                    p_log = os.path.splitext(p_log)[0] + '.' + plotfiles_ext
                     p_log = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), p_log)
-                    
+
                     d = os.path.basename(f)
                     d = os.path.join(MCRUN_OUTPUT_DIRNAME, str(i), d)
-                    
+
                     if i == 0:
                         _log('plot_linlog: %s' % p)
                         plot_files.append(p)
@@ -147,44 +149,44 @@ def mcplot(simrun):
                         data_files.append(d)
             for f in datfiles:
                 sweep_zip_gen(f,simrun.data_folder)
-                
+
         else:
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
-            
+
             datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
             datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
-            
+
             data_files = []
             plot_files = []
             plot_files_log = []
-        
+
             for f in datfiles: 
                 plot_file(f)
-                
+
                 p = os.path.basename(f)
-                p = os.path.splitext(p)[0] + '.png'
+                p = os.path.splitext(p)[0] + '.' + plotfiles_ext
                 p = os.path.join(MCRUN_OUTPUT_DIRNAME, p)
-                
+
                 _log('plot: %s' % p)
                 plot_files.append(p)
-            
+
             # NOTE: the following only works with mcplot-gnuplot-py
             for f in datfiles: 
                 plot_file(f, log=True)
-                
+
                 l = os.path.basename(f)
-                l = os.path.splitext(l)[0] + '_log.png'
+                l = os.path.splitext(l)[0] + '_log.' + plotfiles_ext
                 l = os.path.join(MCRUN_OUTPUT_DIRNAME, l)
-                
+
                 _log('plot: %s' % l)
                 plot_files_log.append(l)
-            
+
             for f in datfiles:
                 d = os.path.basename(f)
                 d = os.path.join(MCRUN_OUTPUT_DIRNAME, d)
-                
+
                 data_files.append(d)
-            
+
         simrun.data_files = data_files
         simrun.plot_files = plot_files
         simrun.plot_files_log = plot_files_log
@@ -196,7 +198,7 @@ def mcplot(simrun):
 def mcdisplay_webgl(simrun, pout=False):
     ''' apply mcdisplay-webgl output to subfolder 'mcdisplay', renaming index.html to mcdisplay.html '''
     join = os.path.join
-    
+
     dirname = 'mcdisplay'
     instr = '%s.instr' % simrun.instr_displayname
 
@@ -209,9 +211,9 @@ def mcdisplay_webgl(simrun, pout=False):
         params_str_lst.append('%s=%s' % (p[0], p[1]))
     params_str = ' '.join(params_str_lst)
     cmd = '%s %s %s --nobrowse --dir=%s' % (settings.MCDISPLAY_WEBGL, instr, params_str, dirname)
-    
+
     # TODO: inplement --inspect, --first, --last
-    
+
     # run mcdisplay
     _log('display: %s' % cmd)
     process = subprocess.Popen(cmd,
@@ -224,7 +226,7 @@ def mcdisplay_webgl(simrun, pout=False):
         print(stdoutdata)
         if (stderrdata is not None) and (stderrdata != ''):
             print(stderrdata)
-    
+
     # copy files
     #_log('mcdisplay: renaming index.html')
     #os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
@@ -382,7 +384,11 @@ def get_and_start_new_simrun():
     return simrun
 
 def cache_check(simrun):
-    simrun_matches = SimRun.objects.filter(was_run=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, scanpoints=simrun.scanpoints, neutrons__gte = simrun.neutrons).order_by('-complete')
+    '''
+    Checks if a similar simrun exists and if this run is allows to be loaded from cache.
+    If so, it loads the cache and returns True, and False otherwise.
+    '''
+    simrun_matches = SimRun.objects.filter(enable_cachefrom=True, group_name=simrun.group_name, instr_displayname=simrun.instr_displayname, params_str=simrun.params_str, gravity=simrun.gravity, scanpoints=simrun.scanpoints, neutrons__gte = simrun.neutrons).order_by('-complete')
     if len(simrun_matches) > 0:
         simrun.data_folder = os.path.join(os.path.join(STATIC_URL.lstrip('/'), DATA_DIRNAME), simrun.__str__())
         # Simple unix cp -r of data directory
@@ -403,6 +409,21 @@ def cache_check(simrun):
     else:
         return False
 
+def write_results(simrun):
+    ''' Generate data browser page. '''
+    lin_log_html = 'lin_log_url: impl.'
+    gen = McStaticDataBrowserGenerator()
+    gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+                          'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
+                          'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
+                          'lin_log_html': lin_log_html,
+                          'data_folder': simrun.data_folder})
+
+    if simrun.scanpoints == 1:
+        gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+    else:
+        gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
+
 def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''
     try:
@@ -416,7 +437,7 @@ def threadwork(simrun, semaphore):
         
             # process
             mcrun(simrun)
-            simrun.was_run = True
+            simrun.enable_cachefrom = True
         
             mcdisplay_webgl(simrun)
             mcdisplay(simrun)
@@ -424,9 +445,10 @@ def threadwork(simrun, semaphore):
         
             # post-processing
             maketar(simrun)
+            simrun.complete = timezone.now()
+            write_results(simrun)
         
         # finish
-        simrun.complete = timezone.now()
         simrun.save()
 
         _log('done (%s secs).' % (simrun.complete - simrun.started).seconds)

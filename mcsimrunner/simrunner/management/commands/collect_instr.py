@@ -11,6 +11,9 @@ import datetime
 import re
 from simrunner.models import InstrGroup, Instrument
 from mcweb.settings import MCRUN, MXRUN
+import logging
+import sys
+import traceback
 
 def mkdir_p(path):
     ''' create directory ala Unix mkdir -p '''
@@ -71,16 +74,17 @@ def get_group_instrs(basedir):
 
     return grp_instr
 
-def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr):
+def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj):
     ''' returns params [[name, value]] list of list, from instr_displayname (relative path) '''
     MCCODE = MCRUN
+
     instr_file = 'sim/' + instr_grp + '/' + instr_displayname + '.instr'
 
     # Check if this is McStas or McXtrace by a simple
     for line in open(instr_file):
         if re.search('mcxtrace', line, re.IGNORECASE):
             MCCODE = MXRUN
-            instr.is_mcxtrace = True
+            instr_obj.is_mcxtrace = True
             break
 
     cmd = MCCODE + ' --mpi=1 ' + instr_displayname + " --info"
@@ -135,6 +139,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr):
 
     return params_4real
 
+
 class Command(BaseCommand):
     help = 'adds groups and contained instruments from disk to the db'
 
@@ -173,10 +178,11 @@ class Command(BaseCommand):
                     try:
                         displayname = i
                         name = g + "_" + i
+
                         try:
                             instr = Instrument.objects.get(name=name)
                             print "instrument %s exists in db" % i
-                        except Instrument.DoesNotExist:
+                        except Instrument.DoesNotExist:    
                             instr = Instrument(group=group, name=name, displayname=displayname)
                             print "instrument %s created" % i
 
@@ -221,3 +227,4 @@ class Command(BaseCommand):
             _elog.addHandler(hdlr)
             _elog.addHandler(hdlr2)
             _elog.error(msg)
+
