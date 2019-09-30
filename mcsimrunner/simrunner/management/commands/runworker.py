@@ -35,15 +35,13 @@ def maketar(simrun):
         raise Exception('tarfile fail')
     
 def plot_file(f, log=False):
-    f_dirname=os.path.dirname(f)
-    f_filename=os.path.basename(f)
-    cmd = '%s %s' % (MCPLOT_CMD,f_filename)
+    cmd = '%s %s' % (MCPLOT_CMD, f)
     if log:
-        cmd = '%s %s' % (MCPLOT_LOGCMD,f_filename)
+        cmd = '%s %s' % (MCPLOT_LOGCMD,f)
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
-                               shell=True, cwd=f_dirname)
+                               shell=True)
     (stdoutdata, stderrdata) = process.communicate()
     if os.path.isfile( f + '.png'):
         if log:
