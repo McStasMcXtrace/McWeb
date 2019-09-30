@@ -151,8 +151,8 @@ class McStaticDataBrowserGenerator():
 
         # get data for browse_ss.html
         # the list html_name contains list of monitors (monitor.0 is html filepath,  monitor.1 is monitor displayname)
-        sim_html = html_paths[0]
-        sim_html_log = splitext(html_paths[0])[0] + '_log.html'
+        sim_html = join(data_folder, 'mcstas', 'mccode.html')
+        sim_html_log = join(data_folder, 'mcstas', 'mccode_log.html')
         sim_png = plot_files[0]
         sim_png_log = splitext(plot_files[0])[0] + '_log' + splitext(plot_files[0])[1]
 
