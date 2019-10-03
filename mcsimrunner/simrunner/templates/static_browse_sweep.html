@@ -5,7 +5,7 @@
 <script> function resizeIframe(obj) { obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px'; } </script>
 <legend>Data plots (<a id="linlog" href="{{ twin_html }}">click here for {{ lin_or_log }}-scale</a>)</legend>
 <div class="centerText">
-  <iframe style="width:100%;" src="/{{ sim_html }}" frameborder="0" allowfullscreen scrolling="no" onload="resetIframe(this);"></iframe>
+  <iframe style="width:100%;" src="/{{ sim_html }}" frameborder="0" allowfullscreen scrolling="no" onload="resizeIframe(this);"></iframe>
 </div>
 <ol>
   {% for monitor in html_name %}
