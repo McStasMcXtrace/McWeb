@@ -7,6 +7,7 @@ Uses django templates to generate the html.
 from django.template import Context
 from os.path import basename, join, splitext
 from django.template.loader import get_template
+from django.template.loader import render_to_string
 
 class McStaticDataBrowserGenerator():
     ''' implements functionality to generate static html site for data browsing '''   
@@ -50,29 +51,29 @@ class McStaticDataBrowserGenerator():
         html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')), plot_files)
 
         # get template for <monitor>.html
-        t = get_template('static_monitor.html')
+        templ='static_monitor.html'
 
         # write <monitor>.html and <monitor>_log.html for each png/dat file
         for i in range(len(plot_files)):
             png_dat = [png_base[i], dat_base[i]]
 
-            c = Context({'png_dat': png_dat, 'twin_html': basename(html_paths_log[i]), 'lin_or_log': 'log'})
-            write_html(html_paths[i], t.render(c))
+            c = {'png_dat': png_dat, 'twin_html': basename(html_paths_log[i]), 'lin_or_log': 'log'}
+            write_html(html_paths[i], render_to_string(templ,c))
 
             # log versions of monitor files
             png_dat_log = [splitext(png_base[i])[0] + '_log.html', dat_base[i]]
 
-            c = Context({'png_dat': png_dat_log, 'twin_html': basename(html_paths[i]), 'lin_or_log': 'lin'})
-            write_html(html_paths_log[i], t.render(c))
+            c = {'png_dat': png_dat_log, 'twin_html': basename(html_paths[i]), 'lin_or_log': 'lin'}
+            write_html(html_paths_log[i], render_to_string(templ,c))
 
         # 2) write browse.html
 
-        t = get_template('static_browse.html')
-        c = self.get_context({'html_png_dat': html_png_dat, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'})
-        write_html(join(data_folder, 'browse.html'), t.render(c))
+        templ='static_browse.html'
+        c = {'html_png_dat': html_png_dat, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'}
+        write_html(join(data_folder, 'browse.html'), render_to_string(templ,c))
 
-        c = self.get_context({'html_png_dat': html_png_dat_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
-        write_html(join(data_folder, 'browse_log.html'), t.render(c))
+        c = {'html_png_dat': html_png_dat_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'}
+        write_html(join(data_folder, 'browse_log.html'), render_to_string(templ,c))
 
     def generate_browsepage_sweep(self, data_folder, plot_files, dat_files, scanpoints):
         ''' as above, but handles the simulation scan case '''
@@ -85,7 +86,7 @@ class McStaticDataBrowserGenerator():
         # 1) write <monitor>.html:
 
         # write <monitor>.html for each plt/dat file
-        t = get_template('static_monitor.html')
+        templ='static_monitor.html'
         for j in range(scanpoints):
             for i in range(len(plot_files)):
                 if i == 0:
@@ -94,28 +95,28 @@ class McStaticDataBrowserGenerator():
                 dat = dat_base[i].replace('/0/', '/%s/' % str(j))
 
                 plt_dat = [plt, dat]
-                c = Context({'png_dat': plt_dat, 'twin_html': basename(html_paths_log[i]).replace('/0/', '/%s/' % str(j)), 'lin_or_log': 'log'})
-                write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), t.render(c))
+                c = {'png_dat': plt_dat, 'twin_html': basename(html_paths_log[i]).replace('/0/', '/%s/' % str(j)), 'lin_or_log': 'log'}
+                write_html(html_paths[i].replace('/0/', '/%s/' % str(j)), render_to_string(templ,c))
 
                 # write twin - log scale
                 plt_dat = [splitext(plt)[0] + '_log' + splitext(plt)[1], dat]
-                c = Context({'png_dat': plt_dat, 'twin_html': basename(html_paths[i].replace('/0/', '/%s/' % str(j))), 'lin_or_log': 'lin'})
-                write_html(html_paths_log[i].replace('/0/', '/%s/' % str(j)), t.render(c))
+                c = {'png_dat': plt_dat, 'twin_html': basename(html_paths[i].replace('/0/', '/%s/' % str(j))), 'lin_or_log': 'lin'}
+                write_html(html_paths_log[i].replace('/0/', '/%s/' % str(j)), render_to_string(templ,c))
 
         # special case: mccode.dat : sweep overview
         plt_dat = [plt_base[0], dat_base[0]]
-        c = Context({'png_dat': plt_dat})
-        write_html(html_paths[0], t.render(c))
+        c = {'png_dat': plt_dat}
+        write_html(html_paths[0], render_to_string(templ,c))
 
         # log twin for that..
         plt_dat = [splitext(plt_base[0])[0] + '_log' + splitext(plt_base[0])[1], dat_base[0]]
-        c = Context({'png_dat': plt_dat})
-        write_html(splitext(html_paths[0])[0] + '_log.html', t.render(c))
+        c = {'png_dat': plt_dat}
+        write_html(splitext(html_paths[0])[0] + '_log.html', render_to_string(templ,c))
 
         # 2 write <monitor>_ss.html
 
         # get data for each monitor_ss.html and write it immediately
-        t = get_template('static_monitor_sweep.html')
+        templ='static_monitor_sweep.html'
         for i in range(len(plot_files)):
             if i == 0:
                 continue
@@ -141,11 +142,11 @@ class McStaticDataBrowserGenerator():
                 html = html.replace('/0/', '/%s/' % str(j))
                 html_plt_dat_log.append([html, plt, dat])
 
-            c = self.get_context({'monitor_name': monitor_name, 'html_png_dat': html_plt_dat, 'twin_html': '%s_sweep_log.html' % monitor_name, 'lin_or_log': 'log'})
-            write_html(join(data_folder, '%s_sweep.html' % monitor_name), t.render(c))
+            c = {'monitor_name': monitor_name, 'html_png_dat': html_plt_dat, 'twin_html': '%s_sweep_log.html' % monitor_name, 'lin_or_log': 'log'}
+            write_html(join(data_folder, '%s_sweep.html' % monitor_name), render_to_string(templ,c))
 
-            c = self.get_context({'monitor_name': monitor_name, 'html_png_dat': html_plt_dat_log, 'twin_html': '%s_sweep.html' % monitor_name, 'lin_or_log': 'lin'})
-            write_html(join(data_folder, '%s_sweep_log.html' % monitor_name), t.render(c))
+            c = {'monitor_name': monitor_name, 'html_png_dat': html_plt_dat_log, 'twin_html': '%s_sweep.html' % monitor_name, 'lin_or_log': 'lin'}
+            write_html(join(data_folder, '%s_sweep_log.html' % monitor_name), render_to_string(templ,c))
 
         # 3) write browse.html
 
@@ -175,14 +176,14 @@ class McStaticDataBrowserGenerator():
             html_name_log.append([html_filepath, monitor_name])
 
         # write browse.html
-        t = get_template('static_browse_sweep.html')
-        c = self.get_context({'sim_html': sim_html, 'sim_png': sim_png, 'html_name': html_name, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'})
-        write_html(join(data_folder, 'browse.html'), t.render(c))
+        templ='static_browse_sweep.html'
+        c = {'sim_html': sim_html, 'sim_png': sim_png, 'html_name': html_name, 'twin_html': 'browse_log.html', 'lin_or_log': 'log'}
+        write_html(join(data_folder, 'browse.html'), render_to_string(templ,c))
 
         # browse_log.html
         t = get_template('static_browse_sweep.html')
-        c = self.get_context({'sim_html': sim_html_log, 'sim_png': sim_png_log, 'html_name': html_name_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'})
-        write_html(join(data_folder, 'browse_log.html'), t.render(c))
+        c = {'sim_html': sim_html_log, 'sim_png': sim_png_log, 'html_name': html_name_log, 'twin_html': 'browse.html', 'lin_or_log': 'lin'}
+        write_html(join(data_folder, 'browse_log.html'), render_to_string(templ,c))
 
 
 def write_html(filepath, text):

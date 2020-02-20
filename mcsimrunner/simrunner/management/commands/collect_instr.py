@@ -86,8 +86,9 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
             MCCODE = MXRUN
             instr_obj.is_mcxtrace = True
             break
-
-    cmd = MCCODE + ' --mpi=1 ' + instr_displayname + " --info"
+    
+    # First, compile for mpi
+    cmd = MCCODE + ' -c --mpi ' + instr_displayname + " -n0"
 
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
@@ -98,7 +99,20 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     if process.returncode != 0:
         raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
 
+    # Secondly, retrieve information
+    cmd = MCCODE + instr_displayname + " --info"
+
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               shell=True,
+                               cwd=os.path.join('sim', instr_grp))
+    (stdoutdata, stderrdata) = process.communicate()
+    if process.returncode != 0:
+        raise Exception('instrument info retrieval error: \n%s\n%s' % (stdoutdata, stderrdata))
+
     cmd2 = 'mcdoc.pl -t ./' + os.path.basename(instr_displayname)
+    print(cmd2)
     process2 = subprocess.Popen(cmd2,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -106,8 +120,9 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata2, stderrdata2) = process2.communicate()
 
-    if process.returncode != 0:
-        raise Exception('instrument doc retrieval error.')
+    
+    #if process.returncode != 0:
+    #    raise Exception('instrument doc retrieval error.')
     # get parameters from info
     params = []
     for l in stdoutdata.splitlines():
