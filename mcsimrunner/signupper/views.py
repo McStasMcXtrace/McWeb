@@ -702,7 +702,7 @@ def man_courses(req, menu, post, base_context):
 def man_upload(req, menu, post, base_context):
     '''  '''
     def group_dirs():
-        for _, dirs, _ in os.walk('sim/'):
+        for _, dirs, _ in os.walk('/srv/mcweb/McWeb/mcsimrunner/sim/'):
             # stackoverflow-ish alphanum sort
             dirs = sorted(dirs, key=lambda item: (int(item.partition(' ')[0])
                                    if item[0].isdigit() else float('inf'), item))
