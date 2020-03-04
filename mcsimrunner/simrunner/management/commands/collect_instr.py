@@ -97,10 +97,10 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
     if process.returncode != 0:
-        raise Exception('instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
+        print('Potential instrument compile error: \n%s\n%s' % (stdoutdata, stderrdata))
 
     # Secondly, retrieve information
-    cmd = MCCODE + instr_displayname + " --info"
+    cmd = MCCODE + " " + instr_displayname + " --info"
 
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
