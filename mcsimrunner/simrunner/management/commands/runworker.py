@@ -418,9 +418,9 @@ def write_results(simrun):
                           'data_folder': simrun.data_folder})
 
     if simrun.scanpoints == 1:
-        gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+        gen.generate_browsepage(simrun.instr_displayname, simrun.data_folder, simrun.plot_files, simrun.data_files)
     else:
-        gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
+        gen.generate_browsepage_sweep(simrun.instr_displayname, simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
 
 def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''
