@@ -4,7 +4,7 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess
 import re
-from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW
+from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW, AUTH_LDAP_SERVER_URI, AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN
 from signupper.models import Signup
 from django.utils import timezone
 
@@ -25,10 +25,11 @@ def listusers(uid=None):
     Can also be used to return a single user entry, and thus to search for a user entry.
     Always returns a list, this will be of length all_users, 1 or 0 in the cases listed above.
     '''
+    #ldapsearch -h localhost -x -w segreto -D cn=Manager,dc=wiki,dc=local -b "ou=People,dc=wiki,dc=local" 
     if not uid:
-        cmd = 'ldapsearch -x -b "ou=People,%s"' % MCWEB_LDAP_DN
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN)
     else:
-        cmd = 'ldapsearch -x -b "ou=People,%s" "(uid=%s)"' % (MCWEB_LDAP_DN, uid)
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s" "(uid=%s)"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN, uid)
     
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
