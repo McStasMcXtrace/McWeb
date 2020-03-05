@@ -22,7 +22,7 @@ class McStaticDataBrowserGenerator():
         d.update(dict)
         return Context(d) 
 
-    def generate_browsepage(self, base_context, instr_displayname, data_folder, plot_files, dat_files):
+    def generate_browsepage(self, base_context, plot_files, dat_files):
         ''' plot_files AND dat_files must be of the correct path relative to data_folder 
             note: having dat_files be relative paths reduces assumptions and increases flexibility
         '''
@@ -79,7 +79,7 @@ class McStaticDataBrowserGenerator():
         c = dict(base_context.items(), c.items())
         write_html(join(data_folder, 'browse_log.html'), render_to_string(templ,c))
 
-    def generate_browsepage_sweep(self, base_context, instr_displayname, data_folder, plot_files, dat_files, scanpoints):
+    def generate_browsepage_sweep(self, base_context, plot_files, dat_files, scanpoints):
         ''' as above, but handles the simulation scan case '''
         # prepare strings
         plt_base = map(lambda p: basename(p), plot_files)
