@@ -1,12 +1,12 @@
 '''
 Wrapper functions for calling mooshe on the terminal.
 
-moosh example commands:
-    sudo -u www-data moosh user-create --auth=ldap --firstname=John --lastname=Doe --city=Lyngby --country=DK --email=john@doe.com --password=NONE johndoe
-    sudo -u www-data moosh course-enrol -s lib johndoe
-    sudo -u www-data moosh course-enrol -s musr johndoe
-    sudo -u www-data moosh course-enrol -r editingteacher -s intro-ns munivisit
-    sudo -u www-data moosh user-list "username='munivisit'"
+/usr/local/bin/moosh example commands:
+    sudo -u www-data /usr/local/bin/moosh user-create --auth=ldap --firstname=John --lastname=Doe --city=Lyngby --country=DK --email=john@doe.com --password=NONE johndoe
+    sudo -u www-data /usr/local/bin/moosh course-enrol -s lib johndoe
+    sudo -u www-data /usr/local/bin/moosh course-enrol -s musr johndoe
+    sudo -u www-data /usr/local/bin/moosh course-enrol -r editingteacher -s intro-ns munivisit
+    sudo -u www-data /usr/local/bin/moosh user-list "username='munivisit'"
 '''
 import subprocess
 import re
@@ -26,7 +26,7 @@ def add_enrol_user(firstname, lastname, username, email, courses_sn_lst):
 
 def adduser(firstname, lastname, username, email):
     '''  '''
-    cmd = 'moosh user-create --auth=ldap --firstname="%s" --lastname="%s" --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
+    cmd = '/usr/local/bin/moosh user-create --auth=ldap --firstname="%s" --lastname="%s" --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -42,9 +42,9 @@ def adduser(firstname, lastname, username, email):
 def enrol_user(username, course_sn, teacher=False):
     '''  '''
     if not teacher:
-        cmd = 'moosh course-enrol -r student -s %s %s' % (course_sn, username)
+        cmd = '/usr/local/bin/moosh course-enrol -r student -s %s %s' % (course_sn, username)
     else:
-        cmd = 'moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
+        cmd = '/usr/local/bin/moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
         
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
@@ -61,7 +61,7 @@ def enrol_user(username, course_sn, teacher=False):
 
 def course_list():
     ''' returns: ["courseid","shortname","fullname"] '''
-    cmd = 'moosh course-list'
+    cmd = '/usr/local/bin/moosh course-list'
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -92,7 +92,7 @@ def course_list():
 
 def course_backup(backupname, course_id):
     '''  '''
-    cmd = 'moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
+    cmd = '/usr/local/bin/moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -112,7 +112,7 @@ def course_restore_e(backupname, course_id):
     fname = os.path.basename(tf.name) + '.mrjob'
     
     f = open(os.path.join(MOODLE_RESTORE_JOBS_DIR, fname), 'w')
-    cmd = 'moosh course-restore -e %s %s\n' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
+    cmd = '/usr/local/bin/moosh course-restore -e %s %s\n' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
     f.write(cmd)
     print('writing to worker task: %s' % cmd)
     f.close()
@@ -121,7 +121,7 @@ def course_restore_e(backupname, course_id):
 
 def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
     ''' '''
-    cmd = 'moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname)
+    cmd = '/usr/local/bin/moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname)
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -137,7 +137,7 @@ def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
 
 def synchronize(signups, dry=False, verbose=False):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''
-    cmd = 'moosh user-list "id > 0"'
+    cmd = '/usr/local/bin/moosh user-list "id > 0"'
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -149,7 +149,7 @@ def synchronize(signups, dry=False, verbose=False):
         print('std-out: %s' % com[0])
     if com[1] != '':
         print('std-err: %s' % com[1])
-        raise Exception('Calling: moosh user-list "id > 0"')
+        raise Exception('Calling: /usr/local/bin/moosh user-list "id > 0"')
     
     text = com[0]
     lines = text.splitlines()
@@ -186,7 +186,7 @@ def synchronize(signups, dry=False, verbose=False):
 
 def rmsignup(signup):
     ''' removes the user associated with the given signup from moodle '''
-    cmd = 'moosh user-delete %s' % signup.username
+    cmd = '/usr/local/bin/moosh user-delete %s' % signup.username
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
