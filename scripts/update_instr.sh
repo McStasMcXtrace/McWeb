@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:$PATH
+
 cd /srv/mcweb/McWeb/mcsimrunner/
 
 OLD=$(cat checksum)
