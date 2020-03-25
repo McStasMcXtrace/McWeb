@@ -99,7 +99,7 @@ The e-neutrons.org admin team
         f.write(body)
         f.close()
 
-        cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
+        cmd = 'mailx -r admin@e-neutrons.esss.dk -s "welcome to mcweb" %s < _body' % email
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
 
@@ -116,7 +116,7 @@ def notify_contactentry(replyto, text):
         f.write(body.encode('utf8'))
         f.close()
 
-        cmd = 'mailx -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
+        cmd = 'mailx -r admin@e-neutrons.esss.dk -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
 

@@ -43,7 +43,7 @@ Please note the following:
             email_addrses = MCWEB_ADMIN_EMAIL
             for address in options['adminemail']:
                 email_addrses = '%s %s' % (email_addrses, address)
-            cmd = 'mailx -s "mcweb admin: new signups" %s < _admin_email' % email_addrses
+            cmd = 'mailx -r admin@e-neutrons.esss.dk -s "mcweb admin: new signups" %s < _admin_email' % email_addrses
             print(cmd)
             
             f = open('_admin_email', 'w') 
