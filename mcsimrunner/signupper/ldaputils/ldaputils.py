@@ -140,7 +140,7 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
     ldif.write(uid_user)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-H ldap://','-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_uid_user.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_uid_user.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -172,7 +172,7 @@ def rmuser(dn, admin_password, uid):
     ldif.write(rmuser)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_rmuser.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_rmuser.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -197,7 +197,7 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     ldif.write(chfield)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chvalue.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_chvalue.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -222,7 +222,7 @@ def initdb(dn, admin_password):
     ldif.write(cn_usergroup)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_cn_usergroup.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -242,7 +242,7 @@ def initdb(dn, admin_password):
     ldif.write(ou_users)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_ou_users.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
