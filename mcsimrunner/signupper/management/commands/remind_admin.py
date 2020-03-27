@@ -27,7 +27,7 @@ There are %i new signups. Please visit %s to perform the listed admin tasks.
 At the login screen, you must enter the credentials of a django super-user account, as well as the ldap password.
 
 Please note the following:
-1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at http://www.e-neutrons.org/moodle/ .
+1) To manage course subscription or other tasks for new or existing users in Moodle, please use the Moodle admin pages at https://pan-learning.org/moodle/ .
 2) If you need to edit the signup instances, use the django admin tool.\n\nFull list of signup mail adresses is:\n''' % (len(signups), MCWEB_ADMIN_EMAIL_URL)
 
         
