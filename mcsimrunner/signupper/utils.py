@@ -84,6 +84,10 @@ Dear %s
 
 You have been added to the %s e-Learning system.
 
+For ease of communication, PLEASE register your email address at the mailinglist: https://lists.esss.dk/mailman/listinfo/pan-learning-users
+
+Your username and password for accessing the e-learning system are:
+
 username: %s
 password: %s
 
