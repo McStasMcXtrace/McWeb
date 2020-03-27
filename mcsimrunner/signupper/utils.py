@@ -91,7 +91,7 @@ To change your password, please visit %s
 %s
 Best,
 
-The e-neutrons.org admin team
+The pan-learning.org admin team
     ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password, MCWEB_SSP_URL, courses_text)
 
     try:
