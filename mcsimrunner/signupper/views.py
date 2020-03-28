@@ -752,7 +752,11 @@ def man_upload(req, menu, post, base_context):
         if len(req.FILES) > 0:
             f = req.FILES['up_file']
             shepherd(f, g)
-            req.session['message'] = 'File %s uploaded to %s.' % (f.name, g)
+            # The below lines execute instrument compilation in the background
+            # (mechanism is the same as when called via cron)
+            cmd = '/srv/mcweb/McWeb/scripts/update_instr.sh &> /dev/null '            
+            proc = subprocess.Popen(cmd, shell=True)
+            req.session['message'] = 'File %s uploaded to %s. Check COMPILE STATUS in a few minutes.' % (f.name, g)
         else:
             req.session['message'] = 'Please select a file for upload.'
             return redirect('/manage/%s' % menu)
