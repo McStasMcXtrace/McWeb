@@ -19,6 +19,7 @@ from django.http import HttpResponse
 from django.core.validators import validate_email
 from signupper.models import Signup
 from django.utils import timezone
+import subprocess
 
 import ast
 import os
@@ -80,6 +81,15 @@ def signup_get(req):
     signup.is_self_signup = True
     signup.save()
 
+    # The below lines sends a reminder to admin after a signup was received 
+    # (mechanism is the same as when called via cron)
+    cmd = '/srv/mcweb/McWeb/scripts/remind_admin.sh'
+    proc = subprocess.Popen(cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=True)
+    com = proc.communicate()
+    
     # get a thank-you message to the user
     return redirect('/thanks/')
 
