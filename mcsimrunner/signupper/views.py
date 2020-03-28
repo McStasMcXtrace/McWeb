@@ -83,13 +83,9 @@ def signup_get(req):
 
     # The below lines sends a reminder to admin after a signup was received 
     # (mechanism is the same as when called via cron)
-    cmd = '/srv/mcweb/McWeb/scripts/remind_admin.sh'
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            shell=True)
-    com = proc.communicate()
-    
+    cmd = '/srv/mcweb/McWeb/scripts/remind_admin.sh &> /dev/null '
+    proc = subprocess.Popen(cmd, shell=True)
+        
     # get a thank-you message to the user
     return redirect('/thanks/')
 
