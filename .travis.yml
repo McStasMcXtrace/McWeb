@@ -36,5 +36,5 @@ script:
   - cd mcsimrunner
   - cp tests/settings.py mcweb/
   - python tests/unittest/test.py           # unittest
-  - pytest tests/pytest/test.py             # pytest
-  - python manage.py test tests/djangotest  # django
+  - pytest tests/pytest                     # pytest (run all tests named test_*.py)
+  - python manage.py test tests/djangotest  # django (run all tests)
