@@ -35,6 +35,6 @@ before_script:
 script:
   - cd mcsimrunner
   - cp tests/settings.py mcweb/
-  - python tests/unittest                   # unittest
+  - python tests/unittest/test.py           # unittest
   - pytest tests/pytest                     # pytest
   - python manage.py test tests/djangotest  # django
