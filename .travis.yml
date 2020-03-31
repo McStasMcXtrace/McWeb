@@ -8,16 +8,17 @@ jobs:
       dist: bionic
       python: 3.8
       services: mysql
-      env: DJANGO_VERSION=2.2.6 DB=mysql
+      env: DB=mysql
       
 before_script:
   - mysql -e 'create database test;' -u root
 
 install:
   - pip install --upgrade pip
-  - pip install Django==$DJANGO_VERSION
+  - pip install Django==1.8.2
+  - pip install django_auth_ldap==1.2.7
+  - pip install simplejson
   - pip install python-ldap
-  - pip install django_auth_ldap
 
 before_script:
   - mysql --version
