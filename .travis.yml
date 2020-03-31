@@ -1,0 +1,27 @@
+language: python
+
+jobs:
+  include:
+    - name: "Linux Ubuntu 18.04 (Bionic Beaver)"
+      os: linux
+      dist: bionic
+      python: 3.8
+
+install:
+  - pip install --upgrade pip
+  - which python
+  - which pip
+  - which pytest
+
+before_script:
+  - python --version
+  - pip --version
+  - pytest --version
+  - echo $TRAVIS_OS_NAME
+  - echo $TRAVIS_BRANCH
+  - echo $TRAVIS_PULL_REQUEST
+  - echo $TRAVIS_TAG
+  - echo $HOME
+  
+script:
+  - pytest tests/
