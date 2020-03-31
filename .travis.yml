@@ -30,5 +30,6 @@ before_script:
   - echo $HOME
   
 script:
-  - pytest tests/           # pytest
-  #- python manage.py test   # django
+  - python mcsimrunner/tests/test.py  # unittest
+  - pytest tests/                     # pytest
+  #- python manage.py test            # django
