@@ -6,22 +6,25 @@ jobs:
       os: linux
       dist: bionic
       python: 3.8
+      services: mysql
+      env: DJANGO_VERSION=2.2.6 DB=mysql
 
 install:
   - pip install --upgrade pip
-  - which python
-  - which pip
-  - which pytest
+  - pip install -q Django==$DJANGO_VERSION
 
 before_script:
   - python --version
-  - pip --version
-  - pytest --version
+  - python -m pip --version
+  - python -m pytest --version
+  - python -m django --version
   - echo $TRAVIS_OS_NAME
   - echo $TRAVIS_BRANCH
   - echo $TRAVIS_PULL_REQUEST
   - echo $TRAVIS_TAG
   - echo $HOME
+  - mysql -e 'create database test;' -u root
   
 script:
   - pytest tests/
+  - python manage.py test
