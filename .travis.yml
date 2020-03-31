@@ -1,3 +1,4 @@
+sudo: required
 language: python
 
 jobs:
@@ -17,6 +18,7 @@ install:
   - pip install Django==$DJANGO_VERSION
 
 before_script:
+  - mysql --version
   - python --version
   - python -m pip --version
   - python -m pytest --version
