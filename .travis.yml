@@ -30,7 +30,7 @@ before_script:
   - echo $HOME
   
 script:
-  - cd $TRAVIS_BUILD_DIR/mcsimrunner
-  - python tests/tests.py   # unittest
-  #- pytest tests/          # pytest
-  - python manage.py test   # django
+  - cd mcsimrunner
+  - python tests/unittest/test.py   # unittest
+  - pytest tests/pytest/test.py     # pytest
+  - python manage.py test           # django
