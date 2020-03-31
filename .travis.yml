@@ -6,7 +6,7 @@ jobs:
     - name: "Linux Ubuntu 18.04 (Bionic Beaver)"
       os: linux
       dist: bionic
-      python: 3.8
+      python: 2.7
       services: mysql
       env: DB=mysql
       
@@ -15,7 +15,7 @@ before_script:
 
 install:
   - pip install --upgrade pip
-  - pip install Django==1.8.2
+  - pip install Django==1.11.28
   - pip install django_auth_ldap==1.2.7
   - pip install simplejson
   - pip install python-ldap
@@ -23,9 +23,9 @@ install:
 before_script:
   - mysql --version
   - python --version
-  - python -m pip --version
-  - python -m pytest --version
-  - python -m django --version
+  #- python -m pip --version
+  #- python -m pytest --version
+  #- python -m django --version
   - echo $TRAVIS_OS_NAME
   - echo $TRAVIS_BRANCH
   - echo $TRAVIS_PULL_REQUEST
