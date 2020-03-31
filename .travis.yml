@@ -16,7 +16,7 @@ before_script:
 install:
   - pip install --upgrade pip
   - pip install Django==$DJANGO_VERSION
-  - pip install ldap
+  - pip install python-ldap
 
 before_script:
   - mysql --version
