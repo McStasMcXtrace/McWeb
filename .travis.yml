@@ -8,10 +8,13 @@ jobs:
       python: 3.8
       services: mysql
       env: DJANGO_VERSION=2.2.6 DB=mysql
+      
+before_script:
+  - mysql -e 'create database test;' -u root
 
 install:
   - pip install --upgrade pip
-  - pip install -q Django==$DJANGO_VERSION
+  - pip install Django==$DJANGO_VERSION
 
 before_script:
   - python --version
@@ -23,8 +26,7 @@ before_script:
   - echo $TRAVIS_PULL_REQUEST
   - echo $TRAVIS_TAG
   - echo $HOME
-  - mysql -e 'create database test;' -u root
   
 script:
-  - pytest tests/
-  - python manage.py test
+  - pytest tests/           # pytest
+  #- python manage.py test   # django
