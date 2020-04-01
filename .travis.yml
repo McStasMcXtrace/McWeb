@@ -1,0 +1,40 @@
+sudo: required
+language: python
+
+jobs:
+  include:
+    - name: "Linux Ubuntu 18.04 (Bionic Beaver)"
+      os: linux
+      dist: bionic
+      python: 2.7
+      services: mysql
+      env: DB=mysql
+      
+before_script:
+  - mysql -e 'create database test;' -u root
+
+install:
+  - pip install --upgrade pip
+  - pip install Django==1.11.28
+  - pip install django_auth_ldap==1.2.7
+  - pip install simplejson
+  - pip install python-ldap
+
+before_script:
+  - mysql --version
+  - python --version
+  #- python -m pip --version
+  #- python -m pytest --version
+  #- python -m django --version
+  - echo $TRAVIS_OS_NAME
+  - echo $TRAVIS_BRANCH
+  - echo $TRAVIS_PULL_REQUEST
+  - echo $TRAVIS_TAG
+  - echo $HOME
+  
+script:
+  - cd mcsimrunner
+  - cp tests/settings.py mcweb/             # Put dummy settings file in place before test
+  - python tests/unittest/test.py           # unittest
+  - pytest tests/pytest                     # pytest (run all tests named test_*.py)
+  - python manage.py test tests/djangotest  # django (run all tests)
