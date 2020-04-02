@@ -19,6 +19,10 @@ install:
   - pip install django_auth_ldap==1.2.7
   - pip install simplejson
   - pip install python-ldap
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-comps-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-tools-perl-cmdline-2.6-deb64.deb
+  - sudo dpkg -i mcstas-2.6-deb64.deb mcstas-comps-2.6-deb64.deb mcstas-tools-perl-cmdline-2.6-deb64.deb
 
 before_script:
   - mysql --version
@@ -34,10 +38,6 @@ before_script:
   - echo $HOME
   
 script:
-  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-2.6-deb64.deb
-  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-comps-2.6-deb64.deb
-  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-tools-perl-cmdline-2.6-deb64.deb
-  - sudo dpkg -i mcstas-2.6-deb64.deb mcstas-comps-2.6-deb64.deb mcstas-tools-perl-cmdline-2.6-deb64.deb
   - cd mcsimrunner
   - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
   - mkdir sim/test	 		                    # Create 'test' instrument-category
@@ -45,6 +45,6 @@ script:
   - python tests/unittest/test.py                           # unittest
   - pytest tests/pytest                                     # pytest (run all tests named test_*.py)
   - python manage.py test tests/djangotest                  # django (run all tests)
-  #- python manage.py migrate				    # Apply migrations
-  #- python manage.py collect_instr                          # Check that we can compile the instrument
+  - python manage.py migrate				    # Apply migrations
+  - python manage.py collect_instr                          # Check that we can compile the instrument
 
