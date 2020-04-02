@@ -23,7 +23,7 @@ install:
   - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-comps-2.6-deb64.deb
   - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-tools-perl-cmdline-2.6-deb64.deb
   - sudo dpkg -i mcstas-2.6-deb64.deb mcstas-comps-2.6-deb64.deb mcstas-tools-perl-cmdline-2.6-deb64.deb
-  - sudo apt-get install openmpi libopenmpi-devel
+  - sudo apt-get install openmpi-bin libopenmpi-dev
 
 before_script:
   - mysql --version
