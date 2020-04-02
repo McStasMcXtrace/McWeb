@@ -46,5 +46,5 @@ script:
   - pytest tests/pytest                                     # pytest (run all tests named test_*.py)
   - python manage.py test tests/djangotest                  # django (run all tests)
   #- python manage.py migrate				    # Apply migrations
-  3- python manage.py collect_instr                          # Check that we can compile the instrument
+  #- python manage.py collect_instr                          # Check that we can compile the instrument
 
