@@ -13,8 +13,9 @@ jobs:
 before_script:
   - mysql -e 'create database test;' -u root
   - curl http://packages.mccode.org/debian/mccode.list | sudo tee -a /etc/apt/sources.list
-  - sudo apt-get -qq update
-  - sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
+  - sudo apt-get -y update
+  - sudo apt-cache search mcstas
+  #- sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
 
 install:
   - pip install --upgrade pip
@@ -26,7 +27,7 @@ install:
 before_script:
   - mysql --version
   - python --version
-  - mcstas -v
+  #- mcstas -v
   #- python -m pip --version
   #- python -m pytest --version
   #- python -m django --version
@@ -44,6 +45,6 @@ script:
   - python tests/unittest/test.py                           # unittest
   - pytest tests/pytest                                     # pytest (run all tests named test_*.py)
   - python manage.py test tests/djangotest                  # django (run all tests)
-  - python manage.py migrate				    # Apply migrations
-  - python manage.py collect_instr                          # Check that we can compile the instrument
+  #- python manage.py migrate				    # Apply migrations
+  3- python manage.py collect_instr                          # Check that we can compile the instrument
 
