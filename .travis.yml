@@ -48,5 +48,5 @@ script:
   - python manage.py test tests/djangotest                  # django (run all tests)
   - python manage.py migrate				    # Apply migrations
   - python manage.py collect_instr                          # Check that we can compile the instrument
-  - python manage.py createsuperuser --username=djangoadmin --email=admin@localhost
+  - python manage.py createsuperuser --username=djangoadmin --email=admin@localhost verysecret
   
