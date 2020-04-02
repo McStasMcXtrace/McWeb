@@ -38,6 +38,8 @@ before_script:
   - echo $HOME
   
 script:
+  - cat /etc/apt/sources.list.d/mccode.list
+  - apt-cache search mcstas
   - cd mcsimrunner
   - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
   - mkdir sim/test	 		                    # Create 'test' instrument-category
