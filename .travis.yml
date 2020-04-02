@@ -14,8 +14,7 @@ before_script:
   - mysql -e 'create database test;' -u root
   - sudo curl http://packages.mccode.org/debian/mccode.list -o /etc/apt/sources.list.d/mccode.list
   - sudo apt-get -y update
-  - sudo apt-cache search mcstas
-  #- sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
+  - sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
 
 install:
   - pip install --upgrade pip
@@ -39,6 +38,7 @@ before_script:
   
 script:
   - apt-cache search mcstas
+  - sudo apt-get -y install mcstas-suite-perl
   - cd mcsimrunner
   - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
   - mkdir sim/test	 		                    # Create 'test' instrument-category
