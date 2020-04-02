@@ -12,9 +12,6 @@ jobs:
       
 before_script:
   - mysql -e 'create database test;' -u root
-  - sudo curl http://packages.mccode.org/debian/mccode.list -o /etc/apt/sources.list.d/mccode.list
-  - sudo apt-get -y update
-  - sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
 
 install:
   - pip install --upgrade pip
@@ -37,9 +34,10 @@ before_script:
   - echo $HOME
   
 script:
-  - apt-cache search mcstas &> /tmp/outputs
-  - cat /tmp/outputs
-  - sudo apt-get install mcstas-2.6
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-comps-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-tools-perl-cmdline-2.6-deb64.deb
+  - sudo dpkg -i mcstas-2.6-deb64.deb mcstas-comps-2.6-deb64.deb mcstas-tools-perl-cmdline-2.6-deb64.deb
   - cd mcsimrunner
   - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
   - mkdir sim/test	 		                    # Create 'test' instrument-category
