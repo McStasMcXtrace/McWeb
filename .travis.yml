@@ -26,6 +26,7 @@ install:
 before_script:
   - mysql --version
   - python --version
+  - mcstas -v
   #- python -m pip --version
   #- python -m pytest --version
   #- python -m django --version
