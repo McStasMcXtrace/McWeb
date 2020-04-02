@@ -37,8 +37,9 @@ before_script:
   - echo $HOME
   
 script:
-  - apt-cache search mcstas
-  - sudo apt-get -y install mcstas-suite-perl
+  - apt-cache search mcstas &> /tmp/outputs
+  - cat /tmp/outputs
+  - sudo apt-get install mcstas-2.6
   - cd mcsimrunner
   - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
   - mkdir sim/test	 		                    # Create 'test' instrument-category
