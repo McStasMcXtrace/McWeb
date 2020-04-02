@@ -12,7 +12,7 @@ jobs:
       
 before_script:
   - mysql -e 'create database test;' -u root
-  - curl http://packages.mccode.org/debian/mccode.list | sudo tee -a /etc/apt/sources.list
+  - curl http://packages.mccode.org/debian/mccode.list | sudo tee -a /etc/apt/sources.list.d/mccode.list
   - sudo apt-get -y update
   - sudo apt-cache search mcstas
   #- sudo apt-get -y install mcstas-suite-perl mcstas-suite-python
