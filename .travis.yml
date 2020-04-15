@@ -1,0 +1,52 @@
+sudo: required
+language: python
+
+jobs:
+  include:
+    - name: "Linux Ubuntu 18.04 (Bionic Beaver)"
+      os: linux
+      dist: bionic
+      python: 2.7
+      services: mysql
+      env: DB=mysql
+      
+before_script:
+  - mysql -e 'create database test;' -u root
+
+install:
+  - pip install --upgrade pip
+  - pip install Django==1.11.28
+  - pip install django_auth_ldap==1.2.7
+  - pip install simplejson
+  - pip install python-ldap
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-comps-2.6-deb64.deb
+  - wget http://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcstas-tools-perl-cmdline-2.6-deb64.deb
+  - sudo dpkg -i mcstas-2.6-deb64.deb mcstas-comps-2.6-deb64.deb mcstas-tools-perl-cmdline-2.6-deb64.deb
+  - sudo apt-get install openmpi-bin libopenmpi-dev
+
+before_script:
+  - mysql --version
+  - python --version
+  #- mcstas -v
+  #- python -m pip --version
+  #- python -m pytest --version
+  #- python -m django --version
+  - echo $TRAVIS_OS_NAME
+  - echo $TRAVIS_BRANCH
+  - echo $TRAVIS_PULL_REQUEST
+  - echo $TRAVIS_TAG
+  - echo $HOME
+  
+script:
+  - cd mcsimrunner
+  - cp tests/settings.py mcweb/                             # Put dummy settings file in place before test
+  - mkdir sim/test	 		                    # Create 'test' instrument-category
+  - cp tests/instrument-files/templateSANS2.instr sim/test/ # Put an instrument in place
+  - python tests/unittest/test.py                           # unittest
+  - pytest tests/pytest                                     # pytest (run all tests named test_*.py)
+  - python manage.py test tests/djangotest                  # django (run all tests)
+  - python manage.py migrate				    # Apply migrations
+  - python manage.py collect_instr                          # Check that we can compile the instrument
+  - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@localhost', 'verysecret')" | python manage.py shell
+  

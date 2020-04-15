@@ -84,6 +84,10 @@ Dear %s
 
 You have been added to the %s e-Learning system.
 
+For ease of communication, PLEASE register your email address at the mailinglist: https://lists.esss.dk/mailman/listinfo/pan-learning-users
+
+Your username and password for accessing the e-learning system are:
+
 username: %s
 password: %s
 
@@ -91,7 +95,7 @@ To change your password, please visit %s
 %s
 Best,
 
-The e-neutrons.org admin team
+The pan-learning.org admin team
     ''' % (fullname, MCWEB_NOTIFY_EMAIL_URL, username, password, MCWEB_SSP_URL, courses_text)
 
     try:
@@ -99,7 +103,7 @@ The e-neutrons.org admin team
         f.write(body)
         f.close()
 
-        cmd = 'mailx -s "welcome to mcweb" %s < _body' % email
+        cmd = 'mailx -r admin@pan-learning.org -s "Welcome to PaN-learning.org" %s < _body' % email
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
 
@@ -116,7 +120,7 @@ def notify_contactentry(replyto, text):
         f.write(body.encode('utf8'))
         f.close()
 
-        cmd = 'mailx -s "mcweb: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
+        cmd = 'mailx -r admin@pan-learning.org -s "PaN-learning: new contact entry by %s" -r "%s" %s < _contactbody' % (replyto, replyto, settings.MCWEB_ADMIN_EMAIL)
         retcode = subprocess.call(cmd, shell=True)
         print(cmd)
 

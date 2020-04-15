@@ -9,6 +9,8 @@
 # Intended for weekly run through cron and should only keep the last backup from last month
 #
 
+export PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:$PATH
+
 # Find out data info
 YEAR=`date +'%Y'`
 MONTH=`date +'%m'`

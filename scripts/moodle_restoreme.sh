@@ -3,6 +3,8 @@
 # Script for doing restores of moodle courses
 #
 
+export PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:$PATH
+
 RESTOREJOBS="/srv/mcweb/moodle-restore-jobs"
 MOODLEDIR="/srv/mcweb/moodle"
 

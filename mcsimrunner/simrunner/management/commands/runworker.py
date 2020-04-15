@@ -411,16 +411,16 @@ def write_results(simrun):
     ''' Generate data browser page. '''
     lin_log_html = 'lin_log_url: impl.'
     gen = McStaticDataBrowserGenerator()
-    gen.set_base_context({'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
+    base_context={'group_name': simrun.group_name, 'instr_displayname': simrun.instr_displayname,
                           'date_time_completed': timezone.localtime(simrun.complete).strftime("%H:%M:%S, %d/%m-%Y"),
                           'params': simrun.params, 'neutrons': simrun.neutrons, 'seed': simrun.seed, 'scanpoints': simrun.scanpoints,
                           'lin_log_html': lin_log_html,
-                          'data_folder': simrun.data_folder})
+                          'data_folder': simrun.data_folder}
 
     if simrun.scanpoints == 1:
-        gen.generate_browsepage(simrun.data_folder, simrun.plot_files, simrun.data_files)
+        gen.generate_browsepage(base_context, simrun.plot_files, simrun.data_files)
     else:
-        gen.generate_browsepage_sweep(simrun.data_folder, simrun.plot_files, simrun.data_files, simrun.scanpoints)
+        gen.generate_browsepage_sweep(base_context, simrun.plot_files, simrun.data_files, simrun.scanpoints)
 
 def threadwork(simrun, semaphore):
     ''' thread method for simulation and plotting '''

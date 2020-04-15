@@ -4,7 +4,7 @@ ldap functions using ldifs tooo add/remove users, change password and init the d
 import os
 import subprocess
 import re
-from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW
+from mcweb.settings import MCWEB_LDAP_DN, LDAP_PW, AUTH_LDAP_SERVER_URI, AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN
 from signupper.models import Signup
 from django.utils import timezone
 
@@ -25,10 +25,11 @@ def listusers(uid=None):
     Can also be used to return a single user entry, and thus to search for a user entry.
     Always returns a list, this will be of length all_users, 1 or 0 in the cases listed above.
     '''
+    #ldapsearch -h localhost -x -w segreto -D cn=Manager,dc=wiki,dc=local -b "ou=People,dc=wiki,dc=local" 
     if not uid:
-        cmd = 'ldapsearch -x -b "ou=users,%s"' % MCWEB_LDAP_DN
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN)
     else:
-        cmd = 'ldapsearch -x -b "ou=users,%s" "(uid=%s)"' % (MCWEB_LDAP_DN, uid)
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s" "(uid=%s)"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN, uid)
     
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
@@ -133,13 +134,13 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
     
     uid_number = get_new_uid()    
     
-    uid_user = 'dn: uid=%s,ou=users,%s\nobjectClass: top\nobjectClass: inetOrgPerson\nobjectClass: posixAccount\ncn: %s\nsn: %s\nmail: %s\nuid: %s\nuidNumber: %s\ngidNumber: 500\nhomeDirectory: /home/users/%s\nloginShell: /bin/sh\nuserPassword: %s' %  (uid, dn, cn, sn, email, uid, str(uid_number), uid, pw)
+    uid_user = 'dn: uid=%s,ou=People,%s\nobjectClass: top\nobjectClass: inetOrgPerson\nobjectClass: posixAccount\ncn: %s\nsn: %s\nmail: %s\nuid: %s\nuidNumber: %s\ngidNumber: 500\nhomeDirectory: /home/users/%s\nloginShell: /bin/sh\nuserPassword: %s' %  (uid, dn, cn, sn, email, uid, str(uid_number), uid, pw)
     
     ldif = open('_uid_user.ldif', 'w')
     ldif.write(uid_user)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_uid_user.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_uid_user.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -153,7 +154,7 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
             else:
                 raise Exception(errmsg)
     finally:
-        os.remove('_uid_user.ldif')
+        print('_uid_user.ldif')
 
 def rmsignup(signup):
     ''' proxy for rmuser '''
@@ -165,13 +166,13 @@ def rmuser(dn, admin_password, uid):
     
     uid: username
     '''
-    rmuser = 'dn: uid=%s,ou=users,%s\nchangetype: delete' % (uid, dn)
+    rmuser = 'dn: uid=%s,ou=People,%s\nchangetype: delete' % (uid, dn)
     
     ldif = open('_rmuser.ldif', 'w')
     ldif.write(rmuser)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_rmuser.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_rmuser.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -190,13 +191,13 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     '''
     Change a user field if it exists.
     '''
-    chfield = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: %s\n%s: %s\n-\nadd: %s\n%s: %s' % (uid, dn, value_name, value_name, current_value, value_name, value_name, new_value)
+    chfield = 'dn: uid=%s,ou=People,%s\nchangetype: modify\ndelete: %s\n%s: %s\n-\nadd: %s\n%s: %s' % (uid, dn, value_name, value_name, current_value, value_name, value_name, new_value)
     
     ldif = open('_chvalue.ldif', 'w')
     ldif.write(chfield)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_chvalue.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_chvalue.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -221,7 +222,7 @@ def initdb(dn, admin_password):
     ldif.write(cn_usergroup)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_cn_usergroup.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_cn_usergroup.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -236,12 +237,12 @@ def initdb(dn, admin_password):
         os.remove('_cn_usergroup.ldif')
     
     # add ou_users
-    ou_users = 'dn: ou=users,%s\nobjectClass: organizationalUnit\nobjectClass: top\nou: users\n' % dn
+    ou_users = 'dn: ou=People,%s\nobjectClass: organizationalUnit\nobjectClass: top\nou: users\n' % dn
     ldif = open('_ou_users.ldif', 'a')
     ldif.write(ou_users)
     ldif.close()
     try:
-        cmd = ['ldapadd', '-x', '-w', admin_password, '-D', 'cn=admin,' + dn, '-f', '_ou_users.ldif']
+        cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_ou_users.ldif']
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)

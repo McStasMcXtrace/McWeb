@@ -19,6 +19,7 @@ from django.http import HttpResponse
 from django.core.validators import validate_email
 from signupper.models import Signup
 from django.utils import timezone
+import subprocess
 
 import ast
 import os
@@ -80,6 +81,11 @@ def signup_get(req):
     signup.is_self_signup = True
     signup.save()
 
+    # The below lines sends a reminder to admin after a signup was received 
+    # (mechanism is the same as when called via cron)
+    cmd = '/srv/mcweb/McWeb/scripts/remind_admin.sh &> /dev/null '
+    proc = subprocess.Popen(cmd, shell=True)
+        
     # get a thank-you message to the user
     return redirect('/thanks/')
 
@@ -702,7 +708,7 @@ def man_courses(req, menu, post, base_context):
 def man_upload(req, menu, post, base_context):
     '''  '''
     def group_dirs():
-        for _, dirs, _ in os.walk('sim/'):
+        for _, dirs, _ in os.walk('/srv/mcweb/McWeb/mcsimrunner/sim/'):
             # stackoverflow-ish alphanum sort
             dirs = sorted(dirs, key=lambda item: (int(item.partition(' ')[0])
                                    if item[0].isdigit() else float('inf'), item))
@@ -746,7 +752,11 @@ def man_upload(req, menu, post, base_context):
         if len(req.FILES) > 0:
             f = req.FILES['up_file']
             shepherd(f, g)
-            req.session['message'] = 'File %s uploaded to %s.' % (f.name, g)
+            # The below lines execute instrument compilation in the background
+            # (mechanism is the same as when called via cron)
+            cmd = '/srv/mcweb/McWeb/scripts/update_instr.sh &> /dev/null '            
+            proc = subprocess.Popen(cmd, shell=True)
+            req.session['message'] = 'File %s uploaded to %s. Check COMPILE STATUS in a few minutes.' % (f.name, g)
         else:
             req.session['message'] = 'Please select a file for upload.'
             return redirect('/manage/%s' % menu)

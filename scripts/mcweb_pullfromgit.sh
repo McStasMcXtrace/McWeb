@@ -2,7 +2,7 @@
 #
 # Script to "auto-update" mcweb installations against "current stable"
 
-. /srv/mcweb/mcvenv/bin/activate
+export PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:$PATH
 
 cd /srv/mcweb/McWeb
 

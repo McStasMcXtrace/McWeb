@@ -1,5 +1,6 @@
 #!/bin/bash
-source /srv/mcweb/mcvenv/bin/activate
+
+export PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:$PATH
 
 cd /srv/mcweb/McWeb/mcsimrunner/
 
@@ -8,6 +9,9 @@ OLD=$(cat checksum)
 find sim/ -type f -exec md5sum {} \; | sort -k 34 | md5sum | cut -d' ' -f1 > newchecksum
 NEW=$(cat newchecksum)
 rm newchecksum
+
+export PATH=/usr/lib64/openmpi/bin/mpicc:/usr/local/mcstas/2.6/bin:/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/root/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/pgplot
 
 if [ "$OLD" == $NEW ]; then
 	echo sim folder checksum has not changed, exiting.
