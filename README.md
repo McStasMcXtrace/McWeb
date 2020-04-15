@@ -1,5 +1,5 @@
-# McWeb
-Code and documentation for e-neutrons.org platform
+# pan-learning.org Django tools
+Code for web-simulator and user-management for the pan-learning.org platform
 
 [![Build Status](https://travis-ci.org/McStasMcXtrace/McWeb.svg?branch=ESS-deployment)](https://travis-ci.org/McStasMcXtrace/McWeb)
 
