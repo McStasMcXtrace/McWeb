@@ -44,9 +44,9 @@ MXRUN = 'mxrun.pl'
 #MCPLOT_LOGCMD = "mcplot-gnuplot-py -s -l"
 #  For Perl + PGPLOT use
 #MCPLOT_CMD = "mcplot.pl -png"
-MCPLOT_CMD = "mcplot-svg-dev --nobrowse --autosize --libpath='/static'"
+MCPLOT_CMD = "mcplot-svg --nobrowse --autosize --libpath='/static'"
 #MCPLOT_LOGCMD = "mcplot.pl -png -log"
-MCPLOT_LOGCMD = "mcplot-svg-dev --nobrowse --autosize --log --libpath='/static'"
+MCPLOT_LOGCMD = "mcplot-svg --nobrowse --autosize --log --libpath='/static'"
 MCPLOT_USE_HTML_PLOTTER = True
 
 MCDISPLAY = "mcdisplay.pl" # should be mcdisplay.pl from mcstas 2.4
@@ -99,7 +99,7 @@ SECRET_KEY = 'xne_dc*fb74a334571393902945dc0938cfd173wx7t4)e+b5k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','0.0.0.0']
 
 # Application definition
 INSTALLED_APPS = (
