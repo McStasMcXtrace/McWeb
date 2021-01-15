@@ -118,7 +118,7 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
     '''
     def get_new_uid():
         ''' opens _ldap_uidindexfile, iterates, saves and returns '''
-        if not os.path.exists('_uidindexfile'):
+        if not os.path.exists('_ldap_uidindexfile'):
             with open('_ldap_uidindexfile', 'w') as uidif:
                 uidif.write('10001')
                 uidif.close()
