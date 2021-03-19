@@ -1,6 +1,7 @@
 '''
 Updates the pars of an existing instrumentwithout compiling it first.
 '''
+from __future__ import print_function
 from django.core.management.base import BaseCommand
 import subprocess
 import os, errno
@@ -125,7 +126,7 @@ class Command(BaseCommand):
             objs = Instrument.objects.filter(displayname=displayname)
 
         except Instrument.DoesNotExist:    
-            print "instrument %s not found" % displayname
+            print("instrument %s not found" % displayname)
             quit()
 
         update_lst = []

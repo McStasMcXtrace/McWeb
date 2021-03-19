@@ -1,6 +1,7 @@
 '''
 utils for signupper
 '''
+from __future__ import print_function
 from mcweb import settings
 import subprocess
 from models import Signup
@@ -196,7 +197,7 @@ def adduser(signup):
 
     except Exception as e:
         s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
-        print s.fail_str
+        print(s.fail_str)
         s.save()
 
 def enroluser(signup, course_sn, teacher=False):
