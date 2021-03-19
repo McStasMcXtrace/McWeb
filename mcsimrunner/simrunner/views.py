@@ -1,13 +1,14 @@
 '''
 simrunner functional views
 '''
+from __future__ import absolute_import
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from os.path import basename
-from models import InstrGroup, Instrument, SimRun
+from .models import InstrGroup, Instrument, SimRun
 import json
 from django.views.decorators.clickjacking import xframe_options_exempt
 from mcweb.settings import DEFAULT_GROUP, DEFAULT_INSTR

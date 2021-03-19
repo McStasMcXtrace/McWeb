@@ -2,16 +2,17 @@
 utils for signupper
 '''
 from __future__ import print_function
+from __future__ import absolute_import
 from mcweb import settings
 import subprocess
-from models import Signup
+from .models import Signup
 from datetime import datetime
 import os
 import re
 import logging
 from django.utils import timezone
-from ldaputils import ldaputils
-from moodleutils import moodleutils as mu
+from .ldaputils import ldaputils
+from .moodleutils import moodleutils as mu
 from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_NOTIFY_ROOT_URL, MCWEB_SSP_URL
 from signupper.moodleutils.moodleutils import TEMPLATES_DIR
 
