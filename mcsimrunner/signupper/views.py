@@ -168,7 +168,7 @@ def manage(req, menu=None, post=None):
     req.session['message'] = ''
     base_context = {'menu' : menu, 'menu_items' : manage_menu_items, 'message' : message}
 
-    idx = manage_menu_items.keys().index(menu)
+    idx = list(manage_menu_items.keys()).index(menu)
     if idx == 0:
         return man_selfsignups(req, menu, post, base_context)
     elif idx == 1:
