@@ -40,7 +40,11 @@ RUN echo "\n# Allow www-data to restart uwsgi_mcweb service\nwww-data ALL = NOPA
 
 WORKDIR /srv/mcweb
 
-RUN virtualenv mcvenv \
+RUN apt-get update \
+    && apt-get -y install git python3-dev python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv mcvenv \
     && mcvenv/bin/pip install Django==1.8.2 django-auth-ldap==1.2.7 simplejson python-ldap uwsgi
 
 # Copy files from this repo for the server
