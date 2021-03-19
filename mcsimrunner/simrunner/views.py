@@ -80,11 +80,12 @@ def recent(req):
     ''' returns a link to recent simruns '''
     all_simruns = SimRun.objects.filter(owner_username=req.user)
     
-    # make sure we only work on instances with valied data_folder atributes
-    all_simruns = filter(lambda s: s.data_folder is not None, all_simruns)
-    
-    # create a list of template-friendly records from the simruns belonging to this user 
-    datafolder_simname = map(lambda s: [s.data_folder, basename(s.data_folder)], all_simruns)
+    # create a list of template-friendly records from the simruns belonging to this user
+    datafolder_simname = [
+        [s.data_folder, basename(s.data_folder)] for s in all_simruns
+        # make sure we only work on instances with valied data_folder atributes
+        if s.data_folder is not None
+    ]
     
     # most recent simruns first 
     datafolder_simname = reversed(datafolder_simname)
@@ -115,8 +116,8 @@ def instrument(req, group_name, instr_name=None, menu=False):
         instr_urlbit = "instrument-menu"
     
     # collect properties
-    group_names = map(lambda g: g.name, InstrGroup.objects.all())
-    instr_displaynames = map(lambda i: i.displayname, Instrument.objects.filter(group=group))
+    group_names = [g.name for g in InstrGroup.objects.all()]
+    instr_displaynames = [i.displayname for i in Instrument.objects.filter(group=group)]
     params = instr.params
     neutrons = 1000000
     seed = 0

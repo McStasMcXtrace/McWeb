@@ -78,9 +78,11 @@ def rename_mcstas_to_mccode(simrun):
 
 def get_monitor_files(mccode_sim):
     ''' implements "data files can have any name" '''
-    monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(mccode_sim).readlines())
-    monitor_files = map(lambda f: f.rstrip('\n').split(':')[1].strip(), monitor_files)
-    return monitor_files
+    with open(mccode_sim) as msf:
+        return [
+            line.rstrip('\n').split(':')[1].strip() for line in msf
+            if line.strip().startswith('filename:')
+        ]
 
 def mcplot(simrun):
     ''' generates plots from simrun output data '''
@@ -123,7 +125,7 @@ def mcplot(simrun):
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
 
                 datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
-                datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+                datfiles = [os.path.join(outdir, f) for f in datfiles_nodir]
 
                 for f in datfiles:
                     plot_file(f)
@@ -152,7 +154,7 @@ def mcplot(simrun):
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
 
             datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
-            datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+            datfiles = [os.path.join(outdir, f) for f in datfiles_nodir]
 
             data_files = []
             plot_files = []
