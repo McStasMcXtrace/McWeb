@@ -34,6 +34,7 @@ def listusers(uid=None):
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             shell=True)
     com = proc.communicate()
     print('%s\n' % cmd)
@@ -141,9 +142,12 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
     ldif.close()
     try:
         cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_uid_user.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         if stderr != '': 
@@ -173,9 +177,12 @@ def rmuser(dn, admin_password, uid):
     ldif.close()
     try:
         cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_rmuser.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         if stderr:
@@ -198,9 +205,12 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     ldif.close()
     try:
         cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_chvalue.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         (stdout, stderr) = process.communicate()
         print('running: %s' % ' '.join(cmd))
         #print('std-out: %s' % stdout)
@@ -223,9 +233,12 @@ def initdb(dn, admin_password):
     ldif.close()
     try:
         cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_cn_usergroup.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         com = process.communicate()
         print('running: %s' % ' '.join(cmd))
         if com[0] != '':
@@ -243,9 +256,12 @@ def initdb(dn, admin_password):
     ldif.close()
     try:
         cmd = ['ldapadd', '-H ldap://', '-x', '-w', admin_password, '-D', 'cn=Manager,' + dn, '-f', '_ou_users.ldif']
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         com = process.communicate()
         print('running: %s' % cmd)
         if com[0] != '':

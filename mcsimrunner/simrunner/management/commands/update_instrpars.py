@@ -52,6 +52,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     process = subprocess.Popen(cmd, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True, 
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
@@ -62,6 +63,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     process2 = subprocess.Popen(cmd2, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True, 
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata2, stderrdata2) = process2.communicate()

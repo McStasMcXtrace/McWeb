@@ -22,16 +22,16 @@ def get_random_passwd():
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             shell=True)
-    com = proc.communicate()
-    std_err = com[1]
+    std_out, std_err = proc.communicate()
     print('running: %s' % cmd)
-    print('std-out: %s' % com[0])
+    print('std-out: %s' % std_out)
     if std_err != '':
         print('std-err: %s' % std_err)
         raise Exception('makepasswd says: %s' % std_err)
 
-    return com[0].strip()
+    return std_out.strip()
 
 def cols_to_line(cols, delimiter = ','):
     ''' makes a list of strings into a single ;-separated string with a trailing linebreak '''
