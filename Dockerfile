@@ -10,7 +10,8 @@ RUN apt-get update \
 RUN cd /etc/apt/sources.list.d/ && wget http://packages.mccode.org/debian/mccode.list
 
 RUN apt-get update \
-    && apt-get install -y mcstas-suite-perl mcstas-suite-python mcxtrace-suite-perl mcxtrace-suite-python openmpi-bin libopenmpi-dev \
+    && apt-get install -y mcstas-suite-perl mcstas-suite-python mcxtrace-suite-perl \
+        mcxtrace-suite-python openmpi-bin libopenmpi-dev mcstas-tools-python-mcplot-svg-2.7 \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure we use mcdoc.pl rather than python version
