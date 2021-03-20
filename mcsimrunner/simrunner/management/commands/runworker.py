@@ -33,12 +33,25 @@ def maketar(simrun):
             tar.add(simrun.data_folder, arcname=os.path.basename(simrun.data_folder))
     except:
         raise Exception('tarfile fail')
+
+def env_with_usr_bin_priority():
+    # Workaround: Commands including mcdisplay-webgl and mcplot launch
+    # Python by name as 'python3'. When run from inside the virtualenv for
+    # the Django application, this would find Python in the virtualenv, which
+    # doesn't have all of the Mcstas dependencies installed. This puts
+    # /usr/bin at the front of $PATH, so those scripts will use the system
+    # Python (/usr/bin/python3) instead.
+    env = os.environ.copy()
+    env['PATH'] = '/usr/bin:' + env['PATH']
+    return env
+
     
 def plot_file(f, log=False):
     cmd = '%s %s' % (MCPLOT_CMD, f)
     if log:
         cmd = '%s %s' % (MCPLOT_LOGCMD,f)
     process = subprocess.Popen(cmd,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                universal_newlines=True,
@@ -223,6 +236,7 @@ def mcdisplay_webgl(simrun):
     # run mcdisplay
     _log('display: %s' % cmd)
     process = subprocess.Popen(cmd,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                universal_newlines=True,
@@ -258,6 +272,7 @@ def mcdisplay(simrun):
         
         # start mcdisplay process, wait
         process = subprocess.Popen(cmd,
+                                   env=env_with_usr_bin_priority(),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    universal_newlines=True,
@@ -265,6 +280,7 @@ def mcdisplay(simrun):
                                    cwd = simrun.data_folder)
         (stdoutdata, stderrdata) = process.communicate()
         process2 = subprocess.Popen(vrmlcmd,
+                                   env=env_with_usr_bin_priority(),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    universal_newlines=True,
@@ -320,6 +336,7 @@ def mcrun(simrun, print_mcrun_output=False):
     
     _log('running: %s...' % runstr)
     process = subprocess.Popen(runstr,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
