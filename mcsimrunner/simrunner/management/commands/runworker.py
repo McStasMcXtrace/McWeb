@@ -319,13 +319,11 @@ def mcrun(simrun, print_mcrun_output=False):
     # TODO: implement a timeout (max simulation time)
     (stdout, stderr) = process.communicate()
     
-    o = open('%s/stdout.txt' % simrun.data_folder, 'w')
-    o.write(stdout)
-    o.close()
-    e = open('%s/stderr.txt' % simrun.data_folder, 'w')
-    e.write(stderr)
-    e.close()
-    
+    with open('%s/stdout.txt' % simrun.data_folder, 'wb') as o:
+        o.write(stdout)
+    with open('%s/stderr.txt' % simrun.data_folder, 'wb') as e:
+        e.write(stderr)
+
     if process.returncode != 0:
         raise Exception('Instrument run failure - see %s.' % simrun.data_folder )
     
