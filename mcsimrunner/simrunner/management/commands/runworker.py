@@ -49,6 +49,11 @@ def plot_file(f, log=False):
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '_log.png')
         else:    
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
+    if process.returncode != 0:
+        _log('Plot command failed: %s' % cmd)
+        _log('stdout: %s' % stdoutdata)
+        if stderrdata:
+            _log('stderr: %s' % stderrdata)
     return (stdoutdata, stderrdata)
 
 def sweep_zip_gen(f,dirname):
@@ -196,7 +201,7 @@ def mcplot(simrun):
     except Exception as e:
         raise Exception('mcplot fail: %s' % e.__str__())
 
-def mcdisplay_webgl(simrun, pout=False):
+def mcdisplay_webgl(simrun):
     ''' apply mcdisplay-webgl output to subfolder 'mcdisplay', renaming index.html to mcdisplay.html '''
     join = os.path.join
 
@@ -224,16 +229,17 @@ def mcdisplay_webgl(simrun, pout=False):
                                shell=True,
                                cwd = os.path.join(BASE_DIR, simrun.data_folder))
     (stdoutdata, stderrdata) = process.communicate()
-    if pout:
-        print(stdoutdata)
-        if (stderrdata is not None) and (stderrdata != ''):
-            print(stderrdata)
+    if process.returncode != 0:
+        _log('mcdisplay-webgl command failed: %s' % cmd)
+        _log('stdout: %s' % stdoutdata)
+        if stderrdata:
+            _log('stderr: %s' % stdoutdata)
 
     # copy files
     #_log('mcdisplay: renaming index.html')
     #os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
 
-def mcdisplay(simrun, print_mcdisplay_output=False):
+def mcdisplay(simrun):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
     try:
         instr = '%s.instr' % simrun.instr_displayname
@@ -265,16 +271,18 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
                                    shell=True, 
                                    cwd = simrun.data_folder)
         (stdoutdata2, stderrdata2) = process2.communicate()
-        
-        if print_mcdisplay_output:
-            print(stdoutdata)
-            if (stderrdata is not None) and (stderrdata != ''):
-                print(stderrdata)
-        if print_mcdisplay_output:
-            print(stdoutdata2)
-            if (stderrdata2 is not None) and (stderrdata2 != ''):
-                print(stderrdata2)    
-        
+
+        if process.returncode != 0:
+            _log('mcdisplay command failed: %s' % cmd)
+            _log('stdout: %s' % stdoutdata)
+            if stderrdata:
+                _log('stderr: %s' % stdoutdata)
+        if process2.returncode != 0:
+            _log('mcdisplay VRML command failed: %s' % cmd)
+            _log('stdout: %s' % stdoutdata2)
+            if stderrdata:
+                _log('stderr: %s' % stdoutdata2)
+
         oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
         newfilename = os.path.join(simrun.data_folder, 'layout.png')
         oldwrlfilename = os.path.join(simrun.data_folder,'mcdisplay_commands.wrl')
