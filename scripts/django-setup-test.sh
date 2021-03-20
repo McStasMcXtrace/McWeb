@@ -29,14 +29,12 @@ python manage.py migrate
 python manage.py collect_instr
 echo Please assist Django in creation of your djangoadmin user:
 python manage.py createsuperuser --username=djangoadmin --email=admin@localhost
-echo -n Please enter your Django admin user pass again and press \[ENTER\]:
-read DJANGO_PASS
 echo
 echo Essential setup done, here is a summary:
 echo
 echo Django setup:
 echo username: djangoadmin
-echo password: $DJANGO_PASS
+echo "password: (as just entered)"
 echo email-adress: admin@localhost
 echo Django upload pass: $UPLOADPW
 echo
