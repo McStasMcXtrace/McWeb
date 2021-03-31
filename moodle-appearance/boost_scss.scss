@@ -110,7 +110,7 @@ div#page-navbar {
 .list-group-item-action {
   &:focus, &:hover {
     background-color: transparent;
-    color: white;
+    color: $gray-lightest;
     font-size: 1.1em;
     font-weight: bold;
   }
