@@ -46,10 +46,10 @@ class McStaticDataBrowserGenerator():
         # 1) write <monitor>.html:
 
         # prepare strings
-        png_base = map(lambda p: basename(p), plot_files)
-        dat_base = map(lambda d: basename(d), dat_files)
-        html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')), plot_files)
-        html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')), plot_files)
+        png_base = [basename(p) for p in plot_files]
+        dat_base = [basename(d) for d in dat_files]
+        html_paths = [join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')) for p in plot_files]
+        html_paths_log = [join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')) for p in plot_files]
 
         # get template for <monitor>.html
         templ='static_monitor.html'
@@ -85,10 +85,10 @@ class McStaticDataBrowserGenerator():
         
         data_folder = base_context.get("data_folder")
         # prepare strings
-        plt_base = map(lambda p: basename(p), plot_files)
-        dat_base = map(lambda d: basename(d), dat_files)
-        html_paths = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')), plot_files)
-        html_paths_log = map(lambda p: join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')), plot_files)
+        plt_base = [basename(p) for p in plot_files]
+        dat_base = [basename(d) for d in dat_files]
+        html_paths = [join(data_folder, '%s%s' % (splitext(p)[0], '_w.html')) for p in plot_files]
+        html_paths_log = [join(data_folder, '%s%s' % (splitext(p)[0], '_log_w.html')) for p in plot_files]
 
         # 1) write <monitor>.html:
 

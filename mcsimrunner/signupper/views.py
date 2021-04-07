@@ -12,6 +12,7 @@ Signupper views:
     - bulk add/enroll users
 '''
 
+from __future__ import absolute_import
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import user_passes_test
@@ -25,12 +26,12 @@ import ast
 import os
 import re
 
-import utils
+from . import utils
 from mcweb.settings import MCWEB_LDAP_DN, COURSES_MANDATORY, BASE_DIR, FILE_UPLOAD_PW, LDAP_PW, BASE_DIR
-from models import ContactEntry
-from ldaputils import ldaputils
+from .models import ContactEntry
+from .ldaputils import ldaputils
 from collections import OrderedDict
-from moodleutils import moodleutils as mu
+from .moodleutils import moodleutils as mu
 
 ####################################################
 #                  Demo site                       #
@@ -167,7 +168,7 @@ def manage(req, menu=None, post=None):
     req.session['message'] = ''
     base_context = {'menu' : menu, 'menu_items' : manage_menu_items, 'message' : message}
 
-    idx = manage_menu_items.keys().index(menu)
+    idx = list(manage_menu_items.keys()).index(menu)
     if idx == 0:
         return man_selfsignups(req, menu, post, base_context)
     elif idx == 1:

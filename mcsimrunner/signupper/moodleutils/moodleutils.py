@@ -27,11 +27,14 @@ def add_enrol_user(firstname, lastname, username, email, courses_sn_lst):
 def adduser(firstname, lastname, username, email):
     '''  '''
     cmd = '/usr/local/bin/moosh user-create --auth=ldap --firstname="%s" --lastname="%s" --city=Lyngby --country=DK --email=%s --password=NONE %s' % (firstname, lastname, email, username)
-    proc = subprocess.Popen(cmd, 
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR, 
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':
@@ -45,12 +48,15 @@ def enrol_user(username, course_sn, teacher=False):
         cmd = '/usr/local/bin/moosh course-enrol -r student -s %s %s' % (course_sn, username)
     else:
         cmd = '/usr/local/bin/moosh course-enrol -r editingteacher -s %s %s' % (course_sn, username)
-        
-    proc = subprocess.Popen(cmd, 
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR, 
-                            shell=True)
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':
@@ -62,11 +68,14 @@ def enrol_user(username, course_sn, teacher=False):
 def course_list():
     ''' returns: ["courseid","shortname","fullname"] '''
     cmd = '/usr/local/bin/moosh course-list'
-    proc = subprocess.Popen(cmd, 
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR, 
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':
@@ -93,11 +102,14 @@ def course_list():
 def course_backup(backupname, course_id):
     '''  '''
     cmd = '/usr/local/bin/moosh course-backup --template -f %s.mbz %s' % (os.path.join(TEMPLATES_DIR, backupname), str(course_id))
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR,
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     if com[0] != '':
         print('running: %s' % cmd)
@@ -125,11 +137,14 @@ def course_restore_e(backupname, course_id):
 def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
     ''' '''
     cmd = '/usr/local/bin/moosh course-create --fullname="%s" --category="%s" --visible="y" "%s"' % (fullname, str(category_id), shortname)
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR,
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':
@@ -141,11 +156,14 @@ def course_create(shortname, fullname, category_id=DEFAULT_CATEGORY_ID):
 def synchronize(signups, dry=False, verbose=False):
     ''' attempt to sync is_in_moodle signup field to the moodle db '''
     cmd = '/usr/local/bin/moosh user-list "id > 0"'
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR,
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':
@@ -190,11 +208,14 @@ def synchronize(signups, dry=False, verbose=False):
 def rmsignup(signup):
     ''' removes the user associated with the given signup from moodle '''
     cmd = '/usr/local/bin/moosh user-delete %s' % signup.username
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=MOODLE_DIR,
-                            shell=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        cwd=MOODLE_DIR,
+        shell=True,
+    )
     com = proc.communicate()
     print('running: %s' % cmd)
     if com[0] != '':

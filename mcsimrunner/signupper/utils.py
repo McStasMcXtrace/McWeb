@@ -1,16 +1,18 @@
 '''
 utils for signupper
 '''
+from __future__ import print_function
+from __future__ import absolute_import
 from mcweb import settings
 import subprocess
-from models import Signup
+from .models import Signup
 from datetime import datetime
 import os
 import re
 import logging
 from django.utils import timezone
-from ldaputils import ldaputils
-from moodleutils import moodleutils as mu
+from .ldaputils import ldaputils
+from .moodleutils import moodleutils as mu
 from mcweb.settings import MCWEB_NOTIFY_EMAIL_URL, MCWEB_NOTIFY_ROOT_URL, MCWEB_SSP_URL
 from signupper.moodleutils.moodleutils import TEMPLATES_DIR
 
@@ -20,16 +22,16 @@ def get_random_passwd():
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             shell=True)
-    com = proc.communicate()
-    std_err = com[1]
+    std_out, std_err = proc.communicate()
     print('running: %s' % cmd)
-    print('std-out: %s' % com[0])
+    print('std-out: %s' % std_out)
     if std_err != '':
         print('std-err: %s' % std_err)
         raise Exception('makepasswd says: %s' % std_err)
 
-    return com[0].strip()
+    return std_out.strip()
 
 def cols_to_line(cols, delimiter = ','):
     ''' makes a list of strings into a single ;-separated string with a trailing linebreak '''
@@ -196,7 +198,7 @@ def adduser(signup):
 
     except Exception as e:
         s.fail_str = '%s\n%s' % (s.fail_str, e.__str__())
-        print s.fail_str
+        print(s.fail_str)
         s.save()
 
 def enroluser(signup, course_sn, teacher=False):

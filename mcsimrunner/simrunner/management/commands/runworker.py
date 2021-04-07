@@ -33,14 +33,28 @@ def maketar(simrun):
             tar.add(simrun.data_folder, arcname=os.path.basename(simrun.data_folder))
     except:
         raise Exception('tarfile fail')
+
+def env_with_usr_bin_priority():
+    # Workaround: Commands including mcdisplay-webgl and mcplot launch
+    # Python by name as 'python3'. When run from inside the virtualenv for
+    # the Django application, this would find Python in the virtualenv, which
+    # doesn't have all of the Mcstas dependencies installed. This puts
+    # /usr/bin at the front of $PATH, so those scripts will use the system
+    # Python (/usr/bin/python3) instead.
+    env = os.environ.copy()
+    env['PATH'] = '/usr/bin:' + env['PATH']
+    return env
+
     
 def plot_file(f, log=False):
     cmd = '%s %s' % (MCPLOT_CMD, f)
     if log:
         cmd = '%s %s' % (MCPLOT_LOGCMD,f)
     process = subprocess.Popen(cmd,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True)
     (stdoutdata, stderrdata) = process.communicate()
     if os.path.isfile( f + '.png'):
@@ -48,6 +62,11 @@ def plot_file(f, log=False):
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '_log.png')
         else:    
             os.rename(f + '.png',os.path.splitext(os.path.splitext(f)[0])[0] + '.png')
+    if process.returncode != 0:
+        _log('Plot command failed: %s' % cmd)
+        _log('stdout: %s' % stdoutdata)
+        if stderrdata:
+            _log('stderr: %s' % stderrdata)
     return (stdoutdata, stderrdata)
 
 def sweep_zip_gen(f,dirname):
@@ -78,9 +97,11 @@ def rename_mcstas_to_mccode(simrun):
 
 def get_monitor_files(mccode_sim):
     ''' implements "data files can have any name" '''
-    monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(mccode_sim).readlines())
-    monitor_files = map(lambda f: f.rstrip('\n').split(':')[1].strip(), monitor_files)
-    return monitor_files
+    with open(mccode_sim) as msf:
+        return [
+            line.rstrip('\n').split(':')[1].strip() for line in msf
+            if line.strip().startswith('filename:')
+        ]
 
 def mcplot(simrun):
     ''' generates plots from simrun output data '''
@@ -123,7 +144,7 @@ def mcplot(simrun):
                 outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME, str(i))
 
                 datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
-                datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+                datfiles = [os.path.join(outdir, f) for f in datfiles_nodir]
 
                 for f in datfiles:
                     plot_file(f)
@@ -152,7 +173,7 @@ def mcplot(simrun):
             outdir = os.path.join(simrun.data_folder, MCRUN_OUTPUT_DIRNAME)
 
             datfiles_nodir = get_monitor_files(os.path.join(outdir, 'mccode.sim'))
-            datfiles = map(lambda f: os.path.join(outdir, f), datfiles_nodir)
+            datfiles = [os.path.join(outdir, f) for f in datfiles_nodir]
 
             data_files = []
             plot_files = []
@@ -193,7 +214,7 @@ def mcplot(simrun):
     except Exception as e:
         raise Exception('mcplot fail: %s' % e.__str__())
 
-def mcdisplay_webgl(simrun, pout=False):
+def mcdisplay_webgl(simrun):
     ''' apply mcdisplay-webgl output to subfolder 'mcdisplay', renaming index.html to mcdisplay.html '''
     join = os.path.join
 
@@ -215,21 +236,24 @@ def mcdisplay_webgl(simrun, pout=False):
     # run mcdisplay
     _log('display: %s' % cmd)
     process = subprocess.Popen(cmd,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True,
                                cwd = os.path.join(BASE_DIR, simrun.data_folder))
     (stdoutdata, stderrdata) = process.communicate()
-    if pout:
-        print(stdoutdata)
-        if (stderrdata is not None) and (stderrdata != ''):
-            print(stderrdata)
+    if process.returncode != 0:
+        _log('mcdisplay-webgl command failed: %s' % cmd)
+        _log('stdout: %s' % stdoutdata)
+        if stderrdata:
+            _log('stderr: %s' % stdoutdata)
 
     # copy files
     #_log('mcdisplay: renaming index.html')
     #os.rename(join(simrun.data_folder, dirname, 'index.html'), join(simrun.data_folder, dirname, 'mcdisplay.html'))
 
-def mcdisplay(simrun, print_mcdisplay_output=False):
+def mcdisplay(simrun):
     ''' uses mcdisplay to generate layout.png + VRML file and moves these files to simrun.data_folder '''
     try:
         instr = '%s.instr' % simrun.instr_displayname
@@ -248,27 +272,33 @@ def mcdisplay(simrun, print_mcdisplay_output=False):
         
         # start mcdisplay process, wait
         process = subprocess.Popen(cmd,
+                                   env=env_with_usr_bin_priority(),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
+                                   universal_newlines=True,
                                    shell=True,
                                    cwd = simrun.data_folder)
         (stdoutdata, stderrdata) = process.communicate()
         process2 = subprocess.Popen(vrmlcmd,
+                                   env=env_with_usr_bin_priority(),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
+                                   universal_newlines=True,
                                    shell=True, 
                                    cwd = simrun.data_folder)
         (stdoutdata2, stderrdata2) = process2.communicate()
-        
-        if print_mcdisplay_output:
-            print(stdoutdata)
-            if (stderrdata is not None) and (stderrdata != ''):
-                print(stderrdata)
-        if print_mcdisplay_output:
-            print(stdoutdata2)
-            if (stderrdata2 is not None) and (stderrdata2 != ''):
-                print(stderrdata2)    
-        
+
+        if process.returncode != 0:
+            _log('mcdisplay command failed: %s' % cmd)
+            _log('stdout: %s' % stdoutdata)
+            if stderrdata:
+                _log('stderr: %s' % stdoutdata)
+        if process2.returncode != 0:
+            _log('mcdisplay VRML command failed: %s' % cmd)
+            _log('stdout: %s' % stdoutdata2)
+            if stderrdata:
+                _log('stderr: %s' % stdoutdata2)
+
         oldfilename = '%s.out.png' % os.path.join(simrun.data_folder, simrun.instr_displayname)
         newfilename = os.path.join(simrun.data_folder, 'layout.png')
         oldwrlfilename = os.path.join(simrun.data_folder,'mcdisplay_commands.wrl')
@@ -306,6 +336,7 @@ def mcrun(simrun, print_mcrun_output=False):
     
     _log('running: %s...' % runstr)
     process = subprocess.Popen(runstr,
+                               env=env_with_usr_bin_priority(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                shell=True,
@@ -313,13 +344,11 @@ def mcrun(simrun, print_mcrun_output=False):
     # TODO: implement a timeout (max simulation time)
     (stdout, stderr) = process.communicate()
     
-    o = open('%s/stdout.txt' % simrun.data_folder, 'w')
-    o.write(stdout)
-    o.close()
-    e = open('%s/stderr.txt' % simrun.data_folder, 'w')
-    e.write(stderr)
-    e.close()
-    
+    with open('%s/stdout.txt' % simrun.data_folder, 'wb') as o:
+        o.write(stdout)
+    with open('%s/stderr.txt' % simrun.data_folder, 'wb') as e:
+        e.write(stderr)
+
     if process.returncode != 0:
         raise Exception('Instrument run failure - see %s.' % simrun.data_folder )
     

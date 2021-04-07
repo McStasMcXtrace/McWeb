@@ -3,6 +3,7 @@ Collects all groups and instruments from disk and creates db objects.
 Already existing groups are unchanged, and already existing instruments
 are updated with current params info.
 '''
+from __future__ import print_function
 from django.core.management.base import BaseCommand
 import subprocess
 import os, errno
@@ -93,6 +94,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True,
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
@@ -105,6 +107,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True,
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata, stderrdata) = process.communicate()
@@ -116,6 +119,7 @@ def get_instr_params_and_set_affiliation(instr_grp, instr_displayname, instr_obj
     process2 = subprocess.Popen(cmd2,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
+                               universal_newlines=True,
                                shell=True,
                                cwd=os.path.join('sim', instr_grp))
     (stdoutdata2, stderrdata2) = process2.communicate()
@@ -162,9 +166,9 @@ class Command(BaseCommand):
         # global exception logging block
         try:
 
-            print "<pre>\n"
-            print datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y")
-            print 'collecting instruments one depth in sim/...'
+            print("<pre>\n")
+            print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Z %Y"))
+            print('collecting instruments one depth in sim/...')
 
             # error log
             error_log = []
@@ -173,14 +177,14 @@ class Command(BaseCommand):
             for g in grp_instr:
                 try:
                     group = InstrGroup.objects.get(name=g)
-                    print "group %s exists in db" % g
+                    print("group %s exists in db" % g)
                 except InstrGroup.DoesNotExist:
                     group = InstrGroup(name=g)
                     group.save()
-                    print "group %s created" % g
+                    print("group %s created" % g)
 
                 mkdir_p( "static/doc/%s" % g )
-                print "doc folder static/doc/%s touched" % g
+                print("doc folder static/doc/%s touched" % g)
 
                 try:
                     make_html_docs(g)
@@ -196,35 +200,35 @@ class Command(BaseCommand):
 
                         try:
                             instr = Instrument.objects.get(name=name)
-                            print "instrument %s exists in db" % i
+                            print("instrument %s exists in db" % i)
                         except Instrument.DoesNotExist:    
                             instr = Instrument(group=group, name=name, displayname=displayname)
-                            print "instrument %s created" % i
+                            print("instrument %s created" % i)
 
                         if os.path.isfile('sim/' + g + '/' + i + '.png'):
                             instr.image = "/static/doc/" + g + "/" + i + ".png"
                             shutil.copyfile('sim/' + g + '/' + i + '.png','static/doc/' + g + '/' + i + '.png')
-                            print "Adding image for instrument %s" % i
+                            print("Adding image for instrument %s" % i)
                         else:
                             instr.image = '/static/noimage.png'
 
                         # update instr params
                         instr.params = get_instr_params_and_set_affiliation(g, i, instr)
                         instr.save()
-                        print "instrument %s params updated" % i
+                        print("instrument %s params updated" % i)
                     except Exception as e:
                         error_str = "instrument %s: %s" % (i, e.__str__())
-                        print error_str
+                        print(error_str)
                         error_log.append(error_str)
                         continue
 
             if len(error_log) > 0:
-                print
-                print "ERRORS: The following errors were encountered:"
-                print
+                print()
+                print("ERRORS: The following errors were encountered:")
+                print()
                 print('\n'.join(error_log))
 
-            print "</pre>\n"
+            print("</pre>\n")
 
         # global exception logging, appends to file "collectinstr_fail.log
         except Exception as e:
