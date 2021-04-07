@@ -1,0 +1,146 @@
+// Import everything.
+@import "moodle";
+
+
+// This trick is necessary to change the colour of the top navigation bar as everything else is overwritten. 
+// Unfortunately this also changes the colour of the top bar in the chat function, which has yet to be rectified. 
+.bg-white {
+    background-color: $dark !important; 
+ }
+
+// Change colour of text and icons on top navigation bar.
+.navbar-light {
+ a {
+    color : $gray-lightest;
+    font-size: 1.1em;
+    font-weight: bold;
+  }
+  border-bottom: 1px solid $bordercolor;
+  .navbar-nav .nav-link {
+    color: $gray-lightest !important;
+  }
+}
+// Change color of hamburger icon on top navigation bar.
+.btn-light {
+    color: $gray-lightest;
+    background: transparent !important;
+    border: transparent !important;
+}
+
+
+
+// Add header with image and change color of buttons on the header. 
+#page-header .card {
+  height: 150px;
+  background: url(https://test.pan-learning.org/moodle/draftfile.php/25/user/draft/173996380/earth-1151659.jpg);
+  background-size: cover;
+  background-position: 100% 25%;
+  .btn {
+     color: $gray-lightest;
+     background: $gray-light;
+     font-size: 1.1em;
+     font-weight: bold;
+     border: transparent !important;
+  }
+  }
+// Change title on header card. 
+.page-context-header .page-header-headings h1 {
+  font-size: 2.4em;
+  font-weight: 600;
+  color: $gray-lighter;
+}
+// Change breadcrumb navigation on header card.
+.breadcrumb {
+ a {
+    color : $gray-lighter;
+    font-size: 1.1em;
+    font-weight: bold;
+    }
+   color : $gray-lighter;
+   font-size: 1.1em;
+   font-weight: bold;
+}
+
+
+
+// Change login page background colours. 
+#page-login-index {
+ background: $gray-lightest;
+ .card {
+    background: $gray-lighter;
+ }
+ .card-header {
+    background: $dark;
+ }
+}
+
+
+
+//Stops a weird clipping of buttons on the user profile page - not sure why
+div#page-navbar {   
+  position: relative;
+  width: 100%;
+}
+
+
+//Change color of background and text on side navigation bar. 
+#nav-drawer {
+  background: $mdldark none repeat scroll 0 0; // area behind side navigation button
+}
+.navbar-nav {
+  .btn-secondary:hover, .btn-default:hover {
+    background-color: $dark;
+    border-color: $dark;
+    color: $textcolor;
+  }
+}
+.list-group-item {
+  background-color: $gray-light;
+  border: medium none;
+  color: $textcolor;
+  &:last-child {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+  }
+  &:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
+.list-group-item-action {
+  &:focus, &:hover {
+    background-color: transparent;
+    color: $gray-lightest;
+    font-size: 1.1em;
+    font-weight: bold;
+  }
+}
+
+
+// Change background and colour of all dropdown menus. 
+.dropdown-menu {
+    border-radius: 0;
+
+    .dropdown-divider {
+        display: none;
+    }    
+
+    .dropdown-item {
+        color: $gray-dark;
+        font-weight: bold;
+        font-size: 14px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        border-radius: 0;
+
+        &:focus, &:hover {
+           color: $gray-lightest;
+           font-size: 14px;
+           font-weight: bold;
+        }
+
+    }
+}
+
+
+
