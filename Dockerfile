@@ -24,8 +24,8 @@ RUN cd /usr/lib/x86_64-linux-gnu \
 
 # Packages for bootstrapping an McWeb instance
 RUN apt-get update \
-    && apt-get -y install git libsasl2-dev python-dev libldap2-dev libssl-dev \
-        python-virtualenv makepasswd nginx php-fpm php-mysql php-xml php-curl \
+    && apt-get -y install git libsasl2-dev python3-dev libldap2-dev libssl-dev \
+        python3-venv makepasswd nginx php-fpm php-mysql php-xml php-curl \
         php-zip php-gd php-mbstring php-xmlrpc php-soap php-intl php-ldap \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,7 +41,7 @@ RUN echo "\n# Allow www-data to restart uwsgi_mcweb service\nwww-data ALL = NOPA
 
 WORKDIR /srv/mcweb
 
-RUN virtualenv mcvenv \
+RUN python3 -m venv mcvenv \
     && mcvenv/bin/pip install Django==1.8.2 django-auth-ldap==1.2.7 simplejson python-ldap uwsgi
 
 # Copy files from this repo for the server

@@ -10,13 +10,9 @@ replacement for the docker command. If you don't have podman, replace `podman`
 with `docker` in all the commands below, and they should still work.
 
 ```shell
-# Build for Python 2:
-podman build -t mcweb-py2 .
-podman run -p 8008:80 -ti mcweb-py2
-
-# Build for Python 3:
-podman build -t mcweb-py3 -f Dockerfile-py3 .
-podman run -p 8008:80 -ti mcweb-py3  # Or use -p 8009:80 to run side-by-side
+# Build image & launch container:
+podman build -t mcweb-py3 .
+podman run -p 8008:80 -ti mcweb-py3
 
 # Inside the container:
 sudo -Hu www-data bash django-setup-test.sh
