@@ -4,9 +4,7 @@
 
 // This trick is necessary to change the colour of the top navigation bar as everything else is overwritten. 
 // Unfortunately this also changes the colour of the top bar in the chat function, which has yet to be rectified. 
-.bg-white {
-    background-color: $dark !important; 
- }
+.bg-white { background-color: $dark !important; }
 
 // Change colour of text and icons on top navigation bar.
 .navbar-light {
@@ -20,6 +18,38 @@
     color: $gray-lightest !important;
   }
 }
+
+// WARNING - this is messy: First remove all logos (top navigation bar and home page header card)
+#page-wrapper .logo img { display:none; }
+
+// Then put back the big logo on the home page header card 
+#page-site-index .logo img { display: unset }
+
+// Add the compact logo the navigation bar on the home page 
+#page-site-index .navbar-light .navbar-brand {
+    background-image: url(https://test.pan-learning.org/moodle/theme/PaNOSC_ExPaNDS_compact2.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    width: 300px;
+    height: 50px;
+    background-size: 100%;
+ }
+// Finally add the compact logo to the navigation bar on all the other pages 
+.navbar-light .navbar-brand {
+    background-image: url(https://test.pan-learning.org/moodle/theme/PaNOSC_ExPaNDS_compact2.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    width: 300px;
+    height: 50px;
+    background-size: 100%;
+ }
+// The removal and addition of the logo on all other pages is not strictly necessary however if not done Moodle displays a lower quality version of the logo. 
+// Moodle does still display a low quality version of the large logo on the home page header card and log in page. This could be fixed at a later date. 
+
+
+// Remove short title from top navigation bar 
+.site-name {display: none !important;}
+
 // Change color of hamburger icon on top navigation bar.
 .btn-light {
     color: $gray-lightest;
@@ -32,9 +62,9 @@
 // Add header with image and change color of buttons on the header. 
 #page-header .card {
   height: 150px;
-  background: url(https://test.pan-learning.org/moodle/draftfile.php/25/user/draft/173996380/earth-1151659.jpg);
+  background: url(https://test.pan-learning.org/moodle/theme/earth-1151659.jpg);
   background-size: cover;
-  background-position: 100% 25%;
+  background-position: 100% 90%;
   .btn {
      color: $gray-lightest;
      background: $gray-light;
@@ -60,7 +90,15 @@
    font-size: 1.1em;
    font-weight: bold;
 }
-
+// Increase logo on header card for home page 
+ #page-header {
+     .logo {
+         margin: -15px 10px;
+         img {
+             max-height: 135px;
+         }
+     }
+ }
 
 
 // Change login page background colours. 
@@ -81,6 +119,7 @@ div#page-navbar {
   position: relative;
   width: 100%;
 }
+
 
 
 //Change color of background and text on side navigation bar. 
@@ -143,4 +182,5 @@ div#page-navbar {
 }
 
 
+ 
 
