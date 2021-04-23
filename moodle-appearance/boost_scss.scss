@@ -1,21 +1,17 @@
 // Import everything.
 @import "moodle";
 
-
-// This trick is necessary to change the colour of the top navigation bar as everything else is overwritten. 
-// Unfortunately this also changes the colour of the top bar in the chat function, which has yet to be rectified. 
-.bg-white { background-color: $dark !important; }
-
 // Change colour of text and icons on top navigation bar.
 .navbar-light {
  a {
-    color : $gray-lightest;
+    color : $gray-lightest; // do not make this important as it ruins the drop down menu in the top right 
     font-size: 1.1em;
     font-weight: bold;
   }
-  border-bottom: 1px solid $bordercolor;
+  background-color: $dark !important; 
+  border-bottom: 1px solid $dark;
   .navbar-nav .nav-link {
-    color: $gray-lightest !important;
+   color: $gray-lightest !important;
   }
 }
 
@@ -159,11 +155,9 @@ div#page-navbar {
 // Change background and colour of all dropdown menus. 
 .dropdown-menu {
     border-radius: 0;
-
     .dropdown-divider {
         display: none;
     }    
-
     .dropdown-item {
         color: $gray-dark;
         font-weight: bold;
@@ -177,7 +171,6 @@ div#page-navbar {
            font-size: 14px;
            font-weight: bold;
         }
-
     }
 }
 
