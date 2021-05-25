@@ -1,6 +1,20 @@
 // Import everything.
 @import "moodle";
 
+
+#nav-drawer [data-key="privatefiles"] {
+  display: none;
+}
+
+#nav-drawer [data-key="mycourses"] {
+  display: none;
+}
+
+
+a, a:focus {
+    background: transparent !important;
+}
+
 // Change colour of text and icons on top navigation bar.
 .navbar-light {
  a {
@@ -9,7 +23,7 @@
     font-weight: bold;
   }
   background-color: $dark !important; 
-  border-bottom: 1px solid $dark;
+  border-bottom: 1px solid $gray-lightest;
   .navbar-nav .nav-link {
    color: $gray-lightest !important;
   }
@@ -19,32 +33,41 @@
 #page-wrapper .logo img { display:none; }
 
 // Then put back the big logo on the home page header card 
-#page-site-index .logo img { display: unset }
+#page-site-index .logo img { 
+    display: unset;
+    background-image: url(https://pan-learning.org/moodle/theme/images/PaNOSC_ExPaNDS_original4.png);
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: auto 100%;
+    width: 700px;
+}
 
 // Add the compact logo the navigation bar on the home page 
 #page-site-index .navbar-light .navbar-brand {
-    background-image: url(https://test.pan-learning.org/moodle/theme/PaNOSC_ExPaNDS_compact2.png);
-    background-position: center center;
-    background-repeat: no-repeat;
-    width: 300px;
-    height: 50px;
-    background-size: 100%;
+    background-image: url(https://pan-learning.org/moodle/theme/images/PaNOSC_ExPaNDS_compact4.png) !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-size: auto 100% !important;
  }
 // Finally add the compact logo to the navigation bar on all the other pages 
 .navbar-light .navbar-brand {
-    background-image: url(https://test.pan-learning.org/moodle/theme/PaNOSC_ExPaNDS_compact2.png);
-    background-position: center center;
-    background-repeat: no-repeat;
-    width: 300px;
-    height: 50px;
-    background-size: 100%;
+    background-image: url(https://pan-learning.org/moodle/theme/images/PaNOSC_ExPaNDS_compact4.png) !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    width: 650px !important;
+    height: 46px !important;
+    background-size: auto 100% !important;
  }
 // The removal and addition of the logo on all other pages is not strictly necessary however if not done Moodle displays a lower quality version of the logo. 
 // Moodle does still display a low quality version of the large logo on the home page header card and log in page. This could be fixed at a later date. 
 
 
-// Remove short title from top navigation bar 
-.site-name {display: none !important;}
+// Edit short title on top navigation bar 
+.site-name {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0px 110px;
+}
 
 // Change color of hamburger icon on top navigation bar.
 .btn-light {
@@ -58,44 +81,48 @@
 // Add header with image and change color of buttons on the header. 
 #page-header .card {
   height: 150px;
-  background: url(https://test.pan-learning.org/moodle/theme/earth-1151659.jpg);
+  background: url(https://pan-learning.org/moodle/theme/images/testwallpaper3.png);
   background-size: cover;
-  background-position: 100% 90%;
+  background-position: 100% 15%;
   .btn {
      color: $gray-lightest;
-     background: $gray-light;
+     background: $dark !important;
      font-size: 1.1em;
      font-weight: bold;
      border: transparent !important;
   }
+ img.userpicture {
+    width: 50px;
+    height: 50px;
+ }
   }
 // Change title on header card. 
 .page-context-header .page-header-headings h1 {
   font-size: 2.4em;
   font-weight: 600;
-  color: $gray-lighter;
+  color: $dark;
+  margin-right: .5rem;
 }
 // Change breadcrumb navigation on header card.
 .breadcrumb {
  a {
-    color : $gray-lighter;
+    color : $dark;
     font-size: 1.1em;
     font-weight: bold;
     }
-   color : $gray-lighter;
+   color : $dark;
    font-size: 1.1em;
    font-weight: bold;
 }
-// Increase logo on header card for home page 
+// Increase logo on header card for home page - might be able to get rid of this now that the logo is being added manually
  #page-header {
      .logo {
-         margin: -15px 10px;
+         margin: -10px 10px;
          img {
-             max-height: 135px;
+             max-height: 120px;
          }
      }
  }
-
 
 // Change login page background colours. 
 #page-login-index {
@@ -103,10 +130,16 @@
  .card {
     background: $gray-lighter;
  }
- .card-header {
+  .card-header {
     background: $dark;
+    background-image: url(https://pan-learning.org/moodle/theme/images/PaNOSC_ExPaNDS_gray8.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: auto 95%;
+    height: 230px;
  }
 }
+
 
 
 
@@ -120,19 +153,19 @@ div#page-navbar {
 
 //Change color of background and text on side navigation bar. 
 #nav-drawer {
-  background: $mdldark none repeat scroll 0 0; // area behind side navigation button
+  background: $dark none repeat scroll 0 0; // area behind side navigation button
+  border-right: 1px solid $gray-lightest;
 }
 .navbar-nav {
   .btn-secondary:hover, .btn-default:hover {
     background-color: $dark;
-    border-color: $dark;
-    color: $textcolor;
+    color: $gray-lightest;
   }
 }
 .list-group-item {
-  background-color: $gray-light;
+  background-color: $dark;
   border: medium none;
-  color: $textcolor;
+  color: $gray-lightest;
   &:last-child {
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
@@ -159,7 +192,7 @@ div#page-navbar {
         display: none;
     }    
     .dropdown-item {
-        color: $gray-dark;
+        color: $dark;
         font-weight: bold;
         font-size: 14px;
         padding-top: 8px;
@@ -168,12 +201,23 @@ div#page-navbar {
 
         &:focus, &:hover {
            color: $gray-lightest;
+           background: $dark !important;
            font-size: 14px;
            font-weight: bold;
         }
     }
 }
 
+#page-footer {
+  text-align: right;
+  height: 100px;
+  background-image: url(https://pan-learning.org/moodle/theme/images/PaNOSC_ExPaNDS_footer2.png);
+  background-position: 5%;
+  background-repeat: no-repeat;
+  background-size: auto 90%;
+}
 
+// Remove the Home link in the footer 
+.homelink {display: none;}
  
 
