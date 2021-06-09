@@ -27,9 +27,9 @@ def listusers(uid=None):
     '''
     #ldapsearch -h localhost -x -w segreto -D cn=Manager,dc=wiki,dc=local -b "ou=People,dc=wiki,dc=local" 
     if not uid:
-        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN)
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=users,%s"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN)
     else:
-        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=People,%s" "(uid=%s)"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN, uid)
+        cmd = 'ldapsearch -h %s -x -w %s -D %s -b "ou=users,%s" "(uid=%s)"' % ("localhost", AUTH_LDAP_BIND_PASSWORD, AUTH_LDAP_BIND_DN, MCWEB_LDAP_DN, uid)
     
     proc = subprocess.Popen(cmd, 
                             stdout=subprocess.PIPE,
@@ -135,7 +135,7 @@ def adduser(dn, admin_password, cn, sn, uid, email, pw):
     
     uid_number = get_new_uid()    
     
-    uid_user = 'dn: uid=%s,ou=People,%s\nobjectClass: top\nobjectClass: inetOrgPerson\nobjectClass: posixAccount\ncn: %s\nsn: %s\nmail: %s\nuid: %s\nuidNumber: %s\ngidNumber: 500\nhomeDirectory: /home/users/%s\nloginShell: /bin/sh\nuserPassword: %s' %  (uid, dn, cn, sn, email, uid, str(uid_number), uid, pw)
+    uid_user = 'dn: uid=%s,ou=users,%s\nobjectClass: top\nobjectClass: inetOrgPerson\nobjectClass: posixAccount\ncn: %s\nsn: %s\nmail: %s\nuid: %s\nuidNumber: %s\ngidNumber: 500\nhomeDirectory: /home/users/%s\nloginShell: /bin/sh\nuserPassword: %s' %  (uid, dn, cn, sn, email, uid, str(uid_number), uid, pw)
     
     ldif = open('_uid_user.ldif', 'w')
     ldif.write(uid_user)
@@ -170,7 +170,7 @@ def rmuser(dn, admin_password, uid):
     
     uid: username
     '''
-    rmuser = 'dn: uid=%s,ou=People,%s\nchangetype: delete' % (uid, dn)
+    rmuser = 'dn: uid=%s,ou=users,%s\nchangetype: delete' % (uid, dn)
     
     ldif = open('_rmuser.ldif', 'w')
     ldif.write(rmuser)
@@ -198,7 +198,7 @@ def chfield(dn, admin_password, uid, value_name, current_value, new_value):
     '''
     Change a user field if it exists.
     '''
-    chfield = 'dn: uid=%s,ou=People,%s\nchangetype: modify\ndelete: %s\n%s: %s\n-\nadd: %s\n%s: %s' % (uid, dn, value_name, value_name, current_value, value_name, value_name, new_value)
+    chfield = 'dn: uid=%s,ou=users,%s\nchangetype: modify\ndelete: %s\n%s: %s\n-\nadd: %s\n%s: %s' % (uid, dn, value_name, value_name, current_value, value_name, value_name, new_value)
     
     ldif = open('_chvalue.ldif', 'w')
     ldif.write(chfield)
@@ -250,7 +250,7 @@ def initdb(dn, admin_password):
         os.remove('_cn_usergroup.ldif')
     
     # add ou_users
-    ou_users = 'dn: ou=People,%s\nobjectClass: organizationalUnit\nobjectClass: top\nou: users\n' % dn
+    ou_users = 'dn: ou=users,%s\nobjectClass: organizationalUnit\nobjectClass: top\nou: users\n' % dn
     ldif = open('_ou_users.ldif', 'a')
     ldif.write(ou_users)
     ldif.close()
