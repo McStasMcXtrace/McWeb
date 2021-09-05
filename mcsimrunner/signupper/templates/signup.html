@@ -22,7 +22,9 @@
             <tr><td><label>First Name: </label></td><td><input type="text" name="firstname"></td></tr>
             <tr><td><label>Last Name: </label></td><td><input type="text" name="lastname"></td></tr>
             <tr><td><label>Email: </label></td><td><input type="text" name="email"></td></tr>
-            <tr><td><label>Requested username: </label></td><td><input type="text" name="username"></td></tr>
+	    <tr><td></td></tr>
+            <tr><td><label>Requested username, with:<br>- all lowercase<br>- no spaces<br>- no accents</label></td><td><input type="text" name="username"></td></tr>
+	    <tr><td></td></tr>
             {% for c in courses %}
             <tr><td></td><td><input type="checkbox" name="{{ c }}" value="{{ c }}">{{ c }}</td></tr>{% endfor %}
 
